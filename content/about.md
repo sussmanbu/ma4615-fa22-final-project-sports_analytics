@@ -11,7 +11,7 @@ This comes from the file `content/about.md`.
 This is a website for the final project for MA[46]15 Data Science with R by Team Sports Analytics.
 The members of this team are below.
 
-##Leo Seoane
+## Leo Seoane
 
 Leo Seoane is a second year graduate student getting his Master's in Artificial Intelligence here at BU.
 https://github.com/leoseoane1
