@@ -16,6 +16,10 @@ The members of this team are below.
 Leo Seoane is a second year graduate student getting his Master's in Artificial Intelligence here at BU.
 https://github.com/leoseoane1
 
+## Ryan Mahoney
+
+Ryan is a second year Masters' student in Stats at BU.
+Github account page: https://github.com/ryanmaho
 
 ## Haroon Quershi
 
