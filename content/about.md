@@ -17,9 +17,10 @@ Leo Seoane is a second year graduate student getting his Master's in Artificial 
 https://github.com/leoseoane1
 
 
-## Luis Iberico
+## Haroon Quershi
 
-Luis is a Ph.D. student in Stats and is the Teaching Fellow for the course.
+Haroon is a master’s student studying bioinformatics. I’m interested in photography, sports, and music. His GitHub is 
+https://github.com/hmqure.
 
 ## Dan Sussman
 
