@@ -23,8 +23,8 @@ Github account page: https://github.com/ryanmaho
 
 ## Haroon Quershi
 
-Haroon is a master’s student studying bioinformatics. I’m interested in photography, sports, and music. His GitHub is 
-https://github.com/hmqure.
+Haroon is a master’s student studying bioinformatics. 
+His GitHub is https://github.com/hmqure.
 
 ## Dan Sussman
 
