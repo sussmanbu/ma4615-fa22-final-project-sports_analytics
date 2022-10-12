@@ -1,8 +1,8 @@
 baseURL: https://sports-analytics.netlify.app
-title: MA 415 Project
+title: Sprots Analytics
 
 # Comment when installing using Hugo Modules
-theme: Sports Analytics
+theme: eureka
 # Uncomment when installing using Hugo Modules
 # theme: github.com/wangchucheng/hugo-eureka
 
