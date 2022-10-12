@@ -26,10 +26,6 @@ Github account page: https://github.com/ryanmaho
 Haroon is a master’s student studying bioinformatics. 
 His GitHub is https://github.com/hmqure.
 
-## Dan Sussman
-
-Dan is a professor in the Math/Stat department and is the instructor for the course.
-
 ## Benni Trachtenberg
 Benni is a senior in computer engineering at Boston University. His GitHub can be found at https://github.com/benniTrachtenberg
 
