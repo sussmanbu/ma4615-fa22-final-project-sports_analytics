@@ -1,0 +1,34 @@
+---
+title: week1 blog
+author: Leo Seoane
+date: '2022-10-12'
+slug: []
+categories: []
+tags: []
+description: ~
+toc: yes
+authors: []
+series: []
+lastmod: '2022-10-12T09:18:44-04:00'
+featuredVideo: ~
+featuredImage: ~
+---
+
+
+<div id="TOC">
+
+</div>
+
+<p>Dataset links:
+<a href="https://github.com/fivethirtyeight/data/tree/master/nba-raptor" class="uri">https://github.com/fivethirtyeight/data/tree/master/nba-raptor</a>
+<a href="https://www.advancedsportsanalytics.com/nba-raw-data" class="uri">https://www.advancedsportsanalytics.com/nba-raw-data</a>
+<a href="https://www.seanlahman.com/baseball-archive/statistics/" class="uri">https://www.seanlahman.com/baseball-archive/statistics/</a>
+<a href="https://github.com/erikgregorywebb/datasets/blob/master/nba-salaries.csv" class="uri">https://github.com/erikgregorywebb/datasets/blob/master/nba-salaries.csv</a></p>
+<p>NBA Datasets:
+For both datasets, a row corresponds to an individual player, and the columns correspond to different statistics that they player has recorded. In the advanced sports analytics dataset, each row is a player in a specific game, so a player has as many rows as games he has played in. For the five thirty-eight data, each row is a player each year. The ASA data was originally collected from the NBA stats website for the purposes of daily fantasy sports betting and advanced analytics metrics. The five thirty-eight data was collected for the purpose of building five thirty eights win probability model and to represent player’s impacts more accurately on games. I can load the data, and the data seems reasonably well cleaned beforehand, but more work can be done. For example, players could be filtered to only those who play above a certain minute’s threshold to eliminate two-way bench players who do not have a lot of games played.</p>
+<p>MLB Datasets:</p>
+<p>This dataset provides all sorts of MLB data dating back to 1871 (although for our use, we want to focus on only the most recent data). The data was collected by Sean Lahman for the purpose of record-keeping all relevant statistics that can be used by MLB. There are multiple datasets, but in the ones we want to focus on, the rows represent certain players and their stats (batting, pitching, and fielding) on a yearly basis.
+I feel like we can load/clean this data, because they’re all csv files, and don’t seem to have missing data anywhere. Some questions we want to address deal with trends in how hitters evolve over time: why is batting average down? Why do certain players get “hot” over others? What new trends are used to determine what players are valuable? I see some challenges trying to tie this one into our other potential datasets dealing with the NBA, as those deal with stats on a per game basis, whereas this one does not.</p>
+<p>Overall Insights:
+The main thing we want to examine with this data is the hot streaks that players go on. We would like to take find the hottest streaks that individual players have went on, based on a standard baseline that signifies elite offensive production. There are a few auxiliary questions which can then be answered. One of the questions we will look at is how different is the offensive production of the streak from the player’s usual performance? Between sports, do the players of one league go on hot streaks more frequently? Are streaks in one sport longer than the other? Where does the player stand in terms of salary for the team?
+One challenge we may run into is the difference in league statistics and seasons. For example, a season in the MLB has many more games than an NBA season. So we will have to take this into account when looking at streak lengths. Another challenge we may encounter is stat-keeping in the same sport. For example, 3-pointers were non-existent in earlier NBA seasons. This may skew offensive stats, whether it be possessions per game, field goal percentages or points per game.</p>
