@@ -1,6 +1,6 @@
 ---
 title: Week 1 Blog
-author: Leo, Haroon,Ryan,Benni 
+author: Leo, Haroon, Ryan, Benni 
 date: '2022-10-12'
 slug: []
 categories: []
@@ -30,7 +30,7 @@ For both datasets, a row corresponds to an individual player, and the columns co
 
 ## MLB Datasets:
 This dataset provides all sorts of MLB data dating back to 1871 (although for our use, we want to focus on only the most recent data). The data was collected by Sean Lahman for the purpose of record-keeping all relevant statistics that can be used by MLB. There are multiple datasets, but in the ones we want to focus on, the rows represent certain players and their stats (batting, pitching, and fielding) on a yearly basis.
-I feel like we can load/clean this data, because they’re all csv files, and don’t seem to have missing data anywhere. Some questions we want to address deal with trends in how hitters evolve over time: why is batting average down? Why do certain players get “hot” over others? What new trends are used to determine what players are valuable? I see some challenges trying to tie this one into our other potential datasets dealing with the NBA, as those deal with stats on a per game basis, whereas this one does not.The other ASA mlb raw data,however is game by game. 
+We should be able to load/clean this data because they’re all csv files and don’t seem to have missing data anywhere (cleaning will mostly be taking a subset of the data). Some questions we want to address deal with trends in how hitters evolve over time: why is batting average down? Why do certain players get “hot” over others? What new trends are used to determine what players are valuable? I see some challenges trying to tie this one into our other potential datasets dealing with the NBA, as those deal with stats on a per game basis, whereas this one does not.The other ASA mlb raw data,however is game by game. 
 
 
 # Overall Insights:
