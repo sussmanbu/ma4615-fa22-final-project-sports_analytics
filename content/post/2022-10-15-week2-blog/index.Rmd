@@ -17,3 +17,45 @@ featuredImage: ~
 ## Cleaning the Data:
 To begin the process of cleaning and filtering the data, we'll first want to remove any null values from our analysis. Then, to narrow down the fields in our datasets to those relevant to offensive production and any comparative fields, we'll remove fields that we do not plan to use in our analysis. For our purposes, much of a player's biographical data, like hometown, can be removed, as it won't be used in analysis. Below are some plots created with our datasets to summarize data that will be relevant to our investigation.
 
+``` {r 30pt_vs_date}
+
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
+data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
+data30 <- filter(data, pts >= 30) %>%
+  select(game_date, pts) %>%
+  group_by(game_date) %>%
+  summarize(count = n()) %>%
+  mutate(date = lubridate::as_date(data30$game_date))
+
+ggplot(data30, aes(x=date, y=count, group = 1)) +
+  geom_line() + xlab("Game Date") + 
+  ylab("Number of 30 point Games")
+
+
+```
+
+
+``` {r 25pt_vs_fg}
+
+data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
+data2 <- group_by(data, player) %>%
+  summarize(total_pts = sum(pts),
+            total_games = n(),
+            ppg = total_pts/total_games,
+            total_fg = sum(fg),
+            total_fga = sum(fga),
+            fg_percentage = total_fg/total_fga) %>%
+  select(player, ppg, fg_percentage)
+
+scoring <- filter(data2, ppg >= 25)
+
+ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
+  geom_point() +
+  geom_text(hjust=0, vjust=0)
+
+```
