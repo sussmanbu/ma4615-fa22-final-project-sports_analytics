@@ -6,7 +6,7 @@ slug: []
 categories: []
 tags: []
 description: ~
-toc: yes
+toc: yesblogdown
 authors: []
 series: []
 lastmod: '2022-10-15T03:43:47-04:00'
@@ -19,45 +19,27 @@ To begin the process of cleaning and filtering the data, we'll first want to rem
 
 ####### INPUT PICTURES OF PLOTS #######
 
+Rplot.png
+
+
 ``` {r 30pt_vs_date}
-
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-
-data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
-
-data30 <- filter(data, pts >= 30) %>%
-  select(game_date, pts) %>%
-  group_by(game_date) %>%
-  summarize(count = n()) %>%
-  mutate(date = lubridate::as_date(data30$game_date))
-
-ggplot(data30, aes(x=date, y=count, group = 1)) +
-  geom_line() + xlab("Game Date") + 
-  ylab("Number of 30 point Games")
-
+library(knitr)
+knitr::include_graphics('./Rplot.png')
 
 ```
-
 
 ``` {r 25pt_vs_fg}
-
-library(tidyverse)
-library(dplyr)
-library(lubridate)
-
-data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
-
-data30 <- filter(data, pts >= 30) %>%
-  select(game_date, pts) %>%
-  group_by(game_date) %>%
-  summarize(count = n()) %>%
-  mutate(date = lubridate::as_date(data30$game_date))
-
-ggplot(data30, aes(x=date, y=count, group = 1)) +
-  geom_line() + xlab("Game Date") + 
-  ylab("Number of 30 point Games")
-
+knitr::include_graphics('./Rplot01.png')
 
 ```
+
+
+
+
+
+
+
+
+
+
+
