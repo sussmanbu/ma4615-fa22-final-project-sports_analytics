@@ -27,7 +27,7 @@ knitr::include_graphics('./Rplot.png')
 ```
 
 
-The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the leaugue's top scorers. 
+The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the league's top scorers. To make this plot, the data had to be cleaned by removing duplicate rows in the dataset, and removing games that were listed but the players did not play in. Leaving those values in would have skewed the PPG for the season as it would have added extra games. 
 
 ``` {r 25pt_vs_fg}
 knitr::include_graphics('./Rplot01.png')
