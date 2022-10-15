@@ -17,16 +17,17 @@ featuredImage: ~
 ## Cleaning the Data:
 To begin the process of cleaning and filtering the data, we'll first want to remove any null values from our analysis. Then, to narrow down the fields in our datasets to those relevant to offensive production and any comparative fields, we'll remove fields that we do not plan to use in our analysis. For our purposes, much of a player's biographical data, like hometown, can be removed, as it won't be used in analysis. Below are some plots created with our datasets to summarize data that will be relevant to our investigation.
 
-####### INPUT PICTURES OF PLOTS #######
-
-Rplot.png
-
+## Plots
+The plot below filtered the NBA game-by-game dataset to find games that had at least 30 points scored by a player. Then the number of instances of 30 points being scored were plotted against the date of the games. This plot shows the trend of scoring throughout the 2021-2022 NBA season. As can be seen, there were more instances of over 10 players scoring 30+ points in a day in the second half of the season. 
 
 ``` {r 30pt_vs_date}
 library(knitr)
 knitr::include_graphics('./Rplot.png')
 
 ```
+
+
+The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the leaugue's top scorers. 
 
 ``` {r 25pt_vs_fg}
 knitr::include_graphics('./Rplot01.png')
