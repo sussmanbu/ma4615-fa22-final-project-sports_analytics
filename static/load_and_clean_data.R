@@ -1,10 +1,12 @@
 library(tidyverse)
 
-loan_data <- read_csv(here::here("dataset", "loan_refusal.csv"))
+MLB_batting_raw_data <- read_csv(here::here("dataset",
+                                            "MLB_batting_raw_data.csv"))
 
 ## CLEAN the data
-loan_data_clean <- loan_data
+MLB_bat_data_2021 <- MLB_batting_raw_data %>% filter(!is.na(pa))
 
-write_csv(loan_data_clean, file = here::here("dataset", "loan_refusal_clean.csv"))
+write_csv(MLB_bat_data_2021, file = here::here("dataset",
+                                               "MLB_bat_data_2021.csv"))
 
-save(loan_data_clean, file = here::here("dataset/loan_refusal.RData"))
+save(MLB_bat_data_2021, file = here::here("dataset/MLB_bat_data_2021.RData"))
