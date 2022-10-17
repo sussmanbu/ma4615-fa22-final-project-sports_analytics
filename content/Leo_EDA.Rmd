@@ -1,6 +1,9 @@
 library(tidyverse)
 library(here)
+<<<<<<< HEAD
 library(readr)
+=======
+>>>>>>> 82b9241b807878dae13e4561d9545a67926735ac
 ```{r Dataloading}
 data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"))
 best_streaks <- data %>% group_by(player) %>% filter(season==2022,mean(minutes) >25)  %>% mutate(count_above_avg_pts=length(pts[pts>mean(pts)])) %>%ungroup() %>% head(25)
