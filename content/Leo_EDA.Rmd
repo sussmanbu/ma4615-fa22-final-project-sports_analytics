@@ -1,0 +1,14 @@
+library(tidyverse)
+library(here)
+```{r Dataloading}
+data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"))
+best_streaks <- data %>% group_by(player) %>% filter(season==2022,mean(minutes) >25)  %>% mutate(count_above_avg_pts=length(pts[pts>mean(pts)])) %>%ungroup() %>% head(25)
+best_players <-data %>% group_by(player) %>% filter(player %in% best_streaks$player,season==2022)
+games_abv_avg <- best_players %>% mutate(abv_pts=factor(pts>mean(pts)))
+```
+
+```{r plots}
+ggplot(best_players) +geom_boxplot(aes(x=player,y=pts))+scale_x_discrete(guide = guide_axis(n.dodge=4))
+ggplot(best_streaks) +geom_point(aes(x=Team_Abbrev,y=count_above_avg_pts,color=player))
+ggplot(games_abv_avg) +geom_point(aes(x=player,y=pts,color=abv_pts))+scale_x_discrete(guide = guide_axis(n.dodge=4))
+```
