@@ -1,0 +1,23 @@
+---
+title: "Ryan_EDA"
+output: html_document
+date: "2022-10-20"
+---
+
+```{r Data Cleaning}
+bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
+
+bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
+                                  -batting_order, -DKP, -FDP, -SDP) %>%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch)
+
+ops_data <- bat_data_2 %>% group_by(player) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
+  arrange(desc(ops))
+```
