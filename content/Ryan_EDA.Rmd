@@ -20,4 +20,20 @@ ops_data <- bat_data_2 %>% group_by(player) %>%
             on_base = sum(on_base)) %>% 
   mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
   arrange(desc(ops))
+
+ops_data_month <- bat_data_2 %>% separate(game_date,
+                                      into = c("year", "month", "day")) %>% 
+  group_by(player, month) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
+  arrange(desc(ops))
+
+ops_data_month %>%
+  filter(player %in% filter(ops_data, pa >= 500, ops >= 0.9)$player,
+         month != 10) %>% 
+  ggplot(aes(month, ops, color = player, group = player)) + geom_point() +
+  geom_line()
 ```
