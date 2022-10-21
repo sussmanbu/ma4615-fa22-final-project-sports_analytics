@@ -20,7 +20,27 @@ To begin the process of cleaning and filtering the data, we'll first want to rem
 ## Plots
 The plot below filtered the NBA game-by-game dataset to find games that had at least 30 points scored by a player. Then the number of instances of 30 points being scored were plotted against the date of the games. This plot shows the trend of scoring throughout the 2021-2022 NBA season. As can be seen, there were more instances of over 10 players scoring 30+ points in a day in the second half of the season. 
 
+```{r eval=FALSE, include=TRUE}
+# Code To Make Graph
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
+data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
+data30 <- filter(data, pts >= 30) %>%
+  select(game_date, pts) %>%
+  group_by(game_date) %>%
+  summarize(count = n()) %>%
+  mutate(date = lubridate::as_date(data30$game_date))
+
+ggplot(data30, aes(x=date, y=count, group = 1)) +
+  geom_line() + xlab("Game Date") + 
+  ylab("Number of 30 point Games")
+```
+
 ``` {r 30pt_vs_date}
+# To Prevent Needing to Rerun EDA Each Time
 library(knitr)
 knitr::include_graphics('./Rplot.png')
 
@@ -29,7 +49,28 @@ knitr::include_graphics('./Rplot.png')
 
 The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the league's top scorers. To make this plot, the data had to be cleaned by removing duplicate rows in the dataset, and removing games that were listed but the players did not play in. Leaving those values in would have skewed the PPG for the season as it would have added extra games. 
 
+
+```{r eval=FALSE, include=TRUE}
+# Code To Make Graph
+data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
+data2 <- group_by(data, player) %>%
+  summarize(total_pts = sum(pts),
+            total_games = n(),
+            ppg = total_pts/total_games,
+            total_fg = sum(fg),
+            total_fga = sum(fga),
+            fg_percentage = total_fg/total_fga) %>%
+  select(player, ppg, fg_percentage)
+
+scoring <- filter(data2, ppg >= 25)
+
+ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
+  geom_point() +
+  geom_text(hjust=0, vjust=0)
+```
+
 ``` {r 25pt_vs_fg}
+# To Prevent Needing to Rerun EDA Each Time
 knitr::include_graphics('./Rplot01.png')
 
 ```
