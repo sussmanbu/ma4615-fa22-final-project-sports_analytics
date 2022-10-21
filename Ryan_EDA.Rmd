@@ -5,6 +5,9 @@ date: "2022-10-20"
 ---
 
 ```{r Data Cleaning}
+library(tidyverse)
+library(ggrepel)
+
 bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
 
 bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
@@ -20,6 +23,12 @@ ops_data <- bat_data_2 %>% group_by(player) %>%
             on_base = sum(on_base)) %>% 
   mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
   arrange(desc(ops))
+
+ops_data %>% filter(pa >= 500, ops >= .9) %>%
+  ggplot(aes(x = pa, y = ops)) + geom_point() +
+  geom_text_repel(aes(label = player), size = 3) +
+  labs(title = ".900+ OPS Hitters vs Plate Appearances",
+       x = "Plate Appearances", y = "OPS")
 
 ops_data_month <- bat_data_2 %>% separate(game_date,
                                       into = c("year", "month", "day")) %>% 
