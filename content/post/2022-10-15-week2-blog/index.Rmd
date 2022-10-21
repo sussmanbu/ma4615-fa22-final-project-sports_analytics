@@ -78,7 +78,34 @@ knitr::include_graphics('./Rplot01.png')
 
 The next plot is similar to the last one, but we used the MLB dataset to find players with 500 or more plate appearances who had an OPS of .900 or better in the 2021 season. We plotted these two stats against each other to find which players were able to maintain such a high level of production over a large sample size. To clean this data, we removed rows with missing values in plate appearances, grouped by player, calculated season total stats using the sum function, and manually calculated a few stats using the variables: at-bats, hits, doubles, triples, home runs, walks, hit-by-pitches, and plate appearances.
 
+```{r eval=FALSE, include=TRUE}
+# Code To Make Graph
+bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
+
+bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
+                                  -batting_order, -DKP, -FDP, -SDP) %>%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch)
+
+ops_data <- bat_data_2 %>% group_by(player) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
+  arrange(desc(ops))
+
+ops_data %>% filter(pa >= 500, ops >= .9) %>%
+  ggplot(aes(x = pa, y = ops)) + geom_point() +
+  geom_text_repel(aes(label = player), size = 3) +
+  labs(title = ".900+ OPS Hitters vs Plate Appearances",
+       x = "Plate Appearances", y = "OPS")
+```
+
+
 ```{r .900ops_vs_pa}
+# To Prevent Needing to Rerun EDA Each Time
 knitr::include_graphics('./Rplot02.png')
 
 ```
