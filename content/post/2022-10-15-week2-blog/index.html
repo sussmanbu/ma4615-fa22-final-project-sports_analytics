@@ -40,7 +40,7 @@ data30 &lt;- filter(data, pts &gt;= 30) %&gt;%
   mutate(date = lubridate::as_date(data30$game_date))
 
 ggplot(data30, aes(x=date, y=count, group = 1)) +
-  geom_line() + xlab(&quot;Game Date&quot;) + 
+  geom_line() + ggtitle(&quot;30+ Point Games Across 2021-2022 NBA Season&quot;) + xlab(&quot;Game Date&quot;) + 
   ylab(&quot;Number of 30 point Games&quot;)</code></pre>
 <pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
 library(knitr)
@@ -49,6 +49,7 @@ knitr::include_graphics(&#39;./Rplot.png&#39;)</code></pre>
 <p>The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the league’s top scorers. To make this plot, the data had to be cleaned by removing duplicate rows in the dataset, and removing games that were listed but the players did not play in. Leaving those values in would have skewed the PPG for the season as it would have added extra games.</p>
 <pre class="r"><code># Code To Make Graph
 data &lt;- read.csv(file = &#39;dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
+
 data2 &lt;- group_by(data, player) %&gt;%
   summarize(total_pts = sum(pts),
             total_games = n(),
@@ -62,7 +63,7 @@ scoring &lt;- filter(data2, ppg &gt;= 25)
 
 ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
   geom_point() +
-  geom_text(hjust=0, vjust=0)</code></pre>
+  geom_text(hjust=0, vjust=0) + ggtitle(&quot;25+ PPG Scorers Against Field Goal Percentage&quot;)</code></pre>
 <pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
 knitr::include_graphics(&#39;./Rplot01.png&#39;)</code></pre>
 <p><img src="Rplot01.png" /><!-- --></p>

@@ -35,8 +35,9 @@ data30 <- filter(data, pts >= 30) %>%
   mutate(date = lubridate::as_date(data30$game_date))
 
 ggplot(data30, aes(x=date, y=count, group = 1)) +
-  geom_line() + xlab("Game Date") + 
+  geom_line() + ggtitle("30+ Point Games Across 2021-2022 NBA Season") + xlab("Game Date") + 
   ylab("Number of 30 point Games")
+
 ```
 
 ``` {r 30pt_vs_date}
@@ -53,6 +54,7 @@ The next plot filtered the NBA game-by-game dataset to find players who averaged
 ```{r eval=FALSE, include=TRUE}
 # Code To Make Graph
 data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
 data2 <- group_by(data, player) %>%
   summarize(total_pts = sum(pts),
             total_games = n(),
@@ -66,7 +68,8 @@ scoring <- filter(data2, ppg >= 25)
 
 ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
   geom_point() +
-  geom_text(hjust=0, vjust=0)
+  geom_text(hjust=0, vjust=0) + ggtitle("25+ PPG Scorers Against Field Goal Percentage")
+
 ```
 
 ``` {r 25pt_vs_fg}
