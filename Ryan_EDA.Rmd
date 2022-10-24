@@ -16,6 +16,11 @@ bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
          on_base = h + bb + hit_by_pitch)
 
+bat_data_2 %>% arrange(game_date) %>% group_by(player) %>%
+  filter(sum(home_runs) >= 40) %>% mutate(hr = cumsum(home_runs)) %>%
+  ggplot(aes(x = game_date, y = hr, color = player, group = player)) +
+  geom_line()
+
 ops_data <- bat_data_2 %>% group_by(player) %>%
   summarize(ab = sum(ab),
             pa = sum(pa),
