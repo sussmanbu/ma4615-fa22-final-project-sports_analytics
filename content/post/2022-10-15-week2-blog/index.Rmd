@@ -53,18 +53,25 @@ The next plot filtered the NBA game-by-game dataset to find players who averaged
 
 ```{r eval=FALSE, include=TRUE}
 # Code To Make Graph
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
 data <- read.csv(file = 'dataset/ASA All NBA Raw Data 2022 regular season.csv')
 
 data2 <- group_by(data, player) %>%
+  filter(mp != '0:00') %>%
+  distinct(game_date, .keep_all = TRUE) %>%
   summarize(total_pts = sum(pts),
             total_games = n(),
             ppg = total_pts/total_games,
             total_fg = sum(fg),
             total_fga = sum(fga),
             fg_percentage = total_fg/total_fga) %>%
-  select(player, ppg, fg_percentage)
+  select(player, ppg, fg_percentage) 
 
 scoring <- filter(data2, ppg >= 25)
+
 
 ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
   geom_point() +

@@ -48,18 +48,25 @@ knitr::include_graphics(&#39;./Rplot.png&#39;)</code></pre>
 <p><img src="Rplot.png" /><!-- --></p>
 <p>The next plot filtered the NBA game-by-game dataset to find players who averaged at least 25 points per game in the 2022 season, and plotted these players against their season field goal percentage. This showed players who exceeded the average scoring of the league, being among the elite scorers and then showed their efficiency. This plot enables us to see the most efficient scorers among the league’s top scorers. To make this plot, the data had to be cleaned by removing duplicate rows in the dataset, and removing games that were listed but the players did not play in. Leaving those values in would have skewed the PPG for the season as it would have added extra games.</p>
 <pre class="r"><code># Code To Make Graph
+library(tidyverse)
+library(dplyr)
+library(lubridate)
+
 data &lt;- read.csv(file = &#39;dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
 
 data2 &lt;- group_by(data, player) %&gt;%
+  filter(mp != &#39;0:00&#39;) %&gt;%
+  distinct(game_date, .keep_all = TRUE) %&gt;%
   summarize(total_pts = sum(pts),
             total_games = n(),
             ppg = total_pts/total_games,
             total_fg = sum(fg),
             total_fga = sum(fga),
             fg_percentage = total_fg/total_fga) %&gt;%
-  select(player, ppg, fg_percentage)
+  select(player, ppg, fg_percentage) 
 
 scoring &lt;- filter(data2, ppg &gt;= 25)
+
 
 ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
   geom_point() +
