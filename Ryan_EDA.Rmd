@@ -51,3 +51,44 @@ ops_data_month %>%
   ggplot(aes(month, ops, color = player, group = player)) + geom_point() +
   geom_line()
 ```
+
+```{r}
+library(tidyverse)
+library(ggrepel)
+
+stat_fct <- function(x,y){
+  ifelse(y > 0, x/y, 0)
+}
+
+bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
+
+bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
+                                  -batting_order, -DKP, -FDP, -SDP) %>%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch) %>%
+  arrange(player, game_date)
+
+ops_data <- bat_data_2 %>% group_by(player) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(player, obp, slg, ops)
+
+bat_data_day <- left_join(bat_data_2, ops_data, by = "player")
+
+bat_data_day %>% filter(player == "Bryce Harper") %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - ops,
+         sign = sign(ops_diff)) %>%
+  ggplot(aes(game_date, ops_diff)) +
+  geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
+  labs(title = "Bryce Harper Game by Game OPS Data",
+       x = "Date", y = "Game OPS compared to average")
+```
+
