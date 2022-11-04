@@ -1,0 +1,67 @@
+---
+title: Week 4 Blog
+author: Haroon, Leo, Ryan, Benni
+date: '2022-11-04'
+slug: []
+categories: []
+tags: []
+description: ~
+toc: yes
+authors: []
+series: []
+lastmod: '2022-11-04T01:02:22-04:00'
+featuredVideo: ~
+featuredImage: ~
+---
+
+
+<div id="TOC">
+
+</div>
+
+<div id="confounded-data" class="section level2">
+<h2>Confounded Data:</h2>
+<p>Looking back at Blog 2, we looked at some of the larger picture trends in our data. Regarding the NBA data, one of the things we looked at were the top scorers (particularly those who scored at least 25 points per game), and their field goal percentage. This relationship showed how efficiently the top scorers of the league were, and efficiency is a big factor when considering a player who is experiencing a hot hand. However, the plot from Blog 2 looked at total PPG compared to field goal efficiency, completely disregarding the points earned from free throws. Because of this, we chose to take a deeper look at the PPG these players scored, and subtracting their points earned from free throws.</p>
+<pre class="r"><code># Code To Make Graph
+library(tidyverse)
+
+data &lt;- read.csv(file = &#39;./ASA All NBA Raw Data 2022 regular season.csv&#39;)
+
+data2 &lt;- group_by(data, player) %&gt;%
+  filter(mp != &#39;0:00&#39;) %&gt;%
+  distinct(game_date, .keep_all = TRUE) %&gt;%
+  summarize(total_pts = sum(pts),
+            total_games = n(),
+            ppg = total_pts/total_games,
+            total_ft = sum(ft),
+            ftpg = total_ft/total_games,
+            pts_noft = ppg-ftpg)
+
+scoring &lt;- filter(data2, ppg &gt;= 25)
+
+ggplot(scoring, aes(reorder(player, ppg, sum), ppg, label=format(round(ppg, 2), nsmall = 2))) +
+  geom_col() +
+  coord_flip() + 
+  geom_text(position = position_stack(vjust = 1.1)) +
+  ylab(&#39;PPG&#39;) +
+  xlab(&#39;Players&#39;) +
+  ggtitle(&#39;25+ PPG Scorers Ordered by PPG&#39;)</code></pre>
+<pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
+library(knitr)
+knitr::include_graphics(&#39;./Rplot_ppg_w_fts.png&#39;)</code></pre>
+<p><img src="Rplot_ppg_w_fts.png" /><!-- --></p>
+<p>Now, the graph above simply shows the players who scored the most PPG in the 2022 NBA season. At face value, it would be easy to determine that Joel Embiid most likely had the highest points scored from 2pt and 3pt field goals, as he is far ahead many of the other players in overall PPG. However, by calculating the free throws made per game for each player, and then subtracting this from their points per game, we can see the effects that free throws had on their overall scoring.</p>
+<pre class="r"><code># Code To Make Graph
+ggplot(scoring, aes(reorder(player, pts_noft, sum), pts_noft, label=format(round(pts_noft, 2), nsmall = 2))) +
+  geom_col() +
+  coord_flip() + 
+  geom_text(position = position_stack(vjust = 1.1)) +
+  ylab(&#39;PPG without FTs&#39;) +
+  xlab(&#39;Players&#39;) +
+  ggtitle(&#39;25+ PPG Scorers Reordered by PPG Without Freethrows&#39;)</code></pre>
+<pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
+library(knitr)
+knitr::include_graphics(&#39;./Rplot_ppg_no_fts.png&#39;)</code></pre>
+<p><img src="Rplot_ppg_no_fts.png" /><!-- --></p>
+<p>As can be seen above, the PPG without free throws drastically changes the landscape of the scoring leader board. Joel Embiid was shockingly had the lowest amount of points scored per game among the same pool of scorers. This discrepancy shows the effect that free throws can have on total scoring. Most people would also say that field goal scoring and efficiency plays a larger role in determining a player’s hot streak. Many players (including Joel Embiid) who score heavily relying on free throws are often criticized for foul-baiting and playing an unappealing game. The graph above displays what one may consider a more realistic look at the PPG of the highest scoring players from strictly field goals.</p>
+</div>
