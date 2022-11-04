@@ -118,3 +118,36 @@ knitr::include_graphics(&#39;./BHarper_OBP.png&#39;)</code></pre>
 <p><img src="BHarper_OBP.png" /><!-- --></p>
 <p>Obviously, this graph is just one player. In further analysis, we would want to find players who were above league average OPS the most often. In relation to “hot streaks,” an indication of a streaky player would be one who has a high OBP but fewer games above league average than expected, meaning much of their production comes in quick, large bursts.</p>
 </div>
+<div id="modeling" class="section level2">
+<h2>Modeling</h2>
+<pre class="r"><code>bat_data &lt;- MLB_bat_data_2021 %&gt;% 
+  group_by(player_id) %&gt;% 
+  arrange(game_date) %&gt;% 
+  mutate(hr_total = sum(home_runs), hr_cum = cumsum(home_runs), temp =1, games = cumsum(temp)) %&gt;%
+  filter(hr_total&gt;47)
+
+(unique(bat_data$player))
+
+mins &lt;- bat_data %&gt;% 
+  summarize(min_max_hr = min(hr_cum), min_max_games = min(games))
+
+maxs &lt;- bat_data %&gt;% 
+  summarize(min_max_hr = max(hr_cum), min_max_games = max(games))
+
+min_max &lt;- bind_rows(mins,maxs) %&gt;% group_by(player_id)
+
+ggplot(bat_data) + 
+  geom_line(aes(x=games, y=hr_cum, color=player_id)) +
+  geom_line(data = min_max, mapping = aes(x=min_max_games, y=min_max_hr, color = player_id), alpha =0.5)
+
+data &lt;-  bat_data %&gt;% filter(player_id == &quot;perezsa02&quot;)
+fit_lm &lt;- lm(hr_cum ~ 1 + games, data = data)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, npsi = 6)
+my_fitted &lt;- fitted(fit_segmented)
+my_model &lt;- data.frame(games = data$games, hr_cum = my_fitted)
+ggplot(my_model, aes(x = games, y = hr_cum)) + geom_line() + geom_point(data = data, aes(x=games, y=hr_cum), color=&quot;red&quot;, alpha =0.1)</code></pre>
+<pre class="r"><code>library(knitr)
+knitr::include_graphics(&#39;./Segmented_Linear_Model.png&#39;)</code></pre>
+<p><img src="Segmented_Linear_Model.png" /><!-- -->
+For modelling streaks, we would like to break up a player’s cumulative performance into linear segments, where each segment’s slope represents the pace of performance at a given point in the season. Players with more varying paces are one that tend to be streakier, while a consistent player will stay on a consistent pace throughout the season. Above is a graph of Salvador Perez’s cumulative home runs throughout the 2021 season segmented into 6 different paces. Perez’s pace is very nicely segmented into different periods, with a clear accelerated pace in the 2nd half of the season. To do this, we are using the <strong>segmented</strong> library and fit linear segments. The difficulty with this is that there is no “right way” to segment or correct number of segments. The library allows for either fixed number of segments or for the back-end machine learning model to infer the number of segments. While inferring the number of segments is ideal, we will need to play with the ML parameters to ensure that none of the segments are too small (which would not really represent a different pace but instead noise).</p>
+</div>
