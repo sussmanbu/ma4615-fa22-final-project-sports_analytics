@@ -77,6 +77,14 @@ ops_data <- bat_data_2 %>% group_by(player) %>%
   mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
          ops = obp + slg) %>% select(player, obp, slg, ops)
 
+MLB_avg <- bat_data_2 %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(obp, slg, ops)
+
 bat_data_day <- left_join(bat_data_2, ops_data, by = "player")
 
 bat_data_day %>% filter(player == "Bryce Harper") %>%
@@ -84,11 +92,11 @@ bat_data_day %>% filter(player == "Bryce Harper") %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
          ops_game = obp_game + slg_game,
-         ops_diff = ops_game - ops,
-         sign = sign(ops_diff)) %>%
-  ggplot(aes(game_date, ops_diff)) +
+         obp_diff = obp_game - MLB_avg$obp,
+         sign = sign(obp_diff)) %>%
+  ggplot(aes(game_date, obp_diff)) +
   geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
-  labs(title = "Bryce Harper Game by Game OPS Data",
-       x = "Date", y = "Game OPS compared to average")
+  labs(title = "Bryce Harper Game by Game OBP Data",
+       x = "Date", y = "Game OBP compared to MLB average")
 ```
 
