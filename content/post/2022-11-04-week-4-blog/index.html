@@ -253,7 +253,7 @@ knitr::kable(a_team_data_agg)</code></pre>
 ## ✖ dplyr::lag()      masks stats::lag()
 ## ✖ yardstick::spec() masks readr::spec()
 ## ✖ recipes::step()   masks stats::step()
-## • Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
+## • Use tidymodels_prefer() to resolve common conflicts.</code></pre>
 <pre class="r"><code>xgboost_data &lt;-data %&gt;% distinct(game_id,.keep_all=TRUE) %&gt;% select(starts_with(&#39;Team&#39;),starts_with(&#39;Opponent&#39;))  %&gt;% group_by(Team_Abbrev) %&gt;%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% mutate(max_streak=max(streak)) %&gt;% mutate(direction=ifelse(direction==-1,0,1))
 
 train_test_split &lt;- rsample::initial_split(
@@ -313,40 +313,40 @@ knitr::kable(head(xgboost_grid))</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">9</td>
-<td align="right">1</td>
-<td align="right">0.00e+00</td>
-<td align="right">0.0000000</td>
-</tr>
-<tr class="even">
-<td align="right">32</td>
-<td align="right">4</td>
-<td align="right">0.00e+00</td>
-<td align="right">0.0000000</td>
-</tr>
-<tr class="odd">
 <td align="right">26</td>
 <td align="right">3</td>
-<td align="right">0.00e+00</td>
-<td align="right">0.0275512</td>
-</tr>
-<tr class="even">
-<td align="right">13</td>
-<td align="right">12</td>
-<td align="right">1.10e-06</td>
-<td align="right">0.0504830</td>
-</tr>
-<tr class="odd">
-<td align="right">5</td>
-<td align="right">11</td>
-<td align="right">4.50e-06</td>
+<td align="right">0.0000735</td>
 <td align="right">0.0000000</td>
 </tr>
 <tr class="even">
-<td align="right">39</td>
-<td align="right">8</td>
-<td align="right">7.26e-05</td>
-<td align="right">9.4108680</td>
+<td align="right">2</td>
+<td align="right">10</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000009</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="right">2</td>
+<td align="right">0.0004266</td>
+<td align="right">0.9618958</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="right">13</td>
+<td align="right">0.0030856</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="right">17</td>
+<td align="right">5</td>
+<td align="right">0.0000006</td>
+<td align="right">0.0001464</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">13</td>
+<td align="right">0.0000003</td>
+<td align="right">0.0712528</td>
 </tr>
 </tbody>
 </table>
@@ -419,7 +419,7 @@ xgboost_tuned &lt;- tune::tune_grid(
 <col width="10%" />
 <col width="9%" />
 <col width="2%" />
-<col width="8%" />
+<col width="7%" />
 <col width="20%" />
 </colgroup>
 <thead>
@@ -438,64 +438,64 @@ xgboost_tuned &lt;- tune::tune_grid(
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">39</td>
-<td align="right">8</td>
-<td align="right">7.26e-05</td>
-<td align="right">9.410868</td>
-<td align="left">rmse</td>
-<td align="left">standard</td>
-<td align="right">0.4650699</td>
-<td align="right">2</td>
-<td align="right">2.65e-05</td>
-<td align="left">Preprocessor1_Model6</td>
-</tr>
-<tr class="even">
-<td align="right">5</td>
-<td align="right">11</td>
-<td align="right">4.50e-06</td>
-<td align="right">0.000000</td>
-<td align="left">rmse</td>
-<td align="left">standard</td>
-<td align="right">0.4977367</td>
-<td align="right">2</td>
-<td align="right">1.50e-06</td>
-<td align="left">Preprocessor1_Model5</td>
-</tr>
-<tr class="odd">
+<td align="right">4</td>
 <td align="right">13</td>
-<td align="right">12</td>
-<td align="right">1.10e-06</td>
-<td align="right">0.050483</td>
+<td align="right">0.0030856</td>
+<td align="right">0.0000000</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.4994488</td>
+<td align="right">0.0228422</td>
 <td align="right">2</td>
-<td align="right">9.00e-07</td>
+<td align="right">1e-07</td>
 <td align="left">Preprocessor1_Model4</td>
 </tr>
 <tr class="even">
-<td align="right">9</td>
-<td align="right">1</td>
-<td align="right">0.00e+00</td>
-<td align="right">0.000000</td>
+<td align="right">6</td>
+<td align="right">2</td>
+<td align="right">0.0004266</td>
+<td align="right">0.9618958</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.5000000</td>
+<td align="right">0.3265447</td>
 <td align="right">2</td>
-<td align="right">0.00e+00</td>
-<td align="left">Preprocessor1_Model1</td>
+<td align="right">4e-07</td>
+<td align="left">Preprocessor1_Model3</td>
 </tr>
 <tr class="odd">
-<td align="right">32</td>
-<td align="right">4</td>
-<td align="right">0.00e+00</td>
-<td align="right">0.000000</td>
+<td align="right">26</td>
+<td align="right">3</td>
+<td align="right">0.0000735</td>
+<td align="right">0.0000000</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.5000000</td>
+<td align="right">0.4646300</td>
 <td align="right">2</td>
-<td align="right">0.00e+00</td>
-<td align="left">Preprocessor1_Model2</td>
+<td align="right">1e-07</td>
+<td align="left">Preprocessor1_Model1</td>
+</tr>
+<tr class="even">
+<td align="right">17</td>
+<td align="right">5</td>
+<td align="right">0.0000006</td>
+<td align="right">0.0001464</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4997020</td>
+<td align="right">2</td>
+<td align="right">0e+00</td>
+<td align="left">Preprocessor1_Model5</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">13</td>
+<td align="right">0.0000003</td>
+<td align="right">0.0712528</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4998656</td>
+<td align="right">2</td>
+<td align="right">2e-07</td>
+<td align="left">Preprocessor1_Model6</td>
 </tr>
 </tbody>
 </table>
@@ -514,11 +514,11 @@ knitr::kable(xgboost_best_params)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">39</td>
-<td align="right">8</td>
-<td align="right">7.26e-05</td>
-<td align="right">9.410868</td>
-<td align="left">Preprocessor1_Model6</td>
+<td align="right">4</td>
+<td align="right">13</td>
+<td align="right">0.0030856</td>
+<td align="right">0</td>
+<td align="left">Preprocessor1_Model4</td>
 </tr>
 </tbody>
 </table>
@@ -552,7 +552,7 @@ knitr::kable(xgboost_score_train)</code></pre>
 <tr class="odd">
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="left">111.56</td>
+<td align="left">111.54</td>
 </tr>
 <tr class="even">
 <td align="left">rsq</td>
@@ -594,17 +594,17 @@ knitr::kable(xgboost_score)</code></pre>
 <tr class="odd">
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="left">103.81</td>
+<td align="left">5.30</td>
 </tr>
 <tr class="even">
 <td align="left">rsq</td>
 <td align="left">standard</td>
-<td align="left">0.90</td>
+<td align="left">0.99</td>
 </tr>
 <tr class="odd">
 <td align="left">mae</td>
 <td align="left">standard</td>
-<td align="left">103.11</td>
+<td align="left">5.11</td>
 </tr>
 </tbody>
 </table>
