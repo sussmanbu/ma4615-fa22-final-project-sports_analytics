@@ -1,17 +1,17 @@
 ---
-title: Week 4 Blog
-author: Haroon, Leo, Ryan, Benni
-date: '2022-11-04'
+title: "Week 4 Blog"
+author: "Haroon, Leo, Ryan, Benni"
+date: "2022-11-04"
 slug: []
 categories: []
 tags: []
-description: ~
+description: null
 toc: yes
 authors: []
 series: []
-lastmod: '2022-11-04T01:02:22-04:00'
-featuredVideo: ~
-featuredImage: ~
+lastmod: "2022-11-04T01:02:22-04:00"
+featuredVideo: null
+featuredImage: null
 ---
 
 ## Confounded Data:
@@ -74,6 +74,207 @@ knitr::include_graphics('./Rplot_ppg_no_fts.png')
 ```
 
 As can be seen above, the PPG without free throws drastically changes the landscape of the scoring leader board. Joel Embiid was shockingly had the lowest amount of points scored per game among the same pool of scorers. This discrepancy shows the effect that free throws can have on total scoring. Most people would also say that field goal scoring and efficiency plays a larger role in determining a player's hot streak. Many players (including Joel Embiid) who score heavily relying on free throws are often criticized for foul-baiting and playing an unappealing game. The graph above displays what one may consider a more realistic look at the PPG of the highest scoring players from strictly field goals.
+
+##Streak Analysis
+The purpose of this section is to analyze how streaks(consecutive games scoring above their average) are distributed across the NBA by both top players and teams. We want to get a sense for how common it is for players and teams to continue the streaks once they have started. There is a well known adage in basketball, called "feeding the hot hand" and "heat checks" where players believe that their next shot will go in based off of their previous successes. Let's see if this applies throughout entire games and seasons. To start we will get a sense for how streaks are distributed. In our case, we are noting both positive and negative streaks. It is important to note that I am allowing players to "continue" their streak even if they have not scored above their average in a game if they have played less than 15 minutes in that game. I believe this will account for injuries, foul trouble, or extremely unfavorable matchups. 
+```{r streaks by team and player}
+library(here)
+library(readr)
+library(tidyverse)
+##what is the average length of a streak in the nba by player and team?
+
+#by player
+data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"),show_col_types = FALSE)
+all_data <-data %>% group_by(player) %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = 
+sign(change_net)) %>% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+streak <-all_data$streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data,indices)
+local_max_all <- local_max %>%group_by(player) %>% select(streak)
+local_max_positive <-local_max %>%group_by(player) %>% select(streak,change_net) %>%filter(streak >-1)
+
+summary(local_max_all$streak)
+summary(local_max_positive$streak)
+
+
+
+#by team
+team_data <-data  %>% distinct(game_id,.keep_all = TRUE) %>%group_by(Team_Abbrev) %>% mutate(change_net = Team_Score - mean(Team_Score),direction  = 
+                                                                                              sign(change_net)) %>% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+team_streak <-team_data$streak
+indices<-which(diff(sign(diff(team_streak)))==-2)+1
+team_local_max <-slice(team_data,indices)
+team_local_max_all <- team_local_max %>%group_by(player) %>% select(streak)
+team_local_max_positive <-team_local_max %>%group_by(player) %>% select(streak,change_net) %>%filter(streak >-1)
+
+summary(team_local_max_all$streak)
+summary(team_local_max_positive$streak)
+
+#distribution of streaks by player 
+ggplot(local_max_all) +geom_freqpoly(aes(x=streak))
+ggplot(local_max_positive) +geom_freqpoly(aes(x=streak))
+
+#distribution of streaks by team
+ggplot(team_local_max_all) +geom_freqpoly(aes(x=streak))
+ggplot(team_local_max_positive) +geom_freqpoly(aes(x=streak))
+
+
+```
+
+```{r probability distribution}
+##what are the highest streaks in the nba by player 2022
+best_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% summarize(max_streak=max(streak)) %>% arrange(desc(max_streak)) %>%head(10)
+
+
+top_player_data22 <- data %>% filter(player %in% best_streaks_2022$player) %>% group_by(player)%>% mutate(change_net = pts - mean(pts),
+direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,0,1))
+
+best_player_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+##chance that top player streaks continue
+##What are the likelihoods that a player is going to continue a streak once they have started
+a_player_data_agg <-top_player_data22 %>% mutate(a=10*lag(direction)+direction)
+a_player_data_agg <-a_player_data_agg %>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+a_player_data_agg <-a_player_data_agg %>%head(5)
+knitr::kable(a_player_data_agg)
+
+#by team
+best_team_streaks_2022 <- data %>% distinct(game_id,.keep_all=TRUE) %>% group_by(Team_Abbrev) %>%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% mutate(max_streak=max(streak))
+
+top_team_data22 <- data %>% filter(Team_Abbrev %in% best_team_streaks_2022$Team_Abbrev) %>% mutate(change_net = Team_Score - mean(Team_Score),
+direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,1,0))
+
+##chance that team streaks continue
+a_team_data_agg <-top_team_data22 %>% ungroup() %>% mutate(a=10*lag(direction)+direction) %>% count(a) 
+a_team_data_agg <-top_team_data22 %>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+a_team_data_agg <-a_team_data_agg%>%head(5)
+knitr::kable(a_team_data_agg)
+
+```
+
+Finally, lets try and predict points scored  based off of some key columns that I think are the most relevant. There are some flaws in the model that I want to address and work out later, but for this blog post I think it will be sufficient to show my progress. First off, I would ideally like the target variable to be direction and not points scored, but I ran into some difficulty. Additionally,  I am not lagging the results in anyway. I am using the entire seasons data to predict games in which that data would not have been available. Ideally, I would like to use lags of 4-6 games to calculate the prediction, as I believe that having too much data does not represent key factors like load management, player mentality, and fatigue. This will certainly come later. Additionally, at least for the team data, I would like to include a predictive model based on the very popular and promenent work of legendary data analyst Ken Pomeroy. He uses a metric that weighs a teams offensive and opponents defensive ratings,the expected number of posessions, and their league averages in a game to create a prediction for points scored by each team. Dividing this score by a players usage percentage should give me a good estimation for how a player will perform. I would like to use this model as a baseline for further predictions. I used this xgboost template to create a model. https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/
+
+
+```{r model building}
+library(tidymodels)
+
+xgboost_data <-data %>% distinct(game_id,.keep_all=TRUE) %>% select(starts_with('Team'),starts_with('Opponent'))  %>% group_by(Team_Abbrev) %>%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% mutate(max_streak=max(streak)) %>% mutate(direction=ifelse(direction==-1,0,1))
+
+train_test_split <- rsample::initial_split(
+  xgboost_data, 
+  prop = 0.8)
+
+preprocessing_recipe <- 
+  recipes::recipe(Team_Score~ ., data = training(train_test_split)) %>%
+  # convert categorical variables to factors
+  recipes::step_string2factor(all_nominal()) %>%
+  # combine low frequency factor levels
+  recipes::step_other(all_nominal(), threshold = 0.01) %>%
+  # remove no variance predictors which provide no predictive information 
+  recipes::step_nzv(all_nominal()) %>% prep()
+
+cv_folds <- 
+  recipes::bake(
+    preprocessing_recipe, 
+    new_data = training(train_test_split)
+  ) %>%  
+  rsample::vfold_cv(v = 2)
+
+xgboost_model <- 
+  parsnip::boost_tree(
+    mode = "regression",
+    trees = 1000,
+    min_n = tune(),
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %>%
+  set_engine("xgboost", objective ="reg:squarederror")
+
+xgboost_params <- 
+  dials::parameters(
+    min_n(),
+    tree_depth(),
+    learn_rate(),
+    loss_reduction()
+  )
+
+
+xgboost_grid <- 
+  dials::grid_max_entropy(
+    xgboost_params, 
+    size = 6
+  )
+knitr::kable(head(xgboost_grid))
+
+xgboost_wf <- 
+  workflows::workflow() %>%
+  add_model(xgboost_model) %>% 
+  add_formula(direction ~ .)
+
+xgboost_tuned <- tune::tune_grid(
+  object = xgboost_wf,
+  resamples = cv_folds,
+  grid = xgboost_grid,
+  metrics = yardstick::metric_set(rmse, rsq, mae),
+  control = tune::control_grid(verbose = TRUE)
+)
+
+xgboost_tuned %>%
+  tune::show_best(metric = "rmse") %>%
+  knitr::kable()
+
+xgboost_best_params <- xgboost_tuned %>%
+  tune::select_best("mae")
+knitr::kable(xgboost_best_params)
+
+xgboost_model_final <- xgboost_model %>% 
+  finalize_model(xgboost_best_params)
+
+train_processed <- bake(preprocessing_recipe,  new_data = training(train_test_split))
+train_prediction <- xgboost_model_final %>%
+  # fit the model on all the training data
+  fit(
+    formula = direction ~ ., 
+    data    = train_processed
+  ) %>%
+  # predict the sale prices for the training data
+  predict(new_data = train_processed) %>%
+  bind_cols(training(train_test_split))
+xgboost_score_train <- 
+  train_prediction %>%
+  yardstick::metrics(Team_Score, .pred) %>%
+  mutate(.estimate = format(round(.estimate, 2), big.mark = ","))
+knitr::kable(xgboost_score_train)
+
+
+
+test_processed  <- bake(preprocessing_recipe, new_data = testing(train_test_split))
+test_prediction <- xgboost_model_final %>%
+  # fit the model on all the training data
+  fit(
+    formula = Team_Score ~ ., 
+    data    = train_processed
+  ) %>%
+  # use the training model fit to predict the test data
+  predict(new_data = test_processed) %>%
+  bind_cols(testing(train_test_split))
+# measure the accuracy of our model using `yardstick`
+xgboost_score <- 
+  test_prediction %>%
+  yardstick::metrics(Team_Score, .pred) %>%
+  mutate(.estimate = format(round(.estimate, 2), big.mark = ","))
+knitr::kable(xgboost_score)
+
+
+ggplot(test_prediction, aes(x = .pred, y = Team_Score,color=abs(Team_Score -.pred))) +
+  geom_point() +
+  xlab("Team Score") +
+  ylab("Predicted Team_Score") 
+```
+
 
 
 ## MLB Data:

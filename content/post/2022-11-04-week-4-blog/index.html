@@ -1,17 +1,17 @@
 ---
-title: Week 4 Blog
-author: Haroon, Leo, Ryan, Benni
-date: '2022-11-04'
+title: "Week 4 Blog"
+author: "Haroon, Leo, Ryan, Benni"
+date: "2022-11-04"
 slug: []
 categories: []
 tags: []
-description: ~
+description: null
 toc: yes
 authors: []
 series: []
-lastmod: '2022-11-04T01:02:22-04:00'
-featuredVideo: ~
-featuredImage: ~
+lastmod: "2022-11-04T01:02:22-04:00"
+featuredVideo: null
+featuredImage: null
 ---
 
 
@@ -64,6 +64,555 @@ library(knitr)
 knitr::include_graphics(&#39;./Rplot_ppg_no_fts.png&#39;)</code></pre>
 <p><img src="Rplot_ppg_no_fts.png" /><!-- --></p>
 <p>As can be seen above, the PPG without free throws drastically changes the landscape of the scoring leader board. Joel Embiid was shockingly had the lowest amount of points scored per game among the same pool of scorers. This discrepancy shows the effect that free throws can have on total scoring. Most people would also say that field goal scoring and efficiency plays a larger role in determining a player’s hot streak. Many players (including Joel Embiid) who score heavily relying on free throws are often criticized for foul-baiting and playing an unappealing game. The graph above displays what one may consider a more realistic look at the PPG of the highest scoring players from strictly field goals.</p>
+<p>##Streak Analysis
+The purpose of this section is to analyze how streaks(consecutive games scoring above their average) are distributed across the NBA by both top players and teams. We want to get a sense for how common it is for players and teams to continue the streaks once they have started. There is a well known adage in basketball, called “feeding the hot hand” and “heat checks” where players believe that their next shot will go in based off of their previous successes. Let’s see if this applies throughout entire games and seasons. To start we will get a sense for how streaks are distributed. In our case, we are noting both positive and negative streaks. It is important to note that I am allowing players to “continue” their streak even if they have not scored above their average in a game if they have played less than 15 minutes in that game. I believe this will account for injuries, foul trouble, or extremely unfavorable matchups.</p>
+<pre class="r"><code>library(here)</code></pre>
+<pre><code>## here() starts at C:/Users/leose/Third_Semester/MA_615/r_projects/ma4615-fa22-final-project-sports_analytics</code></pre>
+<pre class="r"><code>library(readr)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages
+## ───────────────────────────────────────
+## tidyverse 1.3.2 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.3.6     ✔ dplyr   1.0.9
+## ✔ tibble  3.1.8     ✔ stringr 1.4.1
+## ✔ tidyr   1.2.0     ✔ forcats 0.5.2
+## ✔ purrr   0.3.4     
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>##what is the average length of a streak in the nba by player and team?
+
+#by player
+data &lt;-read_csv(here::here(&quot;dataset-ignore/raw_nba_data.csv&quot;),show_col_types = FALSE)</code></pre>
+<pre><code>## Warning: One or more parsing issues, see `problems()` for details</code></pre>
+<pre class="r"><code>all_data &lt;-data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = 
+sign(change_net)) %&gt;% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+streak &lt;-all_data$streak
+indices&lt;-which(diff(sign(diff(streak)))==-2)+1
+local_max &lt;-slice(all_data,indices)
+local_max_all &lt;- local_max %&gt;%group_by(player) %&gt;% select(streak)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>local_max_positive &lt;-local_max %&gt;%group_by(player) %&gt;% select(streak,change_net) %&gt;%filter(streak &gt;-1)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>summary(local_max_all$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -82.00  -25.00  -12.00  -12.55    1.00   49.00</code></pre>
+<pre class="r"><code>summary(local_max_positive$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    0.00    3.00    8.00   11.42   17.00   49.00</code></pre>
+<pre class="r"><code>#by team
+team_data &lt;-data  %&gt;% distinct(game_id,.keep_all = TRUE) %&gt;%group_by(Team_Abbrev) %&gt;% mutate(change_net = Team_Score - mean(Team_Score),direction  = 
+                                                                                              sign(change_net)) %&gt;% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+team_streak &lt;-team_data$streak
+indices&lt;-which(diff(sign(diff(team_streak)))==-2)+1
+team_local_max &lt;-slice(team_data,indices)
+team_local_max_all &lt;- team_local_max %&gt;%group_by(player) %&gt;% select(streak)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>team_local_max_positive &lt;-team_local_max %&gt;%group_by(player) %&gt;% select(streak,change_net) %&gt;%filter(streak &gt;-1)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>summary(team_local_max_all$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -27.00   -8.00   -2.00   -2.57    3.00   16.00</code></pre>
+<pre class="r"><code>summary(team_local_max_positive$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   2.000   4.000   4.565   6.000  16.000</code></pre>
+<pre class="r"><code>#distribution of streaks by player 
+ggplot(local_max_all) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/streaks%20by%20team%20and%20player-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(local_max_positive) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/streaks%20by%20team%20and%20player-2.png" width="672" /></p>
+<pre class="r"><code>#distribution of streaks by team
+ggplot(team_local_max_all) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/streaks%20by%20team%20and%20player-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(team_local_max_positive) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/streaks%20by%20team%20and%20player-4.png" width="672" /></p>
+<pre class="r"><code>##what are the highest streaks in the nba by player 2022
+best_streaks_2022 &lt;- data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,season==2022,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% summarize(max_streak=max(streak)) %&gt;% arrange(desc(max_streak)) %&gt;%head(10)
+
+
+top_player_data22 &lt;- data %&gt;% filter(player %in% best_streaks_2022$player) %&gt;% group_by(player)%&gt;% mutate(change_net = pts - mean(pts),
+direction  = sign(change_net)) %&gt;%mutate(usg_pct=usg_pct/100) %&gt;%mutate(direction=ifelse(direction==-1,0,1))
+
+best_player_streaks_2022 &lt;- data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,season==2022,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+##chance that top player streaks continue
+##What are the likelihoods that a player is going to continue a streak once they have started
+a_player_data_agg &lt;-top_player_data22 %&gt;% mutate(a=10*lag(direction)+direction)
+a_player_data_agg &lt;-a_player_data_agg %&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+a_player_data_agg &lt;-a_player_data_agg %&gt;%head(5)
+knitr::kable(a_player_data_agg)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">0,0</td>
+<td align="right">20</td>
+<td align="right">0.2739726</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">0,1</td>
+<td align="right">11</td>
+<td align="right">0.1506849</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,0</td>
+<td align="right">11</td>
+<td align="right">0.1506849</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,1</td>
+<td align="right">30</td>
+<td align="right">0.4109589</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#by team
+best_team_streaks_2022 &lt;- data %&gt;% distinct(game_id,.keep_all=TRUE) %&gt;% group_by(Team_Abbrev) %&gt;%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% mutate(max_streak=max(streak))
+
+top_team_data22 &lt;- data %&gt;% filter(Team_Abbrev %in% best_team_streaks_2022$Team_Abbrev) %&gt;% mutate(change_net = Team_Score - mean(Team_Score),
+direction  = sign(change_net)) %&gt;%mutate(usg_pct=usg_pct/100) %&gt;%mutate(direction=ifelse(direction==-1,1,0))
+
+##chance that team streaks continue
+a_team_data_agg &lt;-top_team_data22 %&gt;% ungroup() %&gt;% mutate(a=10*lag(direction)+direction) %&gt;% count(a) 
+a_team_data_agg &lt;-top_team_data22 %&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+a_team_data_agg &lt;-a_team_data_agg%&gt;%head(5)
+knitr::kable(a_team_data_agg)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0,0</td>
+<td align="right">53113</td>
+<td align="right">0.4385626</td>
+</tr>
+<tr class="even">
+<td align="left">0,1</td>
+<td align="right">8054</td>
+<td align="right">0.0665032</td>
+</tr>
+<tr class="odd">
+<td align="left">1,0</td>
+<td align="right">8054</td>
+<td align="right">0.0665032</td>
+</tr>
+<tr class="even">
+<td align="left">1,1</td>
+<td align="right">51885</td>
+<td align="right">0.4284228</td>
+</tr>
+<tr class="odd">
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0000083</td>
+</tr>
+</tbody>
+</table>
+<p>Finally, lets try and predict points scored based off of some key columns that I think are the most relevant. There are some flaws in the model that I want to address and work out later, but for this blog post I think it will be sufficient to show my progress. First off, I would ideally like the target variable to be direction and not points scored, but I ran into some difficulty. Additionally, I am not lagging the results in anyway. I am using the entire seasons data to predict games in which that data would not have been available. Ideally, I would like to use lags of 4-6 games to calculate the prediction, as I believe that having too much data does not represent key factors like load management, player mentality, and fatigue. This will certainly come later. Additionally, at least for the team data, I would like to include a predictive model based on the very popular and promenent work of legendary data analyst Ken Pomeroy. He uses a metric that weighs a teams offensive and opponents defensive ratings,the expected number of posessions, and their league averages in a game to create a prediction for points scored by each team. Dividing this score by a players usage percentage should give me a good estimation for how a player will perform. I would like to use this model as a baseline for further predictions. I used this xgboost template to create a model. <a href="https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/" class="uri">https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/</a></p>
+<pre class="r"><code>library(tidymodels)</code></pre>
+<pre><code>## ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──</code></pre>
+<pre><code>## ✔ broom        1.0.1     ✔ rsample      1.1.0
+## ✔ dials        1.0.0     ✔ tune         1.0.0
+## ✔ infer        1.0.3     ✔ workflows    1.1.0
+## ✔ modeldata    1.0.1     ✔ workflowsets 1.0.0
+## ✔ parsnip      1.0.2     ✔ yardstick    1.1.0
+## ✔ recipes      1.0.1</code></pre>
+<pre><code>## Warning: package &#39;broom&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## ── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+## ✖ scales::discard() masks purrr::discard()
+## ✖ dplyr::filter()   masks stats::filter()
+## ✖ recipes::fixed()  masks stringr::fixed()
+## ✖ dplyr::lag()      masks stats::lag()
+## ✖ yardstick::spec() masks readr::spec()
+## ✖ recipes::step()   masks stats::step()
+## • Dig deeper into tidy modeling with R at https://www.tmwr.org</code></pre>
+<pre class="r"><code>xgboost_data &lt;-data %&gt;% distinct(game_id,.keep_all=TRUE) %&gt;% select(starts_with(&#39;Team&#39;),starts_with(&#39;Opponent&#39;))  %&gt;% group_by(Team_Abbrev) %&gt;%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% mutate(max_streak=max(streak)) %&gt;% mutate(direction=ifelse(direction==-1,0,1))
+
+train_test_split &lt;- rsample::initial_split(
+  xgboost_data, 
+  prop = 0.8)
+
+preprocessing_recipe &lt;- 
+  recipes::recipe(Team_Score~ ., data = training(train_test_split)) %&gt;%
+  # convert categorical variables to factors
+  recipes::step_string2factor(all_nominal()) %&gt;%
+  # combine low frequency factor levels
+  recipes::step_other(all_nominal(), threshold = 0.01) %&gt;%
+  # remove no variance predictors which provide no predictive information 
+  recipes::step_nzv(all_nominal()) %&gt;% prep()
+
+cv_folds &lt;- 
+  recipes::bake(
+    preprocessing_recipe, 
+    new_data = training(train_test_split)
+  ) %&gt;%  
+  rsample::vfold_cv(v = 2)
+
+xgboost_model &lt;- 
+  parsnip::boost_tree(
+    mode = &quot;regression&quot;,
+    trees = 1000,
+    min_n = tune(),
+    tree_depth = tune(),
+    learn_rate = tune(),
+    loss_reduction = tune()
+  ) %&gt;%
+  set_engine(&quot;xgboost&quot;, objective =&quot;reg:squarederror&quot;)
+
+xgboost_params &lt;- 
+  dials::parameters(
+    min_n(),
+    tree_depth(),
+    learn_rate(),
+    loss_reduction()
+  )
+
+
+xgboost_grid &lt;- 
+  dials::grid_max_entropy(
+    xgboost_params, 
+    size = 6
+  )
+knitr::kable(head(xgboost_grid))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">min_n</th>
+<th align="right">tree_depth</th>
+<th align="right">learn_rate</th>
+<th align="right">loss_reduction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">9</td>
+<td align="right">1</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="right">32</td>
+<td align="right">4</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="right">26</td>
+<td align="right">3</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.0275512</td>
+</tr>
+<tr class="even">
+<td align="right">13</td>
+<td align="right">12</td>
+<td align="right">1.10e-06</td>
+<td align="right">0.0504830</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">4.50e-06</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="right">39</td>
+<td align="right">8</td>
+<td align="right">7.26e-05</td>
+<td align="right">9.4108680</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>xgboost_wf &lt;- 
+  workflows::workflow() %&gt;%
+  add_model(xgboost_model) %&gt;% 
+  add_formula(direction ~ .)
+
+xgboost_tuned &lt;- tune::tune_grid(
+  object = xgboost_wf,
+  resamples = cv_folds,
+  grid = xgboost_grid,
+  metrics = yardstick::metric_set(rmse, rsq, mae),
+  control = tune::control_grid(verbose = TRUE)
+)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 1/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 1/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 1/6 (predictions)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 2/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 2/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 2/6 (predictions)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 3/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 3/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 3/6 (predictions)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 4/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 4/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 4/6 (predictions)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 5/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 5/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 5/6 (predictions)</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 6/6</code></pre>
+<pre><code>## ✓ Fold1: preprocessor 1/1, model 6/6</code></pre>
+<pre><code>## i Fold1: preprocessor 1/1, model 6/6 (predictions)</code></pre>
+<pre><code>## ! Fold1: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+<pre><code>## ✓ Fold1: internal</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 1/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 1/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 1/6 (predictions)</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 2/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 2/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 2/6 (predictions)</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 3/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 3/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 3/6 (predictions)</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 4/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 4/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 4/6 (predictions)</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 5/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 5/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 5/6 (predictions)</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 6/6</code></pre>
+<pre><code>## ✓ Fold2: preprocessor 1/1, model 6/6</code></pre>
+<pre><code>## i Fold2: preprocessor 1/1, model 6/6 (predictions)</code></pre>
+<pre><code>## ! Fold2: internal: A correlation computation is required, but `estimate` is constant and ha...</code></pre>
+<pre><code>## ✓ Fold2: internal</code></pre>
+<pre class="r"><code>xgboost_tuned %&gt;%
+  tune::show_best(metric = &quot;rmse&quot;) %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<colgroup>
+<col width="5%" />
+<col width="10%" />
+<col width="10%" />
+<col width="14%" />
+<col width="7%" />
+<col width="10%" />
+<col width="9%" />
+<col width="2%" />
+<col width="8%" />
+<col width="20%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">min_n</th>
+<th align="right">tree_depth</th>
+<th align="right">learn_rate</th>
+<th align="right">loss_reduction</th>
+<th align="left">.metric</th>
+<th align="left">.estimator</th>
+<th align="right">mean</th>
+<th align="right">n</th>
+<th align="right">std_err</th>
+<th align="left">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">39</td>
+<td align="right">8</td>
+<td align="right">7.26e-05</td>
+<td align="right">9.410868</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4650699</td>
+<td align="right">2</td>
+<td align="right">2.65e-05</td>
+<td align="left">Preprocessor1_Model6</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="right">11</td>
+<td align="right">4.50e-06</td>
+<td align="right">0.000000</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4977367</td>
+<td align="right">2</td>
+<td align="right">1.50e-06</td>
+<td align="left">Preprocessor1_Model5</td>
+</tr>
+<tr class="odd">
+<td align="right">13</td>
+<td align="right">12</td>
+<td align="right">1.10e-06</td>
+<td align="right">0.050483</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4994488</td>
+<td align="right">2</td>
+<td align="right">9.00e-07</td>
+<td align="left">Preprocessor1_Model4</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+<td align="right">1</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.000000</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.5000000</td>
+<td align="right">2</td>
+<td align="right">0.00e+00</td>
+<td align="left">Preprocessor1_Model1</td>
+</tr>
+<tr class="odd">
+<td align="right">32</td>
+<td align="right">4</td>
+<td align="right">0.00e+00</td>
+<td align="right">0.000000</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.5000000</td>
+<td align="right">2</td>
+<td align="right">0.00e+00</td>
+<td align="left">Preprocessor1_Model2</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>xgboost_best_params &lt;- xgboost_tuned %&gt;%
+  tune::select_best(&quot;mae&quot;)
+knitr::kable(xgboost_best_params)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">min_n</th>
+<th align="right">tree_depth</th>
+<th align="right">learn_rate</th>
+<th align="right">loss_reduction</th>
+<th align="left">.config</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">39</td>
+<td align="right">8</td>
+<td align="right">7.26e-05</td>
+<td align="right">9.410868</td>
+<td align="left">Preprocessor1_Model6</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>xgboost_model_final &lt;- xgboost_model %&gt;% 
+  finalize_model(xgboost_best_params)
+
+train_processed &lt;- bake(preprocessing_recipe,  new_data = training(train_test_split))
+train_prediction &lt;- xgboost_model_final %&gt;%
+  # fit the model on all the training data
+  fit(
+    formula = direction ~ ., 
+    data    = train_processed
+  ) %&gt;%
+  # predict the sale prices for the training data
+  predict(new_data = train_processed) %&gt;%
+  bind_cols(training(train_test_split))
+xgboost_score_train &lt;- 
+  train_prediction %&gt;%
+  yardstick::metrics(Team_Score, .pred) %&gt;%
+  mutate(.estimate = format(round(.estimate, 2), big.mark = &quot;,&quot;))
+knitr::kable(xgboost_score_train)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">.metric</th>
+<th align="left">.estimator</th>
+<th align="left">.estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="left">111.56</td>
+</tr>
+<tr class="even">
+<td align="left">rsq</td>
+<td align="left">standard</td>
+<td align="left">0.61</td>
+</tr>
+<tr class="odd">
+<td align="left">mae</td>
+<td align="left">standard</td>
+<td align="left">110.86</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>test_processed  &lt;- bake(preprocessing_recipe, new_data = testing(train_test_split))
+test_prediction &lt;- xgboost_model_final %&gt;%
+  # fit the model on all the training data
+  fit(
+    formula = Team_Score ~ ., 
+    data    = train_processed
+  ) %&gt;%
+  # use the training model fit to predict the test data
+  predict(new_data = test_processed) %&gt;%
+  bind_cols(testing(train_test_split))
+# measure the accuracy of our model using `yardstick`
+xgboost_score &lt;- 
+  test_prediction %&gt;%
+  yardstick::metrics(Team_Score, .pred) %&gt;%
+  mutate(.estimate = format(round(.estimate, 2), big.mark = &quot;,&quot;))
+knitr::kable(xgboost_score)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">.metric</th>
+<th align="left">.estimator</th>
+<th align="left">.estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="left">103.81</td>
+</tr>
+<tr class="even">
+<td align="left">rsq</td>
+<td align="left">standard</td>
+<td align="left">0.90</td>
+</tr>
+<tr class="odd">
+<td align="left">mae</td>
+<td align="left">standard</td>
+<td align="left">103.11</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>ggplot(test_prediction, aes(x = .pred, y = Team_Score,color=abs(Team_Score -.pred))) +
+  geom_point() +
+  xlab(&quot;Team Score&quot;) +
+  ylab(&quot;Predicted Team_Score&quot;) </code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/model%20building-1.png" width="672" /></p>
 </div>
 <div id="mlb-data" class="section level2">
 <h2>MLB Data:</h2>

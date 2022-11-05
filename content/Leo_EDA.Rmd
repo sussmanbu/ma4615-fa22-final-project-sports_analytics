@@ -1,17 +1,18 @@
 library(tidyverse)
 library(here)
-
+install.packages('broom')
 ##what teams have the most players with streaks
 
 ##Are the trends meaningfully different if we look at points, rebounds, and assists? 
 
 ##How are players likely to perform relative to their last 5 performances? 
 ##Visualize by how much players perform above average in games that they do well
-##analyze variance of scores
+
 ##analyze how players perform against teams much better than them
 
 ```{r data loading}
-data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"))
+data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"),show_col_types = FALSE)
+#problems()
 ```
 
 
@@ -21,6 +22,7 @@ data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"))
 #by player
 all_data <-data %>% group_by(player) %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = 
 sign(change_net)) %>% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
 
 streak <-all_data$streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
@@ -64,8 +66,8 @@ ggplot(team_local_max_positive) +geom_freqpoly(aes(x=streak))
 best_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% summarize(max_streak=max(streak)) %>% arrange(desc(max_streak)) %>%head(10)
 
 
-top_player_data22 <- data %>% filter(player %in% best_streaks_2022$player) %>% mutate(change_net = pts - mean(pts),
-direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,1,0))
+top_player_data22 <- data %>% filter(player %in% best_streaks_2022$player) %>% group_by(player)%>% mutate(change_net = pts - mean(pts),
+direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,0,1))
 
 best_player_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) 
 
@@ -98,6 +100,54 @@ a_team_data <- best_team_streaks_2022 %>% mutate(a=str_c(lag(direction),directio
 knitr::kable(a_team_data)
 knitr::kable(a_team_data_agg)
 
+```
 
 
+```{r model building}
+##prediction model using lgr and relevant factors for predicting top player performance
+mod1 <-top_player_data22 %>%ungroup() %>% glm(formula=factor(direction)~ts_pct +off_rtg+usg_pct,family=binomial())
+mod1 %>%coef()
+tableas<-broom::glance(mod1)
+grid <- top_player_data22   %>%ungroup() %>%
+  mutate(pred = predict(mod1, newdata = ., type = 'response'))
+
+
+ggplot(grid) +geom_point(aes(y=pred,x=pts,color=direction))+stat_smooth(aes(x=pts,y=pred),method="glm", se=FALSE, fullrange=TRUE, method.args = list(family=binomial))
+
+
+##prediction model using modified expected equations from popular sports model maker Ken Pomeroy
+
+expected_pos <- function(t1_p,t2_p,la_p){
+  t1_p <-t1_p / la_p
+  t2_p <-t2_p / la_p
+  e_pos <-t1_p *t2_p *la_p
+  return(e_pos)
+}
+expected_output <-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
+  t1_out <-(t1_or /100) *(t2_dr /100) *la_or
+  e_pos <-expected_pos(t1_p,t2_p,la_p)
+  t1_out <-t1_out *(e_pos/100)
+  
+  return(t1_out)
+}
+
+model_data <- data  %>% distinct(game_id,.keep_all = TRUE) %>% group_by(Team_Abbrev) %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %>%ungroup() %>%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
+
+model_data <-model_data %>% select(Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
+preds <- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
+model_data <-model_data %>% cbind(preds)
+
+
+```
+```{r other stat graphs}
+#cdf and pdf for player points
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(best_streaks_2022,aes(max_streak))+geom_density()
+ggplot(top_player_data22,aes(pts)) +geom_density()
+
+#cdf and pdf for team points
+
+ggplot(best_team_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(best_team_streaks_2022,aes(max_streak))+geom_density()
+ggplot(top_team_data22,aes(Team_Score)) +geom_density()
 ```
