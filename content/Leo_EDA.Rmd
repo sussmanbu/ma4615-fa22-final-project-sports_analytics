@@ -1,15 +1,103 @@
 library(tidyverse)
 library(here)
-library(readr)
-=======
 
-```{r Dataloading}
+##what teams have the most players with streaks
+
+##Are the trends meaningfully different if we look at points, rebounds, and assists? 
+
+##How are players likely to perform relative to their last 5 performances? 
+##Visualize by how much players perform above average in games that they do well
+##analyze variance of scores
+##analyze how players perform against teams much better than them
+
+```{r data loading}
 data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"))
-best_streaks <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022) %>% mutate(change_net = pts - mean(pts),
-direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% summarize(max_streak=max(streak)) %>% arrange(desc(max_streak)) %>%head(10)
+```
+
+
+```{r question 1}
+##what is the average length of a streak in the nba by player and team?
+
+#by player
+all_data <-data %>% group_by(player) %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = 
+sign(change_net)) %>% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+streak <-all_data$streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data,indices)
+local_max_all <- local_max %>%group_by(player) %>% select(streak)
+local_max_positive <-local_max %>%group_by(player) %>% select(streak,change_net) %>%filter(streak >-1)
+
+summary(local_max_all$streak)
+summary(local_max_positive$streak)
+
+
+
+#by team
+team_data <-data  %>% distinct(game_id,.keep_all = TRUE) %>%group_by(Team_Abbrev) %>% mutate(change_net = Team_Score - mean(Team_Score),direction  = 
+                                                                                              sign(change_net)) %>% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+team_streak <-team_data$streak
+indices<-which(diff(sign(diff(team_streak)))==-2)+1
+team_local_max <-slice(team_data,indices)
+team_local_max_all <- team_local_max %>%group_by(player) %>% select(streak)
+team_local_max_positive <-team_local_max %>%group_by(player) %>% select(streak,change_net) %>%filter(streak >-1)
+
+summary(team_local_max_all$streak)
+summary(team_local_max_positive$streak)
+
+#distribution of streaks by player 
+ggplot(local_max_all) +geom_freqpoly(aes(x=streak))
+ggplot(local_max_positive) +geom_freqpoly(aes(x=streak))
+
+#distribution of streaks by team
+ggplot(team_local_max_all) +geom_freqpoly(aes(x=streak))
+ggplot(team_local_max_positive) +geom_freqpoly(aes(x=streak))
+
+
 
 ```
 
-```{r plots}
-ggplot(best_streaks) +geom_point(aes(x=player,y=max_streak))+scale_x_discrete(guide = guide_axis(n.dodge=4))
+```{r question 2}
+
+##what are the highest streaks in the nba by player 2022
+best_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% summarize(max_streak=max(streak)) %>% arrange(desc(max_streak)) %>%head(10)
+
+
+top_player_data22 <- data %>% filter(player %in% best_streaks_2022$player) %>% mutate(change_net = pts - mean(pts),
+direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,1,0))
+
+best_player_streaks_2022 <- data %>% group_by(player) %>% filter(mean(minutes) >25,season==2022,minutes >15) %>% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+##chance that top player streaks continue
+##What are the likelihoods that a player is going to continue a streak once they have started
+a_player_data_agg <-top_player_data22 %>% mutate(a=10*lag(direction)+direction) 
+a_player_data_agg <-a_player_data_agg %>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+
+a_player_data <-best_player_streaks_2022 %>% mutate(a=10*lag(direction)+direction)
+a_player_data <-a_player_data%>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+
+
+knitr::kable(a_player_data_agg)
+knitr::kable(a_player_data)
+
+#by team
+best_team_streaks_2022 <- data %>% distinct(game_id,.keep_all=TRUE) %>% group_by(Team_Abbrev) %>%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %>%mutate(streak = cumsum(direction = lag(direction, default = 0))) %>% mutate(max_streak=max(streak))
+
+top_team_data22 <- data %>% filter(Team_Abbrev %in% best_team_streaks_2022$Team_Abbrev) %>% mutate(change_net = Team_Score - mean(Team_Score),
+direction  = sign(change_net)) %>%mutate(usg_pct=usg_pct/100) %>%mutate(direction=ifelse(direction==-1,1,0))
+
+##chance that team streaks continue
+a_team_data_agg <-top_team_data22 %>% ungroup() %>% mutate(a=10*lag(direction)+direction) %>% count(a) 
+a_team_data_agg <-top_team_data22 %>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+
+a_team_data <- best_team_streaks_2022 %>% ungroup() %>% mutate(a=10*lag(direction)+direction) %>% count(a) 
+a_team_data <- best_team_streaks_2022 %>% mutate(a=str_c(lag(direction),direction,sep = ',')) %>% count(a) %>% mutate(prop=n/sum(n))
+
+
+knitr::kable(a_team_data)
+knitr::kable(a_team_data_agg)
+
+
+
 ```
