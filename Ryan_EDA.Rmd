@@ -54,6 +54,7 @@ ops_data_month %>%
 
 ```{r}
 library(tidyverse)
+library(modelr)
 library(ggrepel)
 
 stat_fct <- function(x,y){
@@ -87,16 +88,48 @@ MLB_avg <- bat_data_2 %>%
 
 bat_data_day <- left_join(bat_data_2, ops_data, by = "player")
 
-bat_data_day %>% filter(player == "Bryce Harper") %>%
+sim1 <- bat_data_day %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
          ops_game = obp_game + slg_game,
-         obp_diff = obp_game - MLB_avg$obp,
-         sign = sign(obp_diff)) %>%
-  ggplot(aes(game_date, obp_diff)) +
+         ops_diff = ops_game - MLB_avg$ops,
+         above = (ops_diff > 0)) %>% ungroup() %>% group_by(player) %>%
+  summarize(games_above = sum(above), ops = mean(ops))
+  
+model1 <- lm(games_above ~ ops, data = sim1)
+(beta <- coef(model1))
+ggplot(sim1, aes(ops, games_above)) + geom_point() +
+    geom_abline(intercept = beta[1], slope = beta[2])
+
+s_res1 <- rstandard(model1)
+sim1 %>% cbind(s_res1) %>%  ggplot(aes(ops, s_res1)) +
+  geom_ref_line(h = 0) + geom_point()
+
+sim1 %>% cbind(s_res1) %>% filter(abs(s_res1) >= 2)
+
+bat_data_day %>% filter(player == "Rafael Devers") %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - ops,
+         sign = sign(ops_diff)) %>%
+  ggplot(aes(game_date, ops_diff)) +
   geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
-  labs(title = "Bryce Harper Game by Game OBP Data",
-       x = "Date", y = "Game OBP compared to MLB average")
+  labs(title = "Rafael Devers Game by Game OPS Data",
+       x = "Date", y = "Game OPS compared to average")
+
+bat_data_day %>% filter(player == "Joey Votto") %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - ops,
+         sign = sign(ops_diff)) %>%
+  ggplot(aes(game_date, ops_diff)) +
+  geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
+  labs(title = "Joey Votto Game by Game OPS Data",
+       x = "Date", y = "Game OPS compared to average")
 ```
 
