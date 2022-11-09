@@ -1,0 +1,26 @@
+---
+title: Week 5 Blog
+author: Haroon, Leo, Ryan, Benni
+date: '2022-11-09'
+slug: []
+categories: []
+tags: []
+description: ~
+toc: yes
+authors: []
+series: []
+lastmod: '2022-11-09T17:21:34-05:00'
+featuredVideo: ~
+featuredImage: ~
+---
+
+
+<div id="TOC">
+
+</div>
+
+<p>##Merging Data</p>
+<p>The two datasets we are working with are All Sports Analytics Data for MLB and NBA, which contain game by game data for each player. Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB. We also aim to analyze how similar different teams perform in terms of streakiness across both leagues, and how the top, average, and below average players of their respective leagues perform relative to each other. One thing to note that will complicate our analysis is the league parity in both leagues. In the NBA, a key strategy for bad teams is to “tank” or to lose on purpose to secure better draft position, as just one key player can make the difference between a bad team and a good team. Many teams in our dataset will therefore be making decisions that could affect a teams streak. We believe that player data may not be affected, as players are expected to show their individual value to the team. In some cases, good players on bad teams may play less to give more minutes to promising prospects, or left out of key situations, affecting their overall points scored. We followed this guide as a loose way to structure our comparisons.</p>
+<p><a href="https://www.scirp.org/journal/paperinformation.aspx?paperid=74910" class="uri">https://www.scirp.org/journal/paperinformation.aspx?paperid=74910</a></p>
+<p>##Looking at Context</p>
+<p>Taking this into consideration, it should also be noted that because single players in the NBA have a much more direct impact on their team success, we believe some players may have inflated statistics over some games. For example, a starting player may be out due to injury, giving a bench player more opportunity for a certain amount of time to get more touches and increase their counting stats. When comparing streaky players between leagues, it may be wise to consider the context in which the players are getting these streaks. Regarding the NBA data for the 2022 season, the longest streaks were achieved mostly by players who would generally be considered role players and not top scorers. Of course, because of their role on the team, these players usually have lower scoring averages, so an extended streak scoring above that average is more achievable than a player who averages many more points. Because of this, it would be interesting to look closer at the circumstances of these streaks and see if their were any contextual factors to their streaks. As such, the same considerations should be made in regards to the MLB streaks. Even though MLB statistics for player streaks exist a bit more in a vacuum, it would be wise to look at their surrounding factors.</p>
