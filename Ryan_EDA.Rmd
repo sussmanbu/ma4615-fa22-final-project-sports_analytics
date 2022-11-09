@@ -8,20 +8,18 @@ date: "2022-10-20"
 library(tidyverse)
 library(ggrepel)
 
-bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
-
-bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
-                                  -batting_order, -DKP, -FDP, -SDP) %>%
+bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+  select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
   mutate(singles = h - (doubles + triples + home_runs),
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
          on_base = h + bb + hit_by_pitch)
 
-bat_data_2 %>% arrange(game_date) %>% group_by(player) %>%
+bat_data_21 %>% arrange(game_date) %>% group_by(player) %>%
   filter(sum(home_runs) >= 40) %>% mutate(hr = cumsum(home_runs)) %>%
   ggplot(aes(x = game_date, y = hr, color = player, group = player)) +
   geom_line()
 
-ops_data <- bat_data_2 %>% group_by(player) %>%
+ops_data_21 <- bat_data_21 %>% group_by(player) %>%
   summarize(ab = sum(ab),
             pa = sum(pa),
             tb = sum(tb),
@@ -29,13 +27,13 @@ ops_data <- bat_data_2 %>% group_by(player) %>%
   mutate(obp = on_base/pa, slg = tb/ab, ops = obp + slg) %>% 
   arrange(desc(ops))
 
-ops_data %>% filter(pa >= 500, ops >= .9) %>%
+ops_data_21 %>% filter(pa >= 500, ops >= .9) %>%
   ggplot(aes(x = pa, y = ops)) + geom_point() +
   geom_text_repel(aes(label = player), size = 3) +
   labs(title = ".900+ OPS Hitters vs Plate Appearances",
        x = "Plate Appearances", y = "OPS")
 
-ops_data_month <- bat_data_2 %>% separate(game_date,
+ops_data_month <- bat_data_21 %>% separate(game_date,
                                       into = c("year", "month", "day")) %>% 
   group_by(player, month) %>%
   summarize(ab = sum(ab),
@@ -61,16 +59,14 @@ stat_fct <- function(x,y){
   ifelse(y > 0, x/y, 0)
 }
 
-bat_data <- read_csv("dataset/MLB_bat_data_2021.csv")
-
-bat_data_2 <- bat_data %>% select(-game_id, -player_id, -details,
-                                  -batting_order, -DKP, -FDP, -SDP) %>%
+bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+  select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
   mutate(singles = h - (doubles + triples + home_runs),
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
          on_base = h + bb + hit_by_pitch) %>%
   arrange(player, game_date)
 
-ops_data <- bat_data_2 %>% group_by(player) %>%
+ops_data_21 <- bat_data_21 %>% group_by(player) %>%
   summarize(ab = sum(ab),
             pa = sum(pa),
             tb = sum(tb),
@@ -78,7 +74,7 @@ ops_data <- bat_data_2 %>% group_by(player) %>%
   mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
          ops = obp + slg) %>% select(player, obp, slg, ops)
 
-MLB_avg <- bat_data_2 %>%
+MLB_avg_21 <- bat_data_21 %>%
   summarize(ab = sum(ab),
             pa = sum(pa),
             tb = sum(tb),
@@ -86,29 +82,31 @@ MLB_avg <- bat_data_2 %>%
   mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
          ops = obp + slg) %>% select(obp, slg, ops)
 
-bat_data_day <- left_join(bat_data_2, ops_data, by = "player")
+bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
 
-sim1 <- bat_data_day %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
+sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
          ops_game = obp_game + slg_game,
-         ops_diff = ops_game - MLB_avg$ops,
+         ops_diff = ops_game - MLB_avg_21$ops,
          above = (ops_diff > 0)) %>% ungroup() %>% group_by(player) %>%
   summarize(games_above = sum(above), ops = mean(ops))
   
-model1 <- lm(games_above ~ ops, data = sim1)
-(beta <- coef(model1))
-ggplot(sim1, aes(ops, games_above)) + geom_point() +
+model_21 <- lm(games_above ~ ops, data = sim_21)
+(beta <- coef(model_21))
+ggplot(sim_21, aes(ops, games_above)) + geom_point() +
     geom_abline(intercept = beta[1], slope = beta[2])
 
-s_res1 <- rstandard(model1)
-sim1 %>% cbind(s_res1) %>%  ggplot(aes(ops, s_res1)) +
+s_res_21 <- rstandard(model_21)
+sim_21 %>% cbind(s_res_21) %>%  ggplot(aes(ops, s_res_21)) +
   geom_ref_line(h = 0) + geom_point()
 
-sim1 %>% cbind(s_res1) %>% filter(abs(s_res1) >= 2)
+sim_21 %>% cbind(s_res_21) %>%
+  mutate(streaky = ifelse(s_res_21 < 0, 1, 0)) %>%
+  ggplot(aes(ops, streaky)) + geom_point()
 
-bat_data_day %>% filter(player == "Rafael Devers") %>%
+bat_data_day_21 %>% filter(player == "Rafael Devers") %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
@@ -120,7 +118,7 @@ bat_data_day %>% filter(player == "Rafael Devers") %>%
   labs(title = "Rafael Devers Game by Game OPS Data",
        x = "Date", y = "Game OPS compared to average")
 
-bat_data_day %>% filter(player == "Joey Votto") %>%
+bat_data_day_21 %>% filter(player == "Joey Votto") %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
