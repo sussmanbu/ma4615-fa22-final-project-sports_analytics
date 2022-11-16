@@ -22,6 +22,7 @@ you will
   * Some repetition of what you do in your `load_and_clean_data.R` file is fine and encouraged if it helps explain what you did.
 * Organization, clarity, cleanliness of the page
   * Make sure to remove excessive warnings, use clean easy-to-read code (without side scrolling), organize with sections, use bullets and other organization tools, etc.
+<<<<<<< HEAD
 
 ##link to raw data    
 https://www.advancedsportsanalytics.com/nba-raw-data
@@ -57,5 +58,72 @@ The data is divided in a tidy manner, where each column in the dataset is a diff
 * true shooting percentage
   * the formula is PTS / (2 * TSA). True shooting percentage is a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws. 
   
+=======
+  
+## MLB Raw Data - Advanced Sports Analytics
+
+https://www.advancedsportsanalytics.com/mlb-raw-data
+
+Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks MLB player data on a game to game basis for the 2021 season. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet.
+
+We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:
+
+player: player’s name
+ab: at-bats
+h: hits
+bb: walks
+pa: plate appearances
+doubles
+triples
+home_runs
+hit_by_pitch
+game_date
+
+We also calculated some other stats not included in the original dataset like:
+
+singles: singles (h - (doubles + triples + home_runs))
+tb: total bases (singles + 2*doubles + 3*triples + 4*home_runs)
+on_base: indicates a player reached base (h + bb + hit_by_pitch)
+obp: on base % (on_base / pa)
+slg: slugging % (tb / ab)
+ops: on base plus slugging (obp + slg)
+
+Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our `load_and_clean_data.R` file. As previously mentioned, we also added new variables as well.
+
+We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below:
+
+```{r MLB data}
+library(tidyverse)
+
+stat_fct <- function(x,y){
+  ifelse(y > 0, x/y, 0)
+}
+
+bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+  select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch) %>%
+  arrange(player, game_date)
+
+ops_data_21 <- bat_data_21 %>% group_by(player) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(player, obp, slg, ops)
+
+MLB_avg_21 <- bat_data_21 %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(obp, slg, ops)
+
+bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
+```
+>>>>>>> 06c74ded608c7e54cf51d2c920bf2c2cfd0450a0
 
 
