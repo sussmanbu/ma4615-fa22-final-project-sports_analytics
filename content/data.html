@@ -30,7 +30,8 @@ draft: false</p>
 </ul></li>
 <li>Organization, clarity, cleanliness of the page
 <ul>
-<li>Make sure to remove excessive warnings, use clean easy-to-read code (without side scrolling), organize with sections, use bullets and other organization tools, etc.</li>
+<li>Make sure to remove excessive warnings, use clean easy-to-read code (without side scrolling), organize with sections, use bullets and other organization tools, etc.
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</li>
 </ul></li>
 </ul>
 <p>##link to raw data<br />
@@ -78,4 +79,92 @@ The data is divided in a tidy manner, where each column in the dataset is a diff
 <li>the formula is PTS / (2 * TSA). True shooting percentage is a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.</li>
 </ul></li>
 </ul>
+<p>=======</p>
+</div>
+<div id="mlb-raw-data---advanced-sports-analytics" class="section level2">
+<h2>MLB Raw Data - Advanced Sports Analytics</h2>
+<p><a href="https://www.advancedsportsanalytics.com/mlb-raw-data" class="uri">https://www.advancedsportsanalytics.com/mlb-raw-data</a></p>
+<p>Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks MLB player data on a game to game basis for the 2021 season. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet.</p>
+<p>We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:</p>
+<p>player: player’s name
+ab: at-bats
+h: hits
+bb: walks
+pa: plate appearances
+doubles
+triples
+home_runs
+hit_by_pitch
+game_date</p>
+<p>We also calculated some other stats not included in the original dataset like:</p>
+<p>singles: singles (h - (doubles + triples + home_runs))
+tb: total bases (singles + 2<em>doubles + 3</em>triples + 4*home_runs)
+on_base: indicates a player reached base (h + bb + hit_by_pitch)
+obp: on base % (on_base / pa)
+slg: slugging % (tb / ab)
+ops: on base plus slugging (obp + slg)</p>
+<p>Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our <code>load_and_clean_data.R</code> file. As previously mentioned, we also added new variables as well.</p>
+<p>We created multiple data tables to execute our analysis like <code>bat_data_21</code> which added our new counting stats, <code>ops_data_21</code> which added our new rates stats for season totals, <code>MLB_avg_21</code> which was a small dataset of three values used to calculate the MLB average rate stats, and <code>bat_data_day</code> which combined rates stats for players across the entire season with game by game stats. The code can be seen below:</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(here)</code></pre>
+<pre><code>## here() starts at C:/Users/leose/Third_Semester/MA_615/r_projects/ma4615-fa22-final-project-sports_analytics</code></pre>
+<pre class="r"><code>stat_fct &lt;- function(x,y){
+  ifelse(y &gt; 0, x/y, 0)
+}
+
+bat_data_21 &lt;- read_csv(here::here(&quot;dataset/MLB_bat_data_2021.csv&quot;)) %&gt;%
+  select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %&gt;%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch) %&gt;%
+  arrange(player, game_date)</code></pre>
+<pre><code>## Rows: 61316 Columns: 24
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr   (5): game_id, team_abbrev, player_id, player, details
+## dbl  (18): ab, r, h, rbi, bb, so, pa, batting_order, doubles, triples, home_...
+## date  (1): game_date
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>ops_data_21 &lt;- bat_data_21 %&gt;% group_by(player) %&gt;%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %&gt;% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %&gt;% select(player, obp, slg, ops)
+
+MLB_avg_21 &lt;- bat_data_21 %&gt;%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %&gt;% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %&gt;% select(obp, slg, ops)
+
+bat_data_day_21 &lt;- left_join(bat_data_21, ops_data_21, by = &quot;player&quot;)</code></pre>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>06c74ded608c7e54cf51d2c920bf2c2cfd0450a0</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
+</blockquote>
 </div>

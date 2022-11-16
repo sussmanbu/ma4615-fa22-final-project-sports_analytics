@@ -94,12 +94,13 @@ We created multiple data tables to execute our analysis like `bat_data_21` which
 
 ```{r MLB data}
 library(tidyverse)
+library(here)
 
 stat_fct <- function(x,y){
   ifelse(y > 0, x/y, 0)
 }
 
-bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+bat_data_21 <- read_csv(here::here("dataset/MLB_bat_data_2021.csv")) %>%
   select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
   mutate(singles = h - (doubles + triples + home_runs),
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
