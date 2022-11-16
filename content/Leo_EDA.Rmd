@@ -12,7 +12,8 @@ install.packages('broom')
 
 ```{r data loading}
 data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"),show_col_types = FALSE)
-#problems()
+data <-data %>%  filter(!row_number() %in% c(110510	))
+problems()
 ```
 
 

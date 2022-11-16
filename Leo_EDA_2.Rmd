@@ -1,0 +1,17 @@
+---
+title: "Leo_EDA_2"
+author: "Leo Seoane"
+date: "2022-11-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+```
+```{r data loading}
+data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"),show_col_types = FALSE)
+data <-data %>%  filter(!row_number() %in% c(110510	))
+problems()
+```
