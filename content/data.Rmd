@@ -90,11 +90,10 @@ ops: on base plus slugging (obp + slg)
 
 Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our `load_and_clean_data.R` file. As previously mentioned, we also added new variables as well.
 
-We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below:
+We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below.
 
-```{r MLB data}
+```{r MLB data, eval=FALSE, include=TRUE}
 library(tidyverse)
-library(here)
 
 stat_fct <- function(x,y){
   ifelse(y > 0, x/y, 0)
@@ -125,6 +124,3 @@ MLB_avg_21 <- bat_data_21 %>%
 
 bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
 ```
->>>>>>> 06c74ded608c7e54cf51d2c920bf2c2cfd0450a0
-
-

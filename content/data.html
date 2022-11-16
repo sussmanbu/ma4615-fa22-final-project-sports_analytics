@@ -104,19 +104,10 @@ obp: on base % (on_base / pa)
 slg: slugging % (tb / ab)
 ops: on base plus slugging (obp + slg)</p>
 <p>Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our <code>load_and_clean_data.R</code> file. As previously mentioned, we also added new variables as well.</p>
-<p>We created multiple data tables to execute our analysis like <code>bat_data_21</code> which added our new counting stats, <code>ops_data_21</code> which added our new rates stats for season totals, <code>MLB_avg_21</code> which was a small dataset of three values used to calculate the MLB average rate stats, and <code>bat_data_day</code> which combined rates stats for players across the entire season with game by game stats. The code can be seen below:</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
-## ✔ readr   2.1.2     ✔ forcats 0.5.2
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(here)</code></pre>
-<pre><code>## here() starts at C:/Users/leose/Third_Semester/MA_615/r_projects/ma4615-fa22-final-project-sports_analytics</code></pre>
-<pre class="r"><code>stat_fct &lt;- function(x,y){
+<p>We created multiple data tables to execute our analysis like <code>bat_data_21</code> which added our new counting stats, <code>ops_data_21</code> which added our new rates stats for season totals, <code>MLB_avg_21</code> which was a small dataset of three values used to calculate the MLB average rate stats, and <code>bat_data_day</code> which combined rates stats for players across the entire season with game by game stats. The code can be seen below.</p>
+<pre class="r"><code>library(tidyverse)
+
+stat_fct &lt;- function(x,y){
   ifelse(y &gt; 0, x/y, 0)
 }
 
@@ -125,17 +116,9 @@ bat_data_21 &lt;- read_csv(here::here(&quot;dataset/MLB_bat_data_2021.csv&quot;)
   mutate(singles = h - (doubles + triples + home_runs),
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
          on_base = h + bb + hit_by_pitch) %&gt;%
-  arrange(player, game_date)</code></pre>
-<pre><code>## Rows: 61316 Columns: 24
-## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr   (5): game_id, team_abbrev, player_id, player, details
-## dbl  (18): ab, r, h, rbi, bb, so, pa, batting_order, doubles, triples, home_...
-## date  (1): game_date
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>ops_data_21 &lt;- bat_data_21 %&gt;% group_by(player) %&gt;%
+  arrange(player, game_date)
+
+ops_data_21 &lt;- bat_data_21 %&gt;% group_by(player) %&gt;%
   summarize(ab = sum(ab),
             pa = sum(pa),
             tb = sum(tb),
@@ -152,19 +135,4 @@ MLB_avg_21 &lt;- bat_data_21 %&gt;%
          ops = obp + slg) %&gt;% select(obp, slg, ops)
 
 bat_data_day_21 &lt;- left_join(bat_data_21, ops_data_21, by = &quot;player&quot;)</code></pre>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<blockquote>
-<p>06c74ded608c7e54cf51d2c920bf2c2cfd0450a0</p>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
-</blockquote>
 </div>
