@@ -5,6 +5,7 @@ toc: true
 featuredVideo:
 featuredImage: images/data-import-cheatsheet-thumbs.png
 draft: false
+---
 
 ## Rubric: On this page
 
