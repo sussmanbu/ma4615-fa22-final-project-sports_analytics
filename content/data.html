@@ -34,12 +34,13 @@ draft: false</p>
 &lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</li>
 </ul></li>
 </ul>
+</div>
+<div id="nba-raw-data---advanced-sports-analytics" class="section level2">
+<h2>NBA Raw Data - Advanced Sports Analytics</h2>
 <p>##link to raw data<br />
 <a href="https://www.advancedsportsanalytics.com/nba-raw-data" class="uri">https://www.advancedsportsanalytics.com/nba-raw-data</a></p>
 <p>##link to load_and_clean_data.R
 /ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R</p>
-<p>##describe the cleaning process
-Luckily, most of our data is already cleaned, processed, and ready to be used. There are a couple of NA values that are removed, but that is the extent of the work that we have done.</p>
 <p>##Combining the data
 Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.</p>
 </div>
@@ -79,6 +80,28 @@ The data is divided in a tidy manner, where each column in the dataset is a diff
 <li>the formula is PTS / (2 * TSA). True shooting percentage is a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws.</li>
 </ul></li>
 </ul>
+<p>##describe the cleaning process
+Luckily, most of our data is already cleaned, processed, and ready to be used. However, some cleaning was still needed. At first, this dataset had duplicate rows and sporadically included games where a player played 0 minutes (meaning they did not play). The first step was to identify and remove these erroneous rows to find the proper number of games each player played.</p>
+<p>Finding the number of games was important since we wanted to look at the season averages for many of the statistics. For example, one of the metrics we used to assess a scoring streak for a player was the point differential from their season scoring average in a game. To do this, we needed to clean the data as described above, keeping only the games the player actually played in for an accurate count of the amount of games played in a season, and then dividing the sum of the points scored by that count. The below code shows the clean up process for removing the extra rows and additionally shows the process of finding the season scoring average of each player for the 2022 NBA season.</p>
+<pre class="nba"><code>
+library(tidyverse)
+library(dplyr)
+
+nba_data22 &lt;- read_csv(file = &#39;dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
+
+
+nba_data22 &lt;- group_by(nba_data22, player) %&gt;%
+  filter(did_not_play != 1) %&gt;%
+  distinct(game_id, .keep_all = TRUE)
+  
+nba_ppg_22 &lt;- nba_data22 %&gt;% 
+  summarize(total_pts = sum(pts),
+            total_games = n(),
+            ppg = total_pts/total_games) %&gt;%
+  select(player, ppg, total_games)
+  
+  </code></pre>
+<p><code>nba_data22</code> held the cleaned data that removed any extra rows. This newly created dataset could be used to calculate season average statistics. In the example above, the points per game were calculated for each player. This process was largely reproducible for many other statistics and guided the process to finding streaks, as we will show when diving deeper into our exploratory analysis.</p>
 <p>=======</p>
 </div>
 <div id="mlb-raw-data---advanced-sports-analytics" class="section level2">
