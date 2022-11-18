@@ -93,35 +93,44 @@ nba_ppg_22 <- nba_data22 %>%
   
 ## MLB Raw Data - Advanced Sports Analytics
 
+
 https://www.advancedsportsanalytics.com/mlb-raw-data
+
 
 Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks MLB player data on a game to game basis for the 2021 season. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet.
 
+
 We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:
 
-player: player’s name
-ab: at-bats
-h: hits
-bb: walks
-pa: plate appearances
-doubles
-triples
-home_runs
-hit_by_pitch
-game_date
+
+* player: player’s name
+* ab: at-bats
+* h: hits
+* bb: walks
+* pa: plate appearances
+* doubles
+* triples
+* home_runs
+* hit_by_pitch
+* game_date
+
 
 We also calculated some other stats not included in the original dataset like:
 
-singles: singles (h - (doubles + triples + home_runs))
-tb: total bases (singles + 2*doubles + 3*triples + 4*home_runs)
-on_base: indicates a player reached base (h + bb + hit_by_pitch)
-obp: on base % (on_base / pa)
-slg: slugging % (tb / ab)
-ops: on base plus slugging (obp + slg)
+
+* singles: singles (h - (doubles + triples + home_runs))
+* tb: total bases (singles + 2*doubles + 3*triples + 4*home_runs)
+* on_base: indicates a player reached base (h + bb + hit_by_pitch)
+* obp: on base % (on_base / pa)
+* slg: slugging % (tb / ab)
+* ops: on base plus slugging (obp + slg)
+
 
 Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our `load_and_clean_data.R` file. As previously mentioned, we also added new variables as well.
 
+
 We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below.
+
 
 ```{r MLB data, eval=FALSE, include=TRUE}
 library(tidyverse)
