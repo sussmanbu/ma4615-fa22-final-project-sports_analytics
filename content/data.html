@@ -3,7 +3,7 @@ title: Data
 description:
 toc: true
 featuredVideo:
-featuredImage: images/data-import-cheatsheet-thumbs.png
+featuredImage: 
 draft: false
 ---
 
@@ -12,55 +12,19 @@ draft: false
 
 </div>
 
-<div id="rubric-on-this-page" class="section level2">
-<h2>Rubric: On this page</h2>
-<p>you will</p>
-<ul>
-<li>Describe where/how to find data.
-<ul>
-<li>You must include a link to the original data source(s). Make sure to provide attribution to those who collected the data.</li>
-<li>Why was the data collected/curated? Who put it together? (This is important, if you don’t know why it was collected then that might not be a good dataset to look at.</li>
-</ul></li>
-<li>Describe the different data files used and what each variable means.
-<ul>
-<li>If you have many variables then only describe the most relevant ones and summarize the rest.</li>
-</ul></li>
-<li>Describe any cleaning you had to do for your data.
-<ul>
-<li>You <em>must</em> include a link to your <code>load_and_clean_data.R</code> file.</li>
-<li>Also, describe any additional R packages you used outside of those covered in class.</li>
-<li>Describe and show code for how you combined multiple data files and any cleaning that was necessary for that.</li>
-<li>Some repetition of what you do in your <code>load_and_clean_data.R</code> file is fine and encouraged if it helps explain what you did.</li>
-</ul></li>
-<li>Organization, clarity, cleanliness of the page
-<ul>
-<li>Make sure to remove excessive warnings, use clean easy-to-read code (without side scrolling), organize with sections, use bullets and other organization tools, etc.
-&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</li>
-</ul></li>
-</ul>
+<div id="who-collected-the-data-and-why" class="section level2">
+<h2>Who collected the data and why:</h2>
+<p>We aim to use NBA and MLB data to draw conclusions and comparisons on player and team streaks, both within the respective leagues and interleague. To do so we used Advanced Sports Analytics as our main source. Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks player data on a game to game basis. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet. Special thanks to the team at ASA for allowing for the free download of aggregated data. The data was collected for the purpose of creating projections for daily fantasy sports games, which the author offers as part of their premium monthly package. However, they offer free blogs, resources, and tools for free to help fans of sports betting make better predictions.</p>
 </div>
 <div id="nba-raw-data---advanced-sports-analytics" class="section level2">
 <h2>NBA Raw Data - Advanced Sports Analytics</h2>
 </div>
-<div id="link-to-raw-data" class="section level2">
-<h2>Link to raw data:</h2>
+<div id="link-to-nba-raw-data" class="section level2">
+<h2>Link to NBA raw data:</h2>
 <p><a href="https://www.advancedsportsanalytics.com/nba-raw-data" class="uri">https://www.advancedsportsanalytics.com/nba-raw-data</a></p>
 </div>
-<div id="link-to-load_and_clean_data.r" class="section level2">
-<h2>Link to load_and_clean_data.R:</h2>
-<p>/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R</p>
-</div>
-<div id="combining-the-data" class="section level2">
-<h2>Combining the data:</h2>
-<p>Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.</p>
-</div>
-<div id="who-collected-the-data-and-why" class="section level2">
-<h2>Who collected the data and why:</h2>
-<p>Special thanks to the team at ASA for allowing for the free download of aggregated data.
-The data was collected for the purpose of creating projections for daily fantasy sports games, which the author offers as part of their premium monthly package. However, they offer free blogs, resources, and tools for free to help fans of sports betting make better predictions.</p>
-</div>
-<div id="describe-the-data" class="section level2">
-<h2>Describe the data:</h2>
+<div id="describing-the-nba-data" class="section level2">
+<h2>Describing the NBA data:</h2>
 <p>The data is divided in a tidy manner, where each column in the dataset is a different statistic or a game identifier. For instance, there is the team name, opponent name, date of the game, and unique game id. Each row is an individual players performance in that game. So one game will have mulitple rows comprising of the different players performances. The variable names are straight forward, and there is no ambiguity in their function. The key variables we use in the analysis that warrant highlighting are as follows, offensive rating, defensive rating, bpm, usage percentage, and true shooting percentage.</p>
 <ul>
 <li>Offensive rating(team)
@@ -93,8 +57,8 @@ The data was collected for the purpose of creating projections for daily fantasy
 </ul></li>
 </ul>
 </div>
-<div id="describe-the-cleaning-process" class="section level2">
-<h2>Describe the cleaning process:</h2>
+<div id="describe-the-cleaning-process-nba" class="section level2">
+<h2>Describe the cleaning process (NBA):</h2>
 <p>Luckily, most of our data is already cleaned, processed, and ready to be used. However, some cleaning was still needed. At first, this dataset had duplicate rows and sporadically included games where a player played 0 minutes (meaning they did not play). The first step was to identify and remove these erroneous rows to find the proper number of games each player played.</p>
 <p>Finding the number of games was important since we wanted to look at the season averages for many of the statistics. For example, one of the metrics we used to assess a scoring streak for a player was the point differential from their season scoring average in a game. To do this, we needed to clean the data as described above, keeping only the games the player actually played in for an accurate count of the amount of games played in a season, and then dividing the sum of the points scored by that count. The below code shows the clean up process for removing the extra rows and additionally shows the process of finding the season scoring average of each player for the 2022 NBA season.</p>
 <pre class="nba"><code>
@@ -120,8 +84,13 @@ nba_ppg_22 &lt;- nba_data22 %&gt;%
 </div>
 <div id="mlb-raw-data---advanced-sports-analytics" class="section level2">
 <h2>MLB Raw Data - Advanced Sports Analytics</h2>
+</div>
+<div id="link-to-mlb-raw-data" class="section level2">
+<h2>Link to MLB raw data:</h2>
 <p><a href="https://www.advancedsportsanalytics.com/mlb-raw-data" class="uri">https://www.advancedsportsanalytics.com/mlb-raw-data</a></p>
-<p>Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks MLB player data on a game to game basis for the 2021 season. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet.</p>
+</div>
+<div id="describing-the-mlb-data" class="section level2">
+<h2>Describing the MLB Data:</h2>
 <p>We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:</p>
 <ul>
 <li>player: player’s name</li>
@@ -144,6 +113,9 @@ nba_ppg_22 &lt;- nba_data22 %&gt;%
 <li>slg: slugging % (tb / ab)</li>
 <li>ops: on base plus slugging (obp + slg)</li>
 </ul>
+</div>
+<div id="describing-the-cleaning-process-mlb" class="section level2">
+<h2>Describing the cleaning process (MLB):</h2>
 <p>Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our <code>load_and_clean_data.R</code> file. As previously mentioned, we also added new variables as well.</p>
 <p>We created multiple data tables to execute our analysis like <code>bat_data_21</code> which added our new counting stats, <code>ops_data_21</code> which added our new rates stats for season totals, <code>MLB_avg_21</code> which was a small dataset of three values used to calculate the MLB average rate stats, and <code>bat_data_day</code> which combined rates stats for players across the entire season with game by game stats. The code can be seen below.</p>
 <pre class="r"><code>library(tidyverse)
@@ -176,4 +148,12 @@ MLB_avg_21 &lt;- bat_data_21 %&gt;%
          ops = obp + slg) %&gt;% select(obp, slg, ops)
 
 bat_data_day_21 &lt;- left_join(bat_data_21, ops_data_21, by = &quot;player&quot;)</code></pre>
+</div>
+<div id="combining-the-data" class="section level2">
+<h2>Combining the data:</h2>
+<p>Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.</p>
+</div>
+<div id="link-to-load_and_clean_data.r" class="section level2">
+<h2>Link to load_and_clean_data.R:</h2>
+<p>/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R</p>
 </div>
