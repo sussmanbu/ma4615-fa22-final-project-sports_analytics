@@ -5,13 +5,69 @@ date: "2022-11-09"
 output: html_document
 ---
 
+
+##what teams have the most players with streaks
+
+##Are the trends meaningfully different if we look at points, rebounds, and assists? 
+
+##How are players likely to perform relative to their last 5 performances? 
+##Visualize by how much players perform above average in games that they do well
+
+##analyze how players perform against teams much better than them
+
+##pick top 5, middle 5, bottom 5 players to display
+
+##for visualization, show how changing ts pct,usg pct, off rtg changes probability of changing prediction maybe using sliding value
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)
-library(here)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(here))
+suppressPackageStartupMessages(library(modelr))
 ```
 ```{r data loading}
-data <-read_csv(here::here("dataset-ignore/raw_nba_data.csv"),show_col_types = FALSE)
-data <-data %>%  filter(!row_number() %in% c(110510	))
+load(here::here("dataset-ignore", "clean_nba_data.RData"))
+data <-data %>% mutate(PRA=pts+trb+ast) %>%mutate(usg_pct=usg_pct/100)
 problems()
+
+```
+
+```{r Final player EDA}
+#get all of our data by players who meet criteria and calculate streaks
+all_data <-data %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),pts_direction  = 
+sign(change_net),change_net_PRA=PRA - mean(PRA),PRA_direction=sign(change_net_PRA)) %>%mutate(pts_streak=ave(pts_direction, cumsum(pts_direction==-1), FUN = seq_along) - 1,PRA_streak=ave(PRA_direction, cumsum(PRA_direction==-1), FUN = seq_along) - 1)
+
+#visualize distribution of positive player points streaks and PRA streaks
+streak <-all_data$pts_streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data,indices)
+local_max<-local_max %>%group_by(player) %>% select(pts_streak,change_net,change_net_PRA,PRA_streak) %>%filter(pts_streak >0,PRA_streak >0)
+summary(local_max)
+ggplot(local_max) +geom_freqpoly(aes(x=pts_streak))
+ggplot(local_max) +geom_freqpoly(aes(x=PRA_streak))
+
+
+#view proportion of continuing streaks
+best_streaks_2022 <- all_data %>% summarize(max_streak=max(pts_streak)) %>% arrange(desc(max_streak)) %>%head(10)
+top_player_data22 <- all_data %>% filter(player %in% best_streaks_2022$player) %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+top_player_data22 <-top_player_data22 %>% group_by(player) %>% mutate(a=10*lag(pts_direction)+pts_direction) %>%ungroup() 
+top_player_proportions <-top_player_data22 %>% mutate(a=str_c(lag(pts_direction),pts_direction,sep = ',')) %>% count(a) %>% group_by(a)
+top_player_proportions
+
+#cdf and pdf for player points
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(best_streaks_2022,aes(max_streak))+geom_density()
+ggplot(top_player_data22,aes(pts)) +geom_density()
+
+#model building
+mod1 <-all_data %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct +off_rtg+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1$coefficients
+exp(mod1$coefficients)
+
+all_data <-all_data %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),off_rtg=seq_range(off_rtg,3),usg_pct= seq_range(usg_pct,3)) %>% add_predictions(mod1, type = "response" )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred, color = factor(usg_pct), linetype = factor(off_rtg)),data=grid)
+
 ```

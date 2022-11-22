@@ -1,12 +1,6035 @@
 
 
 
-<p>library(tidyverse)
-library(here)
-data &lt;-read_csv(here::here(“dataset-ignore/raw_nba_data.csv”))
-best_streaks &lt;- data %&gt;% group_by(player) %&gt;% filter(season==2022,mean(minutes) &gt;25) %&gt;% mutate(count_above_avg_pts=length(pts[pts&gt;mean(pts)])) %&gt;%ungroup() %&gt;% head(25)
-best_players &lt;-data %&gt;% group_by(player) %&gt;% filter(player %in% best_streaks$player,season==2022)
-games_abv_avg &lt;- best_players %&gt;% mutate(abv_pts=factor(pts&gt;mean(pts)))</p>
-<p>ggplot(best_players) +geom_boxplot(aes(x=player,y=pts))+scale_x_discrete(guide = guide_axis(n.dodge=4))
-ggplot(best_streaks) +geom_point(aes(x=Team_Abbrev,y=count_above_avg_pts,color=player))
-ggplot(games_abv_avg) +geom_point(aes(x=player,y=pts,color=abv_pts))+scale_x_discrete(guide = guide_axis(n.dodge=4))</p>
+<p>##what teams have the most players with streaks</p>
+<p>##Are the trends meaningfully different if we look at points, rebounds, and assists?</p>
+<p>##How are players likely to perform relative to their last 5 performances?
+##Visualize by how much players perform above average in games that they do well</p>
+<p>##analyze how players perform against teams much better than them</p>
+<pre class="r"><code>suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(here))
+load(here::here(&quot;dataset-ignore&quot;, &quot;clean_nba_data.RData&quot;))
+problems()</code></pre>
+<pre class="r"><code>##what is the average length of a streak in the nba by player and team?
+
+#by player
+all_data &lt;-data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = 
+sign(change_net)) %&gt;% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+
+streak &lt;-all_data$streak
+indices&lt;-which(diff(sign(diff(streak)))==-2)+1
+local_max &lt;-slice(all_data,indices)
+local_max_all &lt;- local_max %&gt;%group_by(player) %&gt;% select(streak)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>local_max_positive &lt;-local_max %&gt;%group_by(player) %&gt;% select(streak,change_net) %&gt;%filter(streak &gt;-1)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>summary(local_max_all$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -82.00  -25.00  -12.00  -12.55    1.00   49.00</code></pre>
+<pre class="r"><code>summary(local_max_positive$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    0.00    3.00    8.00   11.42   17.00   49.00</code></pre>
+<pre class="r"><code>#by team
+team_data &lt;-data  %&gt;% distinct(game_id,.keep_all = TRUE) %&gt;%group_by(Team_Abbrev) %&gt;% mutate(change_net = Team_Score - mean(Team_Score),direction  = 
+                                                                                              sign(change_net)) %&gt;% mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+team_streak &lt;-team_data$streak
+indices&lt;-which(diff(sign(diff(team_streak)))==-2)+1
+team_local_max &lt;-slice(team_data,indices)
+team_local_max_all &lt;- team_local_max %&gt;%group_by(player) %&gt;% select(streak)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>team_local_max_positive &lt;-team_local_max %&gt;%group_by(player) %&gt;% select(streak,change_net) %&gt;%filter(streak &gt;-1)</code></pre>
+<pre><code>## Adding missing grouping variables: `player`</code></pre>
+<pre class="r"><code>summary(team_local_max_all$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  -27.00   -8.00   -2.00   -2.57    3.00   16.00</code></pre>
+<pre class="r"><code>summary(team_local_max_positive$streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   2.000   4.000   4.565   6.000  16.000</code></pre>
+<pre class="r"><code>#distribution of streaks by player 
+ggplot(local_max_all) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/question%201-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(local_max_positive) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/question%201-2.png" width="672" /></p>
+<pre class="r"><code>#distribution of streaks by team
+ggplot(team_local_max_all) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/question%201-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(team_local_max_positive) +geom_freqpoly(aes(x=streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/question%201-4.png" width="672" /></p>
+<pre class="r"><code>##what are the highest streaks in the nba by player 2022
+best_streaks_2022 &lt;- data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,season==2022,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% summarize(max_streak=max(streak)) %&gt;% arrange(desc(max_streak)) %&gt;%head(10)
+
+
+top_player_data22 &lt;- data %&gt;% filter(player %in% best_streaks_2022$player) %&gt;% group_by(player)%&gt;% mutate(change_net = pts - mean(pts),
+direction  = sign(change_net)) %&gt;%mutate(usg_pct=usg_pct/100) %&gt;%mutate(direction=ifelse(direction==-1,0,1))
+
+best_player_streaks_2022 &lt;- data %&gt;% group_by(player) %&gt;% filter(mean(minutes) &gt;25,season==2022,minutes &gt;15) %&gt;% mutate(change_net = pts - mean(pts),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) 
+
+##chance that top player streaks continue
+##What are the likelihoods that a player is going to continue a streak once they have started
+a_player_data_agg &lt;-top_player_data22 %&gt;% mutate(a=10*lag(direction)+direction) 
+a_player_data_agg &lt;-a_player_data_agg %&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+
+a_player_data &lt;-best_player_streaks_2022 %&gt;% mutate(a=10*lag(direction)+direction)
+a_player_data &lt;-a_player_data%&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+
+
+knitr::kable(a_player_data_agg)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">0,0</td>
+<td align="right">20</td>
+<td align="right">0.2739726</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">0,1</td>
+<td align="right">11</td>
+<td align="right">0.1506849</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,0</td>
+<td align="right">11</td>
+<td align="right">0.1506849</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,1</td>
+<td align="right">30</td>
+<td align="right">0.4109589</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">0,0</td>
+<td align="right">68</td>
+<td align="right">0.3541667</td>
+</tr>
+<tr class="odd">
+<td align="left">Darius Garland</td>
+<td align="left">0,1</td>
+<td align="right">29</td>
+<td align="right">0.1510417</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">1,0</td>
+<td align="right">29</td>
+<td align="right">0.1510417</td>
+</tr>
+<tr class="odd">
+<td align="left">Darius Garland</td>
+<td align="left">1,1</td>
+<td align="right">65</td>
+<td align="right">0.3385417</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0052083</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="left">0,0</td>
+<td align="right">41</td>
+<td align="right">0.2369942</td>
+</tr>
+<tr class="even">
+<td align="left">De’Aaron Fox</td>
+<td align="left">0,1</td>
+<td align="right">39</td>
+<td align="right">0.2254335</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="left">1,0</td>
+<td align="right">38</td>
+<td align="right">0.2196532</td>
+</tr>
+<tr class="even">
+<td align="left">De’Aaron Fox</td>
+<td align="left">1,1</td>
+<td align="right">54</td>
+<td align="right">0.3121387</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0057803</td>
+</tr>
+<tr class="even">
+<td align="left">Donovan Mitchell</td>
+<td align="left">0,0</td>
+<td align="right">150</td>
+<td align="right">0.4335260</td>
+</tr>
+<tr class="odd">
+<td align="left">Donovan Mitchell</td>
+<td align="left">0,1</td>
+<td align="right">38</td>
+<td align="right">0.1098266</td>
+</tr>
+<tr class="even">
+<td align="left">Donovan Mitchell</td>
+<td align="left">1,0</td>
+<td align="right">38</td>
+<td align="right">0.1098266</td>
+</tr>
+<tr class="odd">
+<td align="left">Donovan Mitchell</td>
+<td align="left">1,1</td>
+<td align="right">119</td>
+<td align="right">0.3439306</td>
+</tr>
+<tr class="even">
+<td align="left">Donovan Mitchell</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0028902</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">0,0</td>
+<td align="right">55</td>
+<td align="right">0.2644231</td>
+</tr>
+<tr class="even">
+<td align="left">Harrison Barnes</td>
+<td align="left">0,1</td>
+<td align="right">49</td>
+<td align="right">0.2355769</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">1,0</td>
+<td align="right">49</td>
+<td align="right">0.2355769</td>
+</tr>
+<tr class="even">
+<td align="left">Harrison Barnes</td>
+<td align="left">1,1</td>
+<td align="right">54</td>
+<td align="right">0.2596154</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0048077</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">0,0</td>
+<td align="right">24</td>
+<td align="right">0.3478261</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Green</td>
+<td align="left">0,1</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">1,0</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Green</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2028986</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">0,0</td>
+<td align="right">95</td>
+<td align="right">0.3275862</td>
+</tr>
+<tr class="even">
+<td align="left">Julius Randle</td>
+<td align="left">0,1</td>
+<td align="right">48</td>
+<td align="right">0.1655172</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">1,0</td>
+<td align="right">47</td>
+<td align="right">0.1620690</td>
+</tr>
+<tr class="even">
+<td align="left">Julius Randle</td>
+<td align="left">1,1</td>
+<td align="right">99</td>
+<td align="right">0.3413793</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0034483</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">0,0</td>
+<td align="right">117</td>
+<td align="right">0.3401163</td>
+</tr>
+<tr class="odd">
+<td align="left">Mikal Bridges</td>
+<td align="left">0,1</td>
+<td align="right">57</td>
+<td align="right">0.1656977</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">1,0</td>
+<td align="right">57</td>
+<td align="right">0.1656977</td>
+</tr>
+<tr class="odd">
+<td align="left">Mikal Bridges</td>
+<td align="left">1,1</td>
+<td align="right">112</td>
+<td align="right">0.3255814</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0029070</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">0,0</td>
+<td align="right">95</td>
+<td align="right">0.3356890</td>
+</tr>
+<tr class="even">
+<td align="left">RJ Barrett</td>
+<td align="left">0,1</td>
+<td align="right">43</td>
+<td align="right">0.1519435</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">1,0</td>
+<td align="right">42</td>
+<td align="right">0.1484099</td>
+</tr>
+<tr class="even">
+<td align="left">RJ Barrett</td>
+<td align="left">1,1</td>
+<td align="right">102</td>
+<td align="right">0.3604240</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0035336</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">0,0</td>
+<td align="right">91</td>
+<td align="right">0.3596838</td>
+</tr>
+<tr class="odd">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">0,1</td>
+<td align="right">36</td>
+<td align="right">0.1422925</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">1,0</td>
+<td align="right">37</td>
+<td align="right">0.1462451</td>
+</tr>
+<tr class="odd">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">1,1</td>
+<td align="right">88</td>
+<td align="right">0.3478261</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0039526</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(a_player_data)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2800000</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2533333</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2533333</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0133333</td>
+</tr>
+<tr class="even">
+<td align="left">Al Horford</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.3768116</td>
+</tr>
+<tr class="odd">
+<td align="left">Al Horford</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="even">
+<td align="left">Al Horford</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2318841</td>
+</tr>
+<tr class="odd">
+<td align="left">Al Horford</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1594203</td>
+</tr>
+<tr class="even">
+<td align="left">Al Horford</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="odd">
+<td align="left">Alec Burks</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2405063</td>
+</tr>
+<tr class="even">
+<td align="left">Alec Burks</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2658228</td>
+</tr>
+<tr class="odd">
+<td align="left">Alec Burks</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2531646</td>
+</tr>
+<tr class="even">
+<td align="left">Alec Burks</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2278481</td>
+</tr>
+<tr class="odd">
+<td align="left">Alec Burks</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0126582</td>
+</tr>
+<tr class="even">
+<td align="left">Andrew Wiggins</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.3561644</td>
+</tr>
+<tr class="odd">
+<td align="left">Andrew Wiggins</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2328767</td>
+</tr>
+<tr class="even">
+<td align="left">Andrew Wiggins</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2328767</td>
+</tr>
+<tr class="odd">
+<td align="left">Andrew Wiggins</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1643836</td>
+</tr>
+<tr class="even">
+<td align="left">Andrew Wiggins</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="odd">
+<td align="left">Anthony Davis</td>
+<td align="left">-1,-1</td>
+<td align="right">12</td>
+<td align="right">0.3076923</td>
+</tr>
+<tr class="even">
+<td align="left">Anthony Davis</td>
+<td align="left">-1,1</td>
+<td align="right">8</td>
+<td align="right">0.2051282</td>
+</tr>
+<tr class="odd">
+<td align="left">Anthony Davis</td>
+<td align="left">1,-1</td>
+<td align="right">7</td>
+<td align="right">0.1794872</td>
+</tr>
+<tr class="even">
+<td align="left">Anthony Davis</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.2820513</td>
+</tr>
+<tr class="odd">
+<td align="left">Anthony Davis</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0256410</td>
+</tr>
+<tr class="even">
+<td align="left">Anthony Edwards</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2702703</td>
+</tr>
+<tr class="odd">
+<td align="left">Anthony Edwards</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2432432</td>
+</tr>
+<tr class="even">
+<td align="left">Anthony Edwards</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2432432</td>
+</tr>
+<tr class="odd">
+<td align="left">Anthony Edwards</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2297297</td>
+</tr>
+<tr class="even">
+<td align="left">Anthony Edwards</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="odd">
+<td align="left">Ayo Dosunmu</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2608696</td>
+</tr>
+<tr class="even">
+<td align="left">Ayo Dosunmu</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2753623</td>
+</tr>
+<tr class="odd">
+<td align="left">Ayo Dosunmu</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2753623</td>
+</tr>
+<tr class="even">
+<td align="left">Ayo Dosunmu</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1739130</td>
+</tr>
+<tr class="odd">
+<td align="left">Ayo Dosunmu</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">Bam Adebayo</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.3157895</td>
+</tr>
+<tr class="odd">
+<td align="left">Bam Adebayo</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2456140</td>
+</tr>
+<tr class="even">
+<td align="left">Bam Adebayo</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="odd">
+<td align="left">Bam Adebayo</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.1578947</td>
+</tr>
+<tr class="even">
+<td align="left">Bam Adebayo</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0175439</td>
+</tr>
+<tr class="odd">
+<td align="left">Bogdan Bogdanovic</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3387097</td>
+</tr>
+<tr class="even">
+<td align="left">Bogdan Bogdanovic</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="odd">
+<td align="left">Bogdan Bogdanovic</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2096774</td>
+</tr>
+<tr class="even">
+<td align="left">Bogdan Bogdanovic</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.2096774</td>
+</tr>
+<tr class="odd">
+<td align="left">Bogdan Bogdanovic</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0161290</td>
+</tr>
+<tr class="even">
+<td align="left">Bojan Bogdanovic</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Bojan Bogdanovic</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Bojan Bogdanovic</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="odd">
+<td align="left">Bojan Bogdanovic</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2714286</td>
+</tr>
+<tr class="even">
+<td align="left">Bojan Bogdanovic</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0142857</td>
+</tr>
+<tr class="odd">
+<td align="left">Bradley Beal</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.3750000</td>
+</tr>
+<tr class="even">
+<td align="left">Bradley Beal</td>
+<td align="left">-1,1</td>
+<td align="right">6</td>
+<td align="right">0.1500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Bradley Beal</td>
+<td align="left">1,-1</td>
+<td align="right">5</td>
+<td align="right">0.1250000</td>
+</tr>
+<tr class="even">
+<td align="left">Bradley Beal</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.3250000</td>
+</tr>
+<tr class="odd">
+<td align="left">Bradley Beal</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0250000</td>
+</tr>
+<tr class="even">
+<td align="left">Brandon Ingram</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2727273</td>
+</tr>
+<tr class="odd">
+<td align="left">Brandon Ingram</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2181818</td>
+</tr>
+<tr class="even">
+<td align="left">Brandon Ingram</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Brandon Ingram</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2909091</td>
+</tr>
+<tr class="even">
+<td align="left">Brandon Ingram</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0181818</td>
+</tr>
+<tr class="odd">
+<td align="left">Brandon Williams</td>
+<td align="left">-1,-1</td>
+<td align="right">6</td>
+<td align="right">0.2857143</td>
+</tr>
+<tr class="even">
+<td align="left">Brandon Williams</td>
+<td align="left">-1,1</td>
+<td align="right">5</td>
+<td align="right">0.2380952</td>
+</tr>
+<tr class="odd">
+<td align="left">Brandon Williams</td>
+<td align="left">1,-1</td>
+<td align="right">5</td>
+<td align="right">0.2380952</td>
+</tr>
+<tr class="even">
+<td align="left">Brandon Williams</td>
+<td align="left">1,1</td>
+<td align="right">4</td>
+<td align="right">0.1904762</td>
+</tr>
+<tr class="odd">
+<td align="left">Brandon Williams</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0476190</td>
+</tr>
+<tr class="even">
+<td align="left">Brook Lopez</td>
+<td align="left">-1,-1</td>
+<td align="right">3</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">Brook Lopez</td>
+<td align="left">-1,1</td>
+<td align="right">2</td>
+<td align="right">0.1538462</td>
+</tr>
+<tr class="even">
+<td align="left">Brook Lopez</td>
+<td align="left">1,-1</td>
+<td align="right">3</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">Brook Lopez</td>
+<td align="left">1,1</td>
+<td align="right">4</td>
+<td align="right">0.3076923</td>
+</tr>
+<tr class="even">
+<td align="left">Brook Lopez</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0769231</td>
+</tr>
+<tr class="odd">
+<td align="left">Buddy Hield</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="even">
+<td align="left">Buddy Hield</td>
+<td align="left">-1,1</td>
+<td align="right">20</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="odd">
+<td align="left">Buddy Hield</td>
+<td align="left">1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2560976</td>
+</tr>
+<tr class="even">
+<td align="left">Buddy Hield</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="odd">
+<td align="left">Buddy Hield</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0121951</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2031250</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2343750</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2343750</td>
+</tr>
+<tr class="odd">
+<td align="left">Cade Cunningham</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.3125000</td>
+</tr>
+<tr class="even">
+<td align="left">Cade Cunningham</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0156250</td>
+</tr>
+<tr class="odd">
+<td align="left">Caris LeVert</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2881356</td>
+</tr>
+<tr class="even">
+<td align="left">Caris LeVert</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2372881</td>
+</tr>
+<tr class="odd">
+<td align="left">Caris LeVert</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2203390</td>
+</tr>
+<tr class="even">
+<td align="left">Caris LeVert</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2372881</td>
+</tr>
+<tr class="odd">
+<td align="left">Caris LeVert</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0169492</td>
+</tr>
+<tr class="even">
+<td align="left">Carmelo Anthony</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="odd">
+<td align="left">Carmelo Anthony</td>
+<td align="left">-1,1</td>
+<td align="right">20</td>
+<td align="right">0.2941176</td>
+</tr>
+<tr class="even">
+<td align="left">Carmelo Anthony</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2794118</td>
+</tr>
+<tr class="odd">
+<td align="left">Carmelo Anthony</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="even">
+<td align="left">Carmelo Anthony</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="odd">
+<td align="left">Chris Paul</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2461538</td>
+</tr>
+<tr class="even">
+<td align="left">Chris Paul</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2153846</td>
+</tr>
+<tr class="odd">
+<td align="left">Chris Paul</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2153846</td>
+</tr>
+<tr class="even">
+<td align="left">Chris Paul</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.3076923</td>
+</tr>
+<tr class="odd">
+<td align="left">Chris Paul</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0153846</td>
+</tr>
+<tr class="even">
+<td align="left">Christian Wood</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2537313</td>
+</tr>
+<tr class="odd">
+<td align="left">Christian Wood</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2388060</td>
+</tr>
+<tr class="even">
+<td align="left">Christian Wood</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="odd">
+<td align="left">Christian Wood</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Christian Wood</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">CJ McCollum</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2419355</td>
+</tr>
+<tr class="even">
+<td align="left">CJ McCollum</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2419355</td>
+</tr>
+<tr class="odd">
+<td align="left">CJ McCollum</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2419355</td>
+</tr>
+<tr class="even">
+<td align="left">CJ McCollum</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2580645</td>
+</tr>
+<tr class="odd">
+<td align="left">CJ McCollum</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0161290</td>
+</tr>
+<tr class="even">
+<td align="left">Clint Capela</td>
+<td align="left">-1,-1</td>
+<td align="right">25</td>
+<td align="right">0.3378378</td>
+</tr>
+<tr class="odd">
+<td align="left">Clint Capela</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2162162</td>
+</tr>
+<tr class="even">
+<td align="left">Clint Capela</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2297297</td>
+</tr>
+<tr class="odd">
+<td align="left">Clint Capela</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2027027</td>
+</tr>
+<tr class="even">
+<td align="left">Clint Capela</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="odd">
+<td align="left">Coby White</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Coby White</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2321429</td>
+</tr>
+<tr class="odd">
+<td align="left">Coby White</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Coby White</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Coby White</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0178571</td>
+</tr>
+<tr class="even">
+<td align="left">Cole Anthony</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2615385</td>
+</tr>
+<tr class="odd">
+<td align="left">Cole Anthony</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2769231</td>
+</tr>
+<tr class="even">
+<td align="left">Cole Anthony</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2769231</td>
+</tr>
+<tr class="odd">
+<td align="left">Cole Anthony</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1692308</td>
+</tr>
+<tr class="even">
+<td align="left">Cole Anthony</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0153846</td>
+</tr>
+<tr class="odd">
+<td align="left">Collin Sexton</td>
+<td align="left">-1,-1</td>
+<td align="right">2</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Collin Sexton</td>
+<td align="left">-1,1</td>
+<td align="right">2</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Collin Sexton</td>
+<td align="left">1,-1</td>
+<td align="right">3</td>
+<td align="right">0.3000000</td>
+</tr>
+<tr class="even">
+<td align="left">Collin Sexton</td>
+<td align="left">1,1</td>
+<td align="right">2</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Collin Sexton</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.1000000</td>
+</tr>
+<tr class="even">
+<td align="left">D’Angelo Russell</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="odd">
+<td align="left">D’Angelo Russell</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="even">
+<td align="left">D’Angelo Russell</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="odd">
+<td align="left">D’Angelo Russell</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1641791</td>
+</tr>
+<tr class="even">
+<td align="left">D’Angelo Russell</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Damian Lillard</td>
+<td align="left">-1,-1</td>
+<td align="right">5</td>
+<td align="right">0.1724138</td>
+</tr>
+<tr class="even">
+<td align="left">Damian Lillard</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.2413793</td>
+</tr>
+<tr class="odd">
+<td align="left">Damian Lillard</td>
+<td align="left">1,-1</td>
+<td align="right">7</td>
+<td align="right">0.2413793</td>
+</tr>
+<tr class="even">
+<td align="left">Damian Lillard</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.3103448</td>
+</tr>
+<tr class="odd">
+<td align="left">Damian Lillard</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0344828</td>
+</tr>
+<tr class="even">
+<td align="left">Danilo Gallinari</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.4126984</td>
+</tr>
+<tr class="odd">
+<td align="left">Danilo Gallinari</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2063492</td>
+</tr>
+<tr class="even">
+<td align="left">Danilo Gallinari</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2063492</td>
+</tr>
+<tr class="odd">
+<td align="left">Danilo Gallinari</td>
+<td align="left">1,1</td>
+<td align="right">10</td>
+<td align="right">0.1587302</td>
+</tr>
+<tr class="even">
+<td align="left">Danilo Gallinari</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0158730</td>
+</tr>
+<tr class="odd">
+<td align="left">Danny Green</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.4181818</td>
+</tr>
+<tr class="even">
+<td align="left">Danny Green</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="odd">
+<td align="left">Danny Green</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="even">
+<td align="left">Danny Green</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Danny Green</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0181818</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2463768</td>
+</tr>
+<tr class="odd">
+<td align="left">Darius Garland</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.1884058</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.1739130</td>
+</tr>
+<tr class="odd">
+<td align="left">Darius Garland</td>
+<td align="left">1,1</td>
+<td align="right">26</td>
+<td align="right">0.3768116</td>
+</tr>
+<tr class="even">
+<td align="left">Darius Garland</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="odd">
+<td align="left">Davion Mitchell</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2972973</td>
+</tr>
+<tr class="even">
+<td align="left">Davion Mitchell</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2027027</td>
+</tr>
+<tr class="odd">
+<td align="left">Davion Mitchell</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2162162</td>
+</tr>
+<tr class="even">
+<td align="left">Davion Mitchell</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2702703</td>
+</tr>
+<tr class="odd">
+<td align="left">Davion Mitchell</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="even">
+<td align="left">De’Aaron Fox</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2881356</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.1694915</td>
+</tr>
+<tr class="even">
+<td align="left">De’Aaron Fox</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.1694915</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="left">1,1</td>
+<td align="right">21</td>
+<td align="right">0.3559322</td>
+</tr>
+<tr class="even">
+<td align="left">De’Aaron Fox</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0169492</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Andre Hunter</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">De’Andre Hunter</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Andre Hunter</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">De’Andre Hunter</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Andre Hunter</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0192308</td>
+</tr>
+<tr class="even">
+<td align="left">Deandre Ayton</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2241379</td>
+</tr>
+<tr class="odd">
+<td align="left">Deandre Ayton</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2586207</td>
+</tr>
+<tr class="even">
+<td align="left">Deandre Ayton</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2758621</td>
+</tr>
+<tr class="odd">
+<td align="left">Deandre Ayton</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.2241379</td>
+</tr>
+<tr class="even">
+<td align="left">Deandre Ayton</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0172414</td>
+</tr>
+<tr class="odd">
+<td align="left">Dejounte Murray</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2463768</td>
+</tr>
+<tr class="even">
+<td align="left">Dejounte Murray</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2463768</td>
+</tr>
+<tr class="odd">
+<td align="left">Dejounte Murray</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2318841</td>
+</tr>
+<tr class="even">
+<td align="left">Dejounte Murray</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2608696</td>
+</tr>
+<tr class="odd">
+<td align="left">Dejounte Murray</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">DeMar DeRozan</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.3026316</td>
+</tr>
+<tr class="odd">
+<td align="left">DeMar DeRozan</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.1842105</td>
+</tr>
+<tr class="even">
+<td align="left">DeMar DeRozan</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1710526</td>
+</tr>
+<tr class="odd">
+<td align="left">DeMar DeRozan</td>
+<td align="left">1,1</td>
+<td align="right">25</td>
+<td align="right">0.3289474</td>
+</tr>
+<tr class="even">
+<td align="left">DeMar DeRozan</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="odd">
+<td align="left">Dennis Schroder</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.3692308</td>
+</tr>
+<tr class="even">
+<td align="left">Dennis Schroder</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.1846154</td>
+</tr>
+<tr class="odd">
+<td align="left">Dennis Schroder</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.1692308</td>
+</tr>
+<tr class="even">
+<td align="left">Dennis Schroder</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2615385</td>
+</tr>
+<tr class="odd">
+<td align="left">Dennis Schroder</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0153846</td>
+</tr>
+<tr class="even">
+<td align="left">Derrick White</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="odd">
+<td align="left">Derrick White</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2533333</td>
+</tr>
+<tr class="even">
+<td align="left">Derrick White</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2533333</td>
+</tr>
+<tr class="odd">
+<td align="left">Derrick White</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="even">
+<td align="left">Derrick White</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0133333</td>
+</tr>
+<tr class="odd">
+<td align="left">Devin Booker</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2608696</td>
+</tr>
+<tr class="even">
+<td align="left">Devin Booker</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.1884058</td>
+</tr>
+<tr class="odd">
+<td align="left">Devin Booker</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1884058</td>
+</tr>
+<tr class="even">
+<td align="left">Devin Booker</td>
+<td align="left">1,1</td>
+<td align="right">24</td>
+<td align="right">0.3478261</td>
+</tr>
+<tr class="odd">
+<td align="left">Devin Booker</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">Devonte’ Graham</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Devonte’ Graham</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Devonte’ Graham</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="odd">
+<td align="left">Devonte’ Graham</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Devonte’ Graham</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="odd">
+<td align="left">Dillon Brooks</td>
+<td align="left">-1,-1</td>
+<td align="right">6</td>
+<td align="right">0.1935484</td>
+</tr>
+<tr class="even">
+<td align="left">Dillon Brooks</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="odd">
+<td align="left">Dillon Brooks</td>
+<td align="left">1,-1</td>
+<td align="right">7</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="even">
+<td align="left">Dillon Brooks</td>
+<td align="left">1,1</td>
+<td align="right">10</td>
+<td align="right">0.3225806</td>
+</tr>
+<tr class="odd">
+<td align="left">Dillon Brooks</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0322581</td>
+</tr>
+<tr class="even">
+<td align="left">Domantas Sabonis</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2580645</td>
+</tr>
+<tr class="odd">
+<td align="left">Domantas Sabonis</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2580645</td>
+</tr>
+<tr class="even">
+<td align="left">Domantas Sabonis</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2419355</td>
+</tr>
+<tr class="odd">
+<td align="left">Domantas Sabonis</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="even">
+<td align="left">Domantas Sabonis</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0161290</td>
+</tr>
+<tr class="odd">
+<td align="left">Donovan Mitchell</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2058824</td>
+</tr>
+<tr class="even">
+<td align="left">Donovan Mitchell</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.1911765</td>
+</tr>
+<tr class="odd">
+<td align="left">Donovan Mitchell</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1911765</td>
+</tr>
+<tr class="even">
+<td align="left">Donovan Mitchell</td>
+<td align="left">1,1</td>
+<td align="right">27</td>
+<td align="right">0.3970588</td>
+</tr>
+<tr class="odd">
+<td align="left">Donovan Mitchell</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="even">
+<td align="left">Dorian Finney-Smith</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="odd">
+<td align="left">Dorian Finney-Smith</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2560976</td>
+</tr>
+<tr class="even">
+<td align="left">Dorian Finney-Smith</td>
+<td align="left">1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2682927</td>
+</tr>
+<tr class="odd">
+<td align="left">Dorian Finney-Smith</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="even">
+<td align="left">Dorian Finney-Smith</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0121951</td>
+</tr>
+<tr class="odd">
+<td align="left">Draymond Green</td>
+<td align="left">-1,-1</td>
+<td align="right">12</td>
+<td align="right">0.2666667</td>
+</tr>
+<tr class="even">
+<td align="left">Draymond Green</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Draymond Green</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Draymond Green</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.3111111</td>
+</tr>
+<tr class="odd">
+<td align="left">Draymond Green</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0222222</td>
+</tr>
+<tr class="even">
+<td align="left">Duncan Robinson</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="odd">
+<td align="left">Duncan Robinson</td>
+<td align="left">-1,1</td>
+<td align="right">23</td>
+<td align="right">0.3066667</td>
+</tr>
+<tr class="even">
+<td align="left">Duncan Robinson</td>
+<td align="left">1,-1</td>
+<td align="right">23</td>
+<td align="right">0.3066667</td>
+</tr>
+<tr class="odd">
+<td align="left">Duncan Robinson</td>
+<td align="left">1,1</td>
+<td align="right">10</td>
+<td align="right">0.1333333</td>
+</tr>
+<tr class="even">
+<td align="left">Duncan Robinson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0133333</td>
+</tr>
+<tr class="odd">
+<td align="left">Eric Bledsoe</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.4230769</td>
+</tr>
+<tr class="even">
+<td align="left">Eric Bledsoe</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.1730769</td>
+</tr>
+<tr class="odd">
+<td align="left">Eric Bledsoe</td>
+<td align="left">1,-1</td>
+<td align="right">8</td>
+<td align="right">0.1538462</td>
+</tr>
+<tr class="even">
+<td align="left">Eric Bledsoe</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">Eric Bledsoe</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0192308</td>
+</tr>
+<tr class="even">
+<td align="left">Eric Gordon</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2931034</td>
+</tr>
+<tr class="odd">
+<td align="left">Eric Gordon</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2068966</td>
+</tr>
+<tr class="even">
+<td align="left">Eric Gordon</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.2068966</td>
+</tr>
+<tr class="odd">
+<td align="left">Eric Gordon</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2758621</td>
+</tr>
+<tr class="even">
+<td align="left">Eric Gordon</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0172414</td>
+</tr>
+<tr class="odd">
+<td align="left">Evan Fournier</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2469136</td>
+</tr>
+<tr class="even">
+<td align="left">Evan Fournier</td>
+<td align="left">-1,1</td>
+<td align="right">23</td>
+<td align="right">0.2839506</td>
+</tr>
+<tr class="odd">
+<td align="left">Evan Fournier</td>
+<td align="left">1,-1</td>
+<td align="right">23</td>
+<td align="right">0.2839506</td>
+</tr>
+<tr class="even">
+<td align="left">Evan Fournier</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.1728395</td>
+</tr>
+<tr class="odd">
+<td align="left">Evan Fournier</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0123457</td>
+</tr>
+<tr class="even">
+<td align="left">Evan Mobley</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3043478</td>
+</tr>
+<tr class="odd">
+<td align="left">Evan Mobley</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2318841</td>
+</tr>
+<tr class="even">
+<td align="left">Evan Mobley</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2318841</td>
+</tr>
+<tr class="odd">
+<td align="left">Evan Mobley</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="even">
+<td align="left">Evan Mobley</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="odd">
+<td align="left">Franz Wagner</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Franz Wagner</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2435897</td>
+</tr>
+<tr class="odd">
+<td align="left">Franz Wagner</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2435897</td>
+</tr>
+<tr class="even">
+<td align="left">Franz Wagner</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Franz Wagner</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0128205</td>
+</tr>
+<tr class="even">
+<td align="left">Fred VanVleet</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.3030303</td>
+</tr>
+<tr class="odd">
+<td align="left">Fred VanVleet</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2575758</td>
+</tr>
+<tr class="even">
+<td align="left">Fred VanVleet</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2424242</td>
+</tr>
+<tr class="odd">
+<td align="left">Fred VanVleet</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="even">
+<td align="left">Fred VanVleet</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0151515</td>
+</tr>
+<tr class="odd">
+<td align="left">Gary Harris</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.3666667</td>
+</tr>
+<tr class="even">
+<td align="left">Gary Harris</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Gary Harris</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.1833333</td>
+</tr>
+<tr class="even">
+<td align="left">Gary Harris</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2333333</td>
+</tr>
+<tr class="odd">
+<td align="left">Gary Harris</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0166667</td>
+</tr>
+<tr class="even">
+<td align="left">Gary Trent Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2535211</td>
+</tr>
+<tr class="odd">
+<td align="left">Gary Trent Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2957746</td>
+</tr>
+<tr class="even">
+<td align="left">Gary Trent Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2816901</td>
+</tr>
+<tr class="odd">
+<td align="left">Gary Trent Jr.</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1549296</td>
+</tr>
+<tr class="even">
+<td align="left">Gary Trent Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0140845</td>
+</tr>
+<tr class="odd">
+<td align="left">Giannis Antetokounmpo</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="even">
+<td align="left">Giannis Antetokounmpo</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="odd">
+<td align="left">Giannis Antetokounmpo</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="even">
+<td align="left">Giannis Antetokounmpo</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">Giannis Antetokounmpo</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="even">
+<td align="left">Gordon Hayward</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2708333</td>
+</tr>
+<tr class="odd">
+<td align="left">Gordon Hayward</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.2083333</td>
+</tr>
+<tr class="even">
+<td align="left">Gordon Hayward</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.2083333</td>
+</tr>
+<tr class="odd">
+<td align="left">Gordon Hayward</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2916667</td>
+</tr>
+<tr class="even">
+<td align="left">Gordon Hayward</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0208333</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Harrison Barnes</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="even">
+<td align="left">Harrison Barnes</td>
+<td align="left">1,1</td>
+<td align="right">21</td>
+<td align="right">0.2763158</td>
+</tr>
+<tr class="odd">
+<td align="left">Harrison Barnes</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="even">
+<td align="left">Herbert Jones</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2820513</td>
+</tr>
+<tr class="odd">
+<td align="left">Herbert Jones</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="even">
+<td align="left">Herbert Jones</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2179487</td>
+</tr>
+<tr class="odd">
+<td align="left">Herbert Jones</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2564103</td>
+</tr>
+<tr class="even">
+<td align="left">Herbert Jones</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0128205</td>
+</tr>
+<tr class="odd">
+<td align="left">Isaac Okoro</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="even">
+<td align="left">Isaac Okoro</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="odd">
+<td align="left">Isaac Okoro</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Isaac Okoro</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">Isaac Okoro</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="even">
+<td align="left">Ja Morant</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2678571</td>
+</tr>
+<tr class="odd">
+<td align="left">Ja Morant</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">Ja Morant</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="odd">
+<td align="left">Ja Morant</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2857143</td>
+</tr>
+<tr class="even">
+<td align="left">Ja Morant</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0178571</td>
+</tr>
+<tr class="odd">
+<td align="left">Jae’Sean Tate</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2207792</td>
+</tr>
+<tr class="even">
+<td align="left">Jae’Sean Tate</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2467532</td>
+</tr>
+<tr class="odd">
+<td align="left">Jae’Sean Tate</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2337662</td>
+</tr>
+<tr class="even">
+<td align="left">Jae’Sean Tate</td>
+<td align="left">1,1</td>
+<td align="right">22</td>
+<td align="right">0.2857143</td>
+</tr>
+<tr class="odd">
+<td align="left">Jae’Sean Tate</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0129870</td>
+</tr>
+<tr class="even">
+<td align="left">Jae Crowder</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1911765</td>
+</tr>
+<tr class="odd">
+<td align="left">Jae Crowder</td>
+<td align="left">-1,1</td>
+<td align="right">20</td>
+<td align="right">0.2941176</td>
+</tr>
+<tr class="even">
+<td align="left">Jae Crowder</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2941176</td>
+</tr>
+<tr class="odd">
+<td align="left">Jae Crowder</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2058824</td>
+</tr>
+<tr class="even">
+<td align="left">Jae Crowder</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Brunson</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2125000</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Brunson</td>
+<td align="left">-1,1</td>
+<td align="right">22</td>
+<td align="right">0.2750000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Brunson</td>
+<td align="left">1,-1</td>
+<td align="right">23</td>
+<td align="right">0.2875000</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Brunson</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2125000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Brunson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0125000</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.3432836</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Green</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Green</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Green</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Suggs</td>
+<td align="left">-1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2391304</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Suggs</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.2391304</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Suggs</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2391304</td>
+</tr>
+<tr class="even">
+<td align="left">Jalen Suggs</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2608696</td>
+</tr>
+<tr class="odd">
+<td align="left">Jalen Suggs</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0217391</td>
+</tr>
+<tr class="even">
+<td align="left">James Harden</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.3030303</td>
+</tr>
+<tr class="odd">
+<td align="left">James Harden</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2272727</td>
+</tr>
+<tr class="even">
+<td align="left">James Harden</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2272727</td>
+</tr>
+<tr class="odd">
+<td align="left">James Harden</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2272727</td>
+</tr>
+<tr class="even">
+<td align="left">James Harden</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0151515</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaren Jackson Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2207792</td>
+</tr>
+<tr class="even">
+<td align="left">Jaren Jackson Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">23</td>
+<td align="right">0.2987013</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaren Jackson Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2857143</td>
+</tr>
+<tr class="even">
+<td align="left">Jaren Jackson Jr.</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaren Jackson Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0129870</td>
+</tr>
+<tr class="even">
+<td align="left">Jarrett Allen</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.3090909</td>
+</tr>
+<tr class="odd">
+<td align="left">Jarrett Allen</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="even">
+<td align="left">Jarrett Allen</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jarrett Allen</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2909091</td>
+</tr>
+<tr class="even">
+<td align="left">Jarrett Allen</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0181818</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaylen Brown</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.3384615</td>
+</tr>
+<tr class="even">
+<td align="left">Jaylen Brown</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.1384615</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaylen Brown</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.1384615</td>
+</tr>
+<tr class="even">
+<td align="left">Jaylen Brown</td>
+<td align="left">1,1</td>
+<td align="right">24</td>
+<td align="right">0.3692308</td>
+</tr>
+<tr class="odd">
+<td align="left">Jaylen Brown</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0153846</td>
+</tr>
+<tr class="even">
+<td align="left">Jayson Tatum</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2763158</td>
+</tr>
+<tr class="odd">
+<td align="left">Jayson Tatum</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="even">
+<td align="left">Jayson Tatum</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jayson Tatum</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="even">
+<td align="left">Jayson Tatum</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="odd">
+<td align="left">Jerami Grant</td>
+<td align="left">-1,-1</td>
+<td align="right">8</td>
+<td align="right">0.1702128</td>
+</tr>
+<tr class="even">
+<td align="left">Jerami Grant</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2553191</td>
+</tr>
+<tr class="odd">
+<td align="left">Jerami Grant</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2765957</td>
+</tr>
+<tr class="even">
+<td align="left">Jerami Grant</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.2765957</td>
+</tr>
+<tr class="odd">
+<td align="left">Jerami Grant</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0212766</td>
+</tr>
+<tr class="even">
+<td align="left">Jimmy Butler</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2280702</td>
+</tr>
+<tr class="odd">
+<td align="left">Jimmy Butler</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2456140</td>
+</tr>
+<tr class="even">
+<td align="left">Jimmy Butler</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2456140</td>
+</tr>
+<tr class="odd">
+<td align="left">Jimmy Butler</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="even">
+<td align="left">Jimmy Butler</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0175439</td>
+</tr>
+<tr class="odd">
+<td align="left">Joe Harris</td>
+<td align="left">-1,-1</td>
+<td align="right">4</td>
+<td align="right">0.3076923</td>
+</tr>
+<tr class="even">
+<td align="left">Joe Harris</td>
+<td align="left">-1,1</td>
+<td align="right">4</td>
+<td align="right">0.3076923</td>
+</tr>
+<tr class="odd">
+<td align="left">Joe Harris</td>
+<td align="left">1,-1</td>
+<td align="right">3</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="even">
+<td align="left">Joe Harris</td>
+<td align="left">1,1</td>
+<td align="right">1</td>
+<td align="right">0.0769231</td>
+</tr>
+<tr class="odd">
+<td align="left">Joe Harris</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0769231</td>
+</tr>
+<tr class="even">
+<td align="left">Joe Ingles</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.3095238</td>
+</tr>
+<tr class="odd">
+<td align="left">Joe Ingles</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">Joe Ingles</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.2380952</td>
+</tr>
+<tr class="odd">
+<td align="left">Joe Ingles</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">Joe Ingles</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0238095</td>
+</tr>
+<tr class="odd">
+<td align="left">Joel Embiid</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2463768</td>
+</tr>
+<tr class="even">
+<td align="left">Joel Embiid</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="odd">
+<td align="left">Joel Embiid</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2173913</td>
+</tr>
+<tr class="even">
+<td align="left">Joel Embiid</td>
+<td align="left">1,1</td>
+<td align="right">21</td>
+<td align="right">0.3043478</td>
+</tr>
+<tr class="odd">
+<td align="left">Joel Embiid</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">John Collins</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2592593</td>
+</tr>
+<tr class="odd">
+<td align="left">John Collins</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="even">
+<td align="left">John Collins</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="odd">
+<td align="left">John Collins</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="even">
+<td align="left">John Collins</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0185185</td>
+</tr>
+<tr class="odd">
+<td align="left">Jonas Valanciunas</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1756757</td>
+</tr>
+<tr class="even">
+<td align="left">Jonas Valanciunas</td>
+<td align="left">-1,1</td>
+<td align="right">22</td>
+<td align="right">0.2972973</td>
+</tr>
+<tr class="odd">
+<td align="left">Jonas Valanciunas</td>
+<td align="left">1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2972973</td>
+</tr>
+<tr class="even">
+<td align="left">Jonas Valanciunas</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2162162</td>
+</tr>
+<tr class="odd">
+<td align="left">Jonas Valanciunas</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="even">
+<td align="left">Jordan Clarkson</td>
+<td align="left">-1,-1</td>
+<td align="right">12</td>
+<td align="right">0.1500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jordan Clarkson</td>
+<td align="left">-1,1</td>
+<td align="right">23</td>
+<td align="right">0.2875000</td>
+</tr>
+<tr class="even">
+<td align="left">Jordan Clarkson</td>
+<td align="left">1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2750000</td>
+</tr>
+<tr class="odd">
+<td align="left">Jordan Clarkson</td>
+<td align="left">1,1</td>
+<td align="right">22</td>
+<td align="right">0.2750000</td>
+</tr>
+<tr class="even">
+<td align="left">Jordan Clarkson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0125000</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Giddey</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Giddey</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Giddey</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2407407</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Giddey</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2592593</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Giddey</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0185185</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Hart</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.4230769</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Hart</td>
+<td align="left">-1,1</td>
+<td align="right">8</td>
+<td align="right">0.1538462</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Hart</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.1730769</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Hart</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Hart</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0192308</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Richardson</td>
+<td align="left">-1,-1</td>
+<td align="right">10</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Richardson</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.3166667</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Richardson</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.3166667</td>
+</tr>
+<tr class="even">
+<td align="left">Josh Richardson</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1833333</td>
+</tr>
+<tr class="odd">
+<td align="left">Josh Richardson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0166667</td>
+</tr>
+<tr class="even">
+<td align="left">Jrue Holiday</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2388060</td>
+</tr>
+<tr class="odd">
+<td align="left">Jrue Holiday</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Jrue Holiday</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2537313</td>
+</tr>
+<tr class="odd">
+<td align="left">Jrue Holiday</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="even">
+<td align="left">Jrue Holiday</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2602740</td>
+</tr>
+<tr class="even">
+<td align="left">Julius Randle</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2191781</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2191781</td>
+</tr>
+<tr class="even">
+<td align="left">Julius Randle</td>
+<td align="left">1,1</td>
+<td align="right">21</td>
+<td align="right">0.2876712</td>
+</tr>
+<tr class="odd">
+<td align="left">Julius Randle</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="even">
+<td align="left">Justin Holiday</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.3285714</td>
+</tr>
+<tr class="odd">
+<td align="left">Justin Holiday</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2428571</td>
+</tr>
+<tr class="even">
+<td align="left">Justin Holiday</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2428571</td>
+</tr>
+<tr class="odd">
+<td align="left">Justin Holiday</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1714286</td>
+</tr>
+<tr class="even">
+<td align="left">Justin Holiday</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0142857</td>
+</tr>
+<tr class="odd">
+<td align="left">Karl-Anthony Towns</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="even">
+<td align="left">Karl-Anthony Towns</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2763158</td>
+</tr>
+<tr class="odd">
+<td align="left">Karl-Anthony Towns</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="even">
+<td align="left">Karl-Anthony Towns</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="odd">
+<td align="left">Karl-Anthony Towns</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="even">
+<td align="left">Keldon Johnson</td>
+<td align="left">-1,-1</td>
+<td align="right">32</td>
+<td align="right">0.4210526</td>
+</tr>
+<tr class="odd">
+<td align="left">Keldon Johnson</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.1447368</td>
+</tr>
+<tr class="even">
+<td align="left">Keldon Johnson</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.1578947</td>
+</tr>
+<tr class="odd">
+<td align="left">Keldon Johnson</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="even">
+<td align="left">Keldon Johnson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="odd">
+<td align="left">Kelly Oubre Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="even">
+<td align="left">Kelly Oubre Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Kelly Oubre Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Kelly Oubre Jr.</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2638889</td>
+</tr>
+<tr class="odd">
+<td align="left">Kelly Oubre Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0138889</td>
+</tr>
+<tr class="even">
+<td align="left">Kemba Walker</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.5135135</td>
+</tr>
+<tr class="odd">
+<td align="left">Kemba Walker</td>
+<td align="left">-1,1</td>
+<td align="right">6</td>
+<td align="right">0.1621622</td>
+</tr>
+<tr class="even">
+<td align="left">Kemba Walker</td>
+<td align="left">1,-1</td>
+<td align="right">5</td>
+<td align="right">0.1351351</td>
+</tr>
+<tr class="odd">
+<td align="left">Kemba Walker</td>
+<td align="left">1,1</td>
+<td align="right">6</td>
+<td align="right">0.1621622</td>
+</tr>
+<tr class="even">
+<td align="left">Kemba Walker</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0270270</td>
+</tr>
+<tr class="odd">
+<td align="left">Kentavious Caldwell-Pope</td>
+<td align="left">-1,-1</td>
+<td align="right">30</td>
+<td align="right">0.3797468</td>
+</tr>
+<tr class="even">
+<td align="left">Kentavious Caldwell-Pope</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.1898734</td>
+</tr>
+<tr class="odd">
+<td align="left">Kentavious Caldwell-Pope</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.1898734</td>
+</tr>
+<tr class="even">
+<td align="left">Kentavious Caldwell-Pope</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2278481</td>
+</tr>
+<tr class="odd">
+<td align="left">Kentavious Caldwell-Pope</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0126582</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Durant</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2962963</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Durant</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2592593</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Durant</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2592593</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Durant</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Durant</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0185185</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Huerter</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Huerter</td>
+<td align="left">-1,1</td>
+<td align="right">22</td>
+<td align="right">0.3055556</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Huerter</td>
+<td align="left">1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2916667</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Huerter</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Huerter</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0138889</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Love</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2428571</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Love</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2714286</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Love</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2571429</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Love</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Love</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0142857</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Porter Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Porter Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.1833333</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Porter Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Kevin Porter Jr.</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Kevin Porter Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0166667</td>
+</tr>
+<tr class="even">
+<td align="left">Khris Middleton</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2537313</td>
+</tr>
+<tr class="odd">
+<td align="left">Khris Middleton</td>
+<td align="left">-1,0</td>
+<td align="right">2</td>
+<td align="right">0.0298507</td>
+</tr>
+<tr class="even">
+<td align="left">Khris Middleton</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.1791045</td>
+</tr>
+<tr class="odd">
+<td align="left">Khris Middleton</td>
+<td align="left">0,-1</td>
+<td align="right">2</td>
+<td align="right">0.0298507</td>
+</tr>
+<tr class="even">
+<td align="left">Khris Middleton</td>
+<td align="left">0,1</td>
+<td align="right">2</td>
+<td align="right">0.0298507</td>
+</tr>
+<tr class="odd">
+<td align="left">Khris Middleton</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.1641791</td>
+</tr>
+<tr class="even">
+<td align="left">Khris Middleton</td>
+<td align="left">1,0</td>
+<td align="right">2</td>
+<td align="right">0.0298507</td>
+</tr>
+<tr class="odd">
+<td align="left">Khris Middleton</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Khris Middleton</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Klay Thompson</td>
+<td align="left">-1,-1</td>
+<td align="right">12</td>
+<td align="right">0.3750000</td>
+</tr>
+<tr class="even">
+<td align="left">Klay Thompson</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.2187500</td>
+</tr>
+<tr class="odd">
+<td align="left">Klay Thompson</td>
+<td align="left">1,-1</td>
+<td align="right">8</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Klay Thompson</td>
+<td align="left">1,1</td>
+<td align="right">4</td>
+<td align="right">0.1250000</td>
+</tr>
+<tr class="odd">
+<td align="left">Klay Thompson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0312500</td>
+</tr>
+<tr class="even">
+<td align="left">Kristaps Porzingis</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2549020</td>
+</tr>
+<tr class="odd">
+<td align="left">Kristaps Porzingis</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.2156863</td>
+</tr>
+<tr class="even">
+<td align="left">Kristaps Porzingis</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2156863</td>
+</tr>
+<tr class="odd">
+<td align="left">Kristaps Porzingis</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2941176</td>
+</tr>
+<tr class="even">
+<td align="left">Kristaps Porzingis</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0196078</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyle Kuzma</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3134328</td>
+</tr>
+<tr class="even">
+<td align="left">Kyle Kuzma</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.1940299</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyle Kuzma</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1940299</td>
+</tr>
+<tr class="even">
+<td align="left">Kyle Kuzma</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyle Kuzma</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="even">
+<td align="left">Kyle Lowry</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2031250</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyle Lowry</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2656250</td>
+</tr>
+<tr class="even">
+<td align="left">Kyle Lowry</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2812500</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyle Lowry</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2343750</td>
+</tr>
+<tr class="even">
+<td align="left">Kyle Lowry</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0156250</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyrie Irving</td>
+<td align="left">-1,-1</td>
+<td align="right">9</td>
+<td align="right">0.3103448</td>
+</tr>
+<tr class="even">
+<td align="left">Kyrie Irving</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.2413793</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyrie Irving</td>
+<td align="left">1,-1</td>
+<td align="right">8</td>
+<td align="right">0.2758621</td>
+</tr>
+<tr class="even">
+<td align="left">Kyrie Irving</td>
+<td align="left">1,1</td>
+<td align="right">4</td>
+<td align="right">0.1379310</td>
+</tr>
+<tr class="odd">
+<td align="left">Kyrie Irving</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0344828</td>
+</tr>
+<tr class="even">
+<td align="left">LaMarcus Aldridge</td>
+<td align="left">-1,-1</td>
+<td align="right">6</td>
+<td align="right">0.1395349</td>
+</tr>
+<tr class="odd">
+<td align="left">LaMarcus Aldridge</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2790698</td>
+</tr>
+<tr class="even">
+<td align="left">LaMarcus Aldridge</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2558140</td>
+</tr>
+<tr class="odd">
+<td align="left">LaMarcus Aldridge</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.3023256</td>
+</tr>
+<tr class="even">
+<td align="left">LaMarcus Aldridge</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0232558</td>
+</tr>
+<tr class="odd">
+<td align="left">LaMelo Ball</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="even">
+<td align="left">LaMelo Ball</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">LaMelo Ball</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">LaMelo Ball</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="odd">
+<td align="left">LaMelo Ball</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="even">
+<td align="left">Lauri Markkanen</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.3278689</td>
+</tr>
+<tr class="odd">
+<td align="left">Lauri Markkanen</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2295082</td>
+</tr>
+<tr class="even">
+<td align="left">Lauri Markkanen</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2295082</td>
+</tr>
+<tr class="odd">
+<td align="left">Lauri Markkanen</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.1967213</td>
+</tr>
+<tr class="even">
+<td align="left">Lauri Markkanen</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0163934</td>
+</tr>
+<tr class="odd">
+<td align="left">LeBron James</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.3275862</td>
+</tr>
+<tr class="even">
+<td align="left">LeBron James</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.1896552</td>
+</tr>
+<tr class="odd">
+<td align="left">LeBron James</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.1896552</td>
+</tr>
+<tr class="even">
+<td align="left">LeBron James</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2758621</td>
+</tr>
+<tr class="odd">
+<td align="left">LeBron James</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0172414</td>
+</tr>
+<tr class="even">
+<td align="left">Lonzo Ball</td>
+<td align="left">-1,-1</td>
+<td align="right">7</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="odd">
+<td align="left">Lonzo Ball</td>
+<td align="left">-1,0</td>
+<td align="right">1</td>
+<td align="right">0.0285714</td>
+</tr>
+<tr class="even">
+<td align="left">Lonzo Ball</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.2571429</td>
+</tr>
+<tr class="odd">
+<td align="left">Lonzo Ball</td>
+<td align="left">0,-1</td>
+<td align="right">2</td>
+<td align="right">0.0571429</td>
+</tr>
+<tr class="even">
+<td align="left">Lonzo Ball</td>
+<td align="left">0,1</td>
+<td align="right">1</td>
+<td align="right">0.0285714</td>
+</tr>
+<tr class="odd">
+<td align="left">Lonzo Ball</td>
+<td align="left">1,-1</td>
+<td align="right">7</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Lonzo Ball</td>
+<td align="left">1,0</td>
+<td align="right">2</td>
+<td align="right">0.0571429</td>
+</tr>
+<tr class="odd">
+<td align="left">Lonzo Ball</td>
+<td align="left">1,1</td>
+<td align="right">5</td>
+<td align="right">0.1428571</td>
+</tr>
+<tr class="even">
+<td align="left">Lonzo Ball</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0285714</td>
+</tr>
+<tr class="odd">
+<td align="left">Luguentz Dort</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Luguentz Dort</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="odd">
+<td align="left">Luguentz Dort</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2549020</td>
+</tr>
+<tr class="even">
+<td align="left">Luguentz Dort</td>
+<td align="left">1,1</td>
+<td align="right">8</td>
+<td align="right">0.1568627</td>
+</tr>
+<tr class="odd">
+<td align="left">Luguentz Dort</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0196078</td>
+</tr>
+<tr class="even">
+<td align="left">Luka Doncic</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.3582090</td>
+</tr>
+<tr class="odd">
+<td align="left">Luka Doncic</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="even">
+<td align="left">Luka Doncic</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">Luka Doncic</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.1940299</td>
+</tr>
+<tr class="even">
+<td align="left">Luka Doncic</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Malcolm Brogdon</td>
+<td align="left">-1,-1</td>
+<td align="right">11</td>
+<td align="right">0.3055556</td>
+</tr>
+<tr class="even">
+<td align="left">Malcolm Brogdon</td>
+<td align="left">-1,1</td>
+<td align="right">8</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="odd">
+<td align="left">Malcolm Brogdon</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Malcolm Brogdon</td>
+<td align="left">1,1</td>
+<td align="right">7</td>
+<td align="right">0.1944444</td>
+</tr>
+<tr class="odd">
+<td align="left">Malcolm Brogdon</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0277778</td>
+</tr>
+<tr class="even">
+<td align="left">Marcus Morris</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2830189</td>
+</tr>
+<tr class="odd">
+<td align="left">Marcus Morris</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2452830</td>
+</tr>
+<tr class="even">
+<td align="left">Marcus Morris</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.2264151</td>
+</tr>
+<tr class="odd">
+<td align="left">Marcus Morris</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2264151</td>
+</tr>
+<tr class="even">
+<td align="left">Marcus Morris</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0188679</td>
+</tr>
+<tr class="odd">
+<td align="left">Marcus Smart</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">Marcus Smart</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2714286</td>
+</tr>
+<tr class="odd">
+<td align="left">Marcus Smart</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2714286</td>
+</tr>
+<tr class="even">
+<td align="left">Marcus Smart</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2285714</td>
+</tr>
+<tr class="odd">
+<td align="left">Marcus Smart</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0142857</td>
+</tr>
+<tr class="even">
+<td align="left">Markelle Fultz</td>
+<td align="left">-1,-1</td>
+<td align="right">3</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="odd">
+<td align="left">Markelle Fultz</td>
+<td align="left">-1,1</td>
+<td align="right">3</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="even">
+<td align="left">Markelle Fultz</td>
+<td align="left">1,-1</td>
+<td align="right">3</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="odd">
+<td align="left">Markelle Fultz</td>
+<td align="left">1,1</td>
+<td align="right">7</td>
+<td align="right">0.4117647</td>
+</tr>
+<tr class="even">
+<td align="left">Markelle Fultz</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0588235</td>
+</tr>
+<tr class="odd">
+<td align="left">Michael Porter Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">1</td>
+<td align="right">0.1250000</td>
+</tr>
+<tr class="even">
+<td align="left">Michael Porter Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">2</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Michael Porter Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">2</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Michael Porter Jr.</td>
+<td align="left">1,1</td>
+<td align="right">2</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Michael Porter Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.1250000</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.2926829</td>
+</tr>
+<tr class="odd">
+<td align="left">Mikal Bridges</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="odd">
+<td align="left">Mikal Bridges</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="even">
+<td align="left">Mikal Bridges</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0121951</td>
+</tr>
+<tr class="odd">
+<td align="left">Mike Conley</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2602740</td>
+</tr>
+<tr class="even">
+<td align="left">Mike Conley</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2465753</td>
+</tr>
+<tr class="odd">
+<td align="left">Mike Conley</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2465753</td>
+</tr>
+<tr class="even">
+<td align="left">Mike Conley</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2328767</td>
+</tr>
+<tr class="odd">
+<td align="left">Mike Conley</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="even">
+<td align="left">Miles Bridges</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2195122</td>
+</tr>
+<tr class="odd">
+<td align="left">Miles Bridges</td>
+<td align="left">-1,1</td>
+<td align="right">22</td>
+<td align="right">0.2682927</td>
+</tr>
+<tr class="even">
+<td align="left">Miles Bridges</td>
+<td align="left">1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2682927</td>
+</tr>
+<tr class="odd">
+<td align="left">Miles Bridges</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2317073</td>
+</tr>
+<tr class="even">
+<td align="left">Miles Bridges</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0121951</td>
+</tr>
+<tr class="odd">
+<td align="left">Mo Bamba</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.3823529</td>
+</tr>
+<tr class="even">
+<td align="left">Mo Bamba</td>
+<td align="left">-1,1</td>
+<td align="right">15</td>
+<td align="right">0.2205882</td>
+</tr>
+<tr class="odd">
+<td align="left">Mo Bamba</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="even">
+<td align="left">Mo Bamba</td>
+<td align="left">1,1</td>
+<td align="right">10</td>
+<td align="right">0.1470588</td>
+</tr>
+<tr class="odd">
+<td align="left">Mo Bamba</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="even">
+<td align="left">Myles Turner</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.3414634</td>
+</tr>
+<tr class="odd">
+<td align="left">Myles Turner</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.2682927</td>
+</tr>
+<tr class="even">
+<td align="left">Myles Turner</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="odd">
+<td align="left">Myles Turner</td>
+<td align="left">1,1</td>
+<td align="right">5</td>
+<td align="right">0.1219512</td>
+</tr>
+<tr class="even">
+<td align="left">Myles Turner</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0243902</td>
+</tr>
+<tr class="odd">
+<td align="left">Nikola Jokic</td>
+<td align="left">-1,-1</td>
+<td align="right">25</td>
+<td align="right">0.3424658</td>
+</tr>
+<tr class="even">
+<td align="left">Nikola Jokic</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2191781</td>
+</tr>
+<tr class="odd">
+<td align="left">Nikola Jokic</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2328767</td>
+</tr>
+<tr class="even">
+<td align="left">Nikola Jokic</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.1917808</td>
+</tr>
+<tr class="odd">
+<td align="left">Nikola Jokic</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="even">
+<td align="left">Nikola Vucevic</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2876712</td>
+</tr>
+<tr class="odd">
+<td align="left">Nikola Vucevic</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2191781</td>
+</tr>
+<tr class="even">
+<td align="left">Nikola Vucevic</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2054795</td>
+</tr>
+<tr class="odd">
+<td align="left">Nikola Vucevic</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2739726</td>
+</tr>
+<tr class="even">
+<td align="left">Nikola Vucevic</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0136986</td>
+</tr>
+<tr class="odd">
+<td align="left">Norman Powell</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.3409091</td>
+</tr>
+<tr class="even">
+<td align="left">Norman Powell</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.2045455</td>
+</tr>
+<tr class="odd">
+<td align="left">Norman Powell</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.2272727</td>
+</tr>
+<tr class="even">
+<td align="left">Norman Powell</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.2045455</td>
+</tr>
+<tr class="odd">
+<td align="left">Norman Powell</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0227273</td>
+</tr>
+<tr class="even">
+<td align="left">OG Anunoby</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="odd">
+<td align="left">OG Anunoby</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">OG Anunoby</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2291667</td>
+</tr>
+<tr class="odd">
+<td align="left">OG Anunoby</td>
+<td align="left">1,1</td>
+<td align="right">8</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="even">
+<td align="left">OG Anunoby</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0208333</td>
+</tr>
+<tr class="odd">
+<td align="left">P.J. Tucker</td>
+<td align="left">-1,-1</td>
+<td align="right">27</td>
+<td align="right">0.3802817</td>
+</tr>
+<tr class="even">
+<td align="left">P.J. Tucker</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.1690141</td>
+</tr>
+<tr class="odd">
+<td align="left">P.J. Tucker</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.1549296</td>
+</tr>
+<tr class="even">
+<td align="left">P.J. Tucker</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2816901</td>
+</tr>
+<tr class="odd">
+<td align="left">P.J. Tucker</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0140845</td>
+</tr>
+<tr class="even">
+<td align="left">P.J. Washington</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">P.J. Washington</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2461538</td>
+</tr>
+<tr class="even">
+<td align="left">P.J. Washington</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">P.J. Washington</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2769231</td>
+</tr>
+<tr class="even">
+<td align="left">P.J. Washington</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0153846</td>
+</tr>
+<tr class="odd">
+<td align="left">Pascal Siakam</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2898551</td>
+</tr>
+<tr class="even">
+<td align="left">Pascal Siakam</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2028986</td>
+</tr>
+<tr class="odd">
+<td align="left">Pascal Siakam</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2028986</td>
+</tr>
+<tr class="even">
+<td align="left">Pascal Siakam</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2898551</td>
+</tr>
+<tr class="odd">
+<td align="left">Pascal Siakam</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">Patrick Williams</td>
+<td align="left">-1,-1</td>
+<td align="right">8</td>
+<td align="right">0.5333333</td>
+</tr>
+<tr class="odd">
+<td align="left">Patrick Williams</td>
+<td align="left">-1,1</td>
+<td align="right">1</td>
+<td align="right">0.0666667</td>
+</tr>
+<tr class="even">
+<td align="left">Patrick Williams</td>
+<td align="left">1,-1</td>
+<td align="right">2</td>
+<td align="right">0.1333333</td>
+</tr>
+<tr class="odd">
+<td align="left">Patrick Williams</td>
+<td align="left">1,1</td>
+<td align="right">3</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">Patrick Williams</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Paul George</td>
+<td align="left">-1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2903226</td>
+</tr>
+<tr class="even">
+<td align="left">Paul George</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="odd">
+<td align="left">Paul George</td>
+<td align="left">1,-1</td>
+<td align="right">7</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="even">
+<td align="left">Paul George</td>
+<td align="left">1,1</td>
+<td align="right">7</td>
+<td align="right">0.2258065</td>
+</tr>
+<tr class="odd">
+<td align="left">Paul George</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0322581</td>
+</tr>
+<tr class="even">
+<td align="left">Reggie Bullock</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.3529412</td>
+</tr>
+<tr class="odd">
+<td align="left">Reggie Bullock</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2058824</td>
+</tr>
+<tr class="even">
+<td align="left">Reggie Bullock</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1911765</td>
+</tr>
+<tr class="odd">
+<td align="left">Reggie Bullock</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="even">
+<td align="left">Reggie Bullock</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="odd">
+<td align="left">Richaun Holmes</td>
+<td align="left">-1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2894737</td>
+</tr>
+<tr class="even">
+<td align="left">Richaun Holmes</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="odd">
+<td align="left">Richaun Holmes</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="even">
+<td align="left">Richaun Holmes</td>
+<td align="left">1,1</td>
+<td align="right">8</td>
+<td align="right">0.2105263</td>
+</tr>
+<tr class="odd">
+<td align="left">Richaun Holmes</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0263158</td>
+</tr>
+<tr class="even">
+<td align="left">Ricky Rubio</td>
+<td align="left">-1,-1</td>
+<td align="right">8</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="odd">
+<td align="left">Ricky Rubio</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.2941176</td>
+</tr>
+<tr class="even">
+<td align="left">Ricky Rubio</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="odd">
+<td align="left">Ricky Rubio</td>
+<td align="left">1,1</td>
+<td align="right">6</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="even">
+<td align="left">Ricky Rubio</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0294118</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">RJ Barrett</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2028986</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2028986</td>
+</tr>
+<tr class="even">
+<td align="left">RJ Barrett</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2463768</td>
+</tr>
+<tr class="odd">
+<td align="left">RJ Barrett</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0144928</td>
+</tr>
+<tr class="even">
+<td align="left">Robert Covington</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3088235</td>
+</tr>
+<tr class="odd">
+<td align="left">Robert Covington</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="even">
+<td align="left">Robert Covington</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Robert Covington</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1617647</td>
+</tr>
+<tr class="even">
+<td align="left">Robert Covington</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="odd">
+<td align="left">Royce O’Neale</td>
+<td align="left">-1,-1</td>
+<td align="right">30</td>
+<td align="right">0.3846154</td>
+</tr>
+<tr class="even">
+<td align="left">Royce O’Neale</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.1794872</td>
+</tr>
+<tr class="odd">
+<td align="left">Royce O’Neale</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="even">
+<td align="left">Royce O’Neale</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2564103</td>
+</tr>
+<tr class="odd">
+<td align="left">Royce O’Neale</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0128205</td>
+</tr>
+<tr class="even">
+<td align="left">Rudy Gobert</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="odd">
+<td align="left">Rudy Gobert</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="even">
+<td align="left">Rudy Gobert</td>
+<td align="left">1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="odd">
+<td align="left">Rudy Gobert</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Rudy Gobert</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Rui Hachimura</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.4473684</td>
+</tr>
+<tr class="even">
+<td align="left">Rui Hachimura</td>
+<td align="left">-1,1</td>
+<td align="right">7</td>
+<td align="right">0.1842105</td>
+</tr>
+<tr class="odd">
+<td align="left">Rui Hachimura</td>
+<td align="left">1,-1</td>
+<td align="right">8</td>
+<td align="right">0.2105263</td>
+</tr>
+<tr class="even">
+<td align="left">Rui Hachimura</td>
+<td align="left">1,1</td>
+<td align="right">5</td>
+<td align="right">0.1315789</td>
+</tr>
+<tr class="odd">
+<td align="left">Rui Hachimura</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0263158</td>
+</tr>
+<tr class="even">
+<td align="left">Russell Westbrook</td>
+<td align="left">-1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Russell Westbrook</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2250000</td>
+</tr>
+<tr class="even">
+<td align="left">Russell Westbrook</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2250000</td>
+</tr>
+<tr class="odd">
+<td align="left">Russell Westbrook</td>
+<td align="left">1,1</td>
+<td align="right">23</td>
+<td align="right">0.2875000</td>
+</tr>
+<tr class="even">
+<td align="left">Russell Westbrook</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0125000</td>
+</tr>
+<tr class="odd">
+<td align="left">Saddiq Bey</td>
+<td align="left">-1,-1</td>
+<td align="right">33</td>
+<td align="right">0.4074074</td>
+</tr>
+<tr class="even">
+<td align="left">Saddiq Bey</td>
+<td align="left">-1,1</td>
+<td align="right">12</td>
+<td align="right">0.1481481</td>
+</tr>
+<tr class="odd">
+<td align="left">Saddiq Bey</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.1604938</td>
+</tr>
+<tr class="even">
+<td align="left">Saddiq Bey</td>
+<td align="left">1,1</td>
+<td align="right">22</td>
+<td align="right">0.2716049</td>
+</tr>
+<tr class="odd">
+<td align="left">Saddiq Bey</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0123457</td>
+</tr>
+<tr class="even">
+<td align="left">Scottie Barnes</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.1866667</td>
+</tr>
+<tr class="odd">
+<td align="left">Scottie Barnes</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2800000</td>
+</tr>
+<tr class="even">
+<td align="left">Scottie Barnes</td>
+<td align="left">1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2800000</td>
+</tr>
+<tr class="odd">
+<td align="left">Scottie Barnes</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="even">
+<td align="left">Scottie Barnes</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0133333</td>
+</tr>
+<tr class="odd">
+<td align="left">Seth Curry</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Seth Curry</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="odd">
+<td align="left">Seth Curry</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2063492</td>
+</tr>
+<tr class="even">
+<td align="left">Seth Curry</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="odd">
+<td align="left">Seth Curry</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0158730</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="odd">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">-1,1</td>
+<td align="right">9</td>
+<td align="right">0.1578947</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">1,-1</td>
+<td align="right">10</td>
+<td align="right">0.1754386</td>
+</tr>
+<tr class="odd">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">1,1</td>
+<td align="right">22</td>
+<td align="right">0.3859649</td>
+</tr>
+<tr class="even">
+<td align="left">Shai Gilgeous-Alexander</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0175439</td>
+</tr>
+<tr class="odd">
+<td align="left">Spencer Dinwiddie</td>
+<td align="left">-1,-1</td>
+<td align="right">25</td>
+<td align="right">0.3676471</td>
+</tr>
+<tr class="even">
+<td align="left">Spencer Dinwiddie</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.1911765</td>
+</tr>
+<tr class="odd">
+<td align="left">Spencer Dinwiddie</td>
+<td align="left">1,-1</td>
+<td align="right">12</td>
+<td align="right">0.1764706</td>
+</tr>
+<tr class="even">
+<td align="left">Spencer Dinwiddie</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Spencer Dinwiddie</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="even">
+<td align="left">Stephen Curry</td>
+<td align="left">-1,-1</td>
+<td align="right">15</td>
+<td align="right">0.2380952</td>
+</tr>
+<tr class="odd">
+<td align="left">Stephen Curry</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.3015873</td>
+</tr>
+<tr class="even">
+<td align="left">Stephen Curry</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.3015873</td>
+</tr>
+<tr class="odd">
+<td align="left">Stephen Curry</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.1428571</td>
+</tr>
+<tr class="even">
+<td align="left">Stephen Curry</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0158730</td>
+</tr>
+<tr class="odd">
+<td align="left">Steven Adams</td>
+<td align="left">-1,-1</td>
+<td align="right">29</td>
+<td align="right">0.3815789</td>
+</tr>
+<tr class="even">
+<td align="left">Steven Adams</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="odd">
+<td align="left">Steven Adams</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2105263</td>
+</tr>
+<tr class="even">
+<td align="left">Steven Adams</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.1710526</td>
+</tr>
+<tr class="odd">
+<td align="left">Steven Adams</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="even">
+<td align="left">Terry Rozier</td>
+<td align="left">-1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="odd">
+<td align="left">Terry Rozier</td>
+<td align="left">-1,1</td>
+<td align="right">20</td>
+<td align="right">0.2666667</td>
+</tr>
+<tr class="even">
+<td align="left">Terry Rozier</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Terry Rozier</td>
+<td align="left">1,1</td>
+<td align="right">16</td>
+<td align="right">0.2133333</td>
+</tr>
+<tr class="even">
+<td align="left">Terry Rozier</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0133333</td>
+</tr>
+<tr class="odd">
+<td align="left">Tim Hardaway Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">10</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="even">
+<td align="left">Tim Hardaway Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">10</td>
+<td align="right">0.2439024</td>
+</tr>
+<tr class="odd">
+<td align="left">Tim Hardaway Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">9</td>
+<td align="right">0.2195122</td>
+</tr>
+<tr class="even">
+<td align="left">Tim Hardaway Jr.</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.2682927</td>
+</tr>
+<tr class="odd">
+<td align="left">Tim Hardaway Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0243902</td>
+</tr>
+<tr class="even">
+<td align="left">Tobias Harris</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2972973</td>
+</tr>
+<tr class="odd">
+<td align="left">Tobias Harris</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2567568</td>
+</tr>
+<tr class="even">
+<td align="left">Tobias Harris</td>
+<td align="left">1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2567568</td>
+</tr>
+<tr class="odd">
+<td align="left">Tobias Harris</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.1756757</td>
+</tr>
+<tr class="even">
+<td align="left">Tobias Harris</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="odd">
+<td align="left">Trae Young</td>
+<td align="left">-1,-1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Trae Young</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Trae Young</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2368421</td>
+</tr>
+<tr class="even">
+<td align="left">Trae Young</td>
+<td align="left">1,1</td>
+<td align="right">19</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Trae Young</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0131579</td>
+</tr>
+<tr class="even">
+<td align="left">Tyler Herro</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">Tyler Herro</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2537313</td>
+</tr>
+<tr class="even">
+<td align="left">Tyler Herro</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2537313</td>
+</tr>
+<tr class="odd">
+<td align="left">Tyler Herro</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2686567</td>
+</tr>
+<tr class="even">
+<td align="left">Tyler Herro</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0149254</td>
+</tr>
+<tr class="odd">
+<td align="left">Tyrese Haliburton</td>
+<td align="left">-1,-1</td>
+<td align="right">23</td>
+<td align="right">0.2948718</td>
+</tr>
+<tr class="even">
+<td align="left">Tyrese Haliburton</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">Tyrese Haliburton</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="even">
+<td align="left">Tyrese Haliburton</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2307692</td>
+</tr>
+<tr class="odd">
+<td align="left">Tyrese Haliburton</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0128205</td>
+</tr>
+<tr class="even">
+<td align="left">Victor Oladipo</td>
+<td align="left">-1,-1</td>
+<td align="right">4</td>
+<td align="right">0.5714286</td>
+</tr>
+<tr class="odd">
+<td align="left">Victor Oladipo</td>
+<td align="left">1,-1</td>
+<td align="right">1</td>
+<td align="right">0.1428571</td>
+</tr>
+<tr class="even">
+<td align="left">Victor Oladipo</td>
+<td align="left">1,1</td>
+<td align="right">1</td>
+<td align="right">0.1428571</td>
+</tr>
+<tr class="odd">
+<td align="left">Victor Oladipo</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.1428571</td>
+</tr>
+<tr class="even">
+<td align="left">Wendell Carter Jr.</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2622951</td>
+</tr>
+<tr class="odd">
+<td align="left">Wendell Carter Jr.</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2786885</td>
+</tr>
+<tr class="even">
+<td align="left">Wendell Carter Jr.</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2622951</td>
+</tr>
+<tr class="odd">
+<td align="left">Wendell Carter Jr.</td>
+<td align="left">1,1</td>
+<td align="right">11</td>
+<td align="right">0.1803279</td>
+</tr>
+<tr class="even">
+<td align="left">Wendell Carter Jr.</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0163934</td>
+</tr>
+<tr class="odd">
+<td align="left">Wes Iwundu</td>
+<td align="left">1,-1</td>
+<td align="right">1</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Wes Iwundu</td>
+<td align="left">1,1</td>
+<td align="right">1</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="odd">
+<td align="left">Wes Iwundu</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="even">
+<td align="left">Will Barton</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2394366</td>
+</tr>
+<tr class="odd">
+<td align="left">Will Barton</td>
+<td align="left">-1,1</td>
+<td align="right">19</td>
+<td align="right">0.2676056</td>
+</tr>
+<tr class="even">
+<td align="left">Will Barton</td>
+<td align="left">1,-1</td>
+<td align="right">20</td>
+<td align="right">0.2816901</td>
+</tr>
+<tr class="odd">
+<td align="left">Will Barton</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.1971831</td>
+</tr>
+<tr class="even">
+<td align="left">Will Barton</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0140845</td>
+</tr>
+<tr class="odd">
+<td align="left">Zach LaVine</td>
+<td align="left">-1,-1</td>
+<td align="right">12</td>
+<td align="right">0.1818182</td>
+</tr>
+<tr class="even">
+<td align="left">Zach LaVine</td>
+<td align="left">-1,1</td>
+<td align="right">16</td>
+<td align="right">0.2424242</td>
+</tr>
+<tr class="odd">
+<td align="left">Zach LaVine</td>
+<td align="left">1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2424242</td>
+</tr>
+<tr class="even">
+<td align="left">Zach LaVine</td>
+<td align="left">1,1</td>
+<td align="right">21</td>
+<td align="right">0.3181818</td>
+</tr>
+<tr class="odd">
+<td align="left">Zach LaVine</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0151515</td>
+</tr>
+<tr class="even">
+<td align="left">Zavier Simpson</td>
+<td align="left">-1,-1</td>
+<td align="right">1</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Zavier Simpson</td>
+<td align="left">1,-1</td>
+<td align="right">1</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">Zavier Simpson</td>
+<td align="left">1,1</td>
+<td align="right">1</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">Zavier Simpson</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.2500000</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>#by team
+best_team_streaks_2022 &lt;- data %&gt;% distinct(game_id,.keep_all=TRUE) %&gt;% group_by(Team_Abbrev) %&gt;%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% mutate(max_streak=max(streak))
+
+top_team_data22 &lt;- data %&gt;% filter(Team_Abbrev %in% best_team_streaks_2022$Team_Abbrev) %&gt;% mutate(change_net = Team_Score - mean(Team_Score),
+direction  = sign(change_net)) %&gt;%mutate(usg_pct=usg_pct/100) %&gt;%mutate(direction=ifelse(direction==-1,1,0))
+
+##chance that team streaks continue
+a_team_data_agg &lt;-top_team_data22 %&gt;% ungroup() %&gt;% mutate(a=10*lag(direction)+direction) %&gt;% count(a) 
+a_team_data_agg &lt;-top_team_data22 %&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+
+a_team_data &lt;- best_team_streaks_2022 %&gt;% ungroup() %&gt;% mutate(a=10*lag(direction)+direction) %&gt;% count(a) 
+a_team_data &lt;- best_team_streaks_2022 %&gt;% mutate(a=str_c(lag(direction),direction,sep = &#39;,&#39;)) %&gt;% count(a) %&gt;% mutate(prop=n/sum(n))
+
+
+knitr::kable(a_team_data)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Team_Abbrev</th>
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">ATL</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.2058824</td>
+</tr>
+<tr class="even">
+<td align="left">ATL</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="odd">
+<td align="left">ATL</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="even">
+<td align="left">ATL</td>
+<td align="left">1,1</td>
+<td align="right">17</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">ATL</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="even">
+<td align="left">BOS</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.3243243</td>
+</tr>
+<tr class="odd">
+<td align="left">BOS</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2297297</td>
+</tr>
+<tr class="even">
+<td align="left">BOS</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2432432</td>
+</tr>
+<tr class="odd">
+<td align="left">BOS</td>
+<td align="left">1,1</td>
+<td align="right">14</td>
+<td align="right">0.1891892</td>
+</tr>
+<tr class="even">
+<td align="left">BOS</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="odd">
+<td align="left">BRK</td>
+<td align="left">-1,-1</td>
+<td align="right">54</td>
+<td align="right">0.2934783</td>
+</tr>
+<tr class="even">
+<td align="left">BRK</td>
+<td align="left">-1,1</td>
+<td align="right">43</td>
+<td align="right">0.2336957</td>
+</tr>
+<tr class="odd">
+<td align="left">BRK</td>
+<td align="left">1,-1</td>
+<td align="right">42</td>
+<td align="right">0.2282609</td>
+</tr>
+<tr class="even">
+<td align="left">BRK</td>
+<td align="left">1,1</td>
+<td align="right">44</td>
+<td align="right">0.2391304</td>
+</tr>
+<tr class="odd">
+<td align="left">BRK</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0054348</td>
+</tr>
+<tr class="even">
+<td align="left">CHI</td>
+<td align="left">-1,-1</td>
+<td align="right">33</td>
+<td align="right">0.2444444</td>
+</tr>
+<tr class="odd">
+<td align="left">CHI</td>
+<td align="left">-1,1</td>
+<td align="right">34</td>
+<td align="right">0.2518519</td>
+</tr>
+<tr class="even">
+<td align="left">CHI</td>
+<td align="left">1,-1</td>
+<td align="right">35</td>
+<td align="right">0.2592593</td>
+</tr>
+<tr class="odd">
+<td align="left">CHI</td>
+<td align="left">1,1</td>
+<td align="right">32</td>
+<td align="right">0.2370370</td>
+</tr>
+<tr class="even">
+<td align="left">CHI</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0074074</td>
+</tr>
+<tr class="odd">
+<td align="left">CHO</td>
+<td align="left">-1,-1</td>
+<td align="right">52</td>
+<td align="right">0.3005780</td>
+</tr>
+<tr class="even">
+<td align="left">CHO</td>
+<td align="left">-1,1</td>
+<td align="right">39</td>
+<td align="right">0.2254335</td>
+</tr>
+<tr class="odd">
+<td align="left">CHO</td>
+<td align="left">1,-1</td>
+<td align="right">40</td>
+<td align="right">0.2312139</td>
+</tr>
+<tr class="even">
+<td align="left">CHO</td>
+<td align="left">1,1</td>
+<td align="right">41</td>
+<td align="right">0.2369942</td>
+</tr>
+<tr class="odd">
+<td align="left">CHO</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0057803</td>
+</tr>
+<tr class="even">
+<td align="left">CLE</td>
+<td align="left">-1,-1</td>
+<td align="right">51</td>
+<td align="right">0.3090909</td>
+</tr>
+<tr class="odd">
+<td align="left">CLE</td>
+<td align="left">-1,1</td>
+<td align="right">33</td>
+<td align="right">0.2000000</td>
+</tr>
+<tr class="even">
+<td align="left">CLE</td>
+<td align="left">1,-1</td>
+<td align="right">34</td>
+<td align="right">0.2060606</td>
+</tr>
+<tr class="odd">
+<td align="left">CLE</td>
+<td align="left">1,1</td>
+<td align="right">46</td>
+<td align="right">0.2787879</td>
+</tr>
+<tr class="even">
+<td align="left">CLE</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0060606</td>
+</tr>
+<tr class="odd">
+<td align="left">DAL</td>
+<td align="left">-1,-1</td>
+<td align="right">32</td>
+<td align="right">0.3636364</td>
+</tr>
+<tr class="even">
+<td align="left">DAL</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.1931818</td>
+</tr>
+<tr class="odd">
+<td align="left">DAL</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2045455</td>
+</tr>
+<tr class="even">
+<td align="left">DAL</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2272727</td>
+</tr>
+<tr class="odd">
+<td align="left">DAL</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0113636</td>
+</tr>
+<tr class="even">
+<td align="left">DEN</td>
+<td align="left">-1,-1</td>
+<td align="right">9</td>
+<td align="right">0.1875000</td>
+</tr>
+<tr class="odd">
+<td align="left">DEN</td>
+<td align="left">-1,1</td>
+<td align="right">13</td>
+<td align="right">0.2708333</td>
+</tr>
+<tr class="even">
+<td align="left">DEN</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2708333</td>
+</tr>
+<tr class="odd">
+<td align="left">DEN</td>
+<td align="left">1,1</td>
+<td align="right">12</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">DEN</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0208333</td>
+</tr>
+<tr class="odd">
+<td align="left">DET</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.2385321</td>
+</tr>
+<tr class="even">
+<td align="left">DET</td>
+<td align="left">-1,1</td>
+<td align="right">29</td>
+<td align="right">0.2660550</td>
+</tr>
+<tr class="odd">
+<td align="left">DET</td>
+<td align="left">1,-1</td>
+<td align="right">29</td>
+<td align="right">0.2660550</td>
+</tr>
+<tr class="even">
+<td align="left">DET</td>
+<td align="left">1,1</td>
+<td align="right">24</td>
+<td align="right">0.2201835</td>
+</tr>
+<tr class="odd">
+<td align="left">DET</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0091743</td>
+</tr>
+<tr class="even">
+<td align="left">GSW</td>
+<td align="left">-1,-1</td>
+<td align="right">26</td>
+<td align="right">0.1884058</td>
+</tr>
+<tr class="odd">
+<td align="left">GSW</td>
+<td align="left">-1,1</td>
+<td align="right">36</td>
+<td align="right">0.2608696</td>
+</tr>
+<tr class="even">
+<td align="left">GSW</td>
+<td align="left">1,-1</td>
+<td align="right">37</td>
+<td align="right">0.2681159</td>
+</tr>
+<tr class="odd">
+<td align="left">GSW</td>
+<td align="left">1,1</td>
+<td align="right">38</td>
+<td align="right">0.2753623</td>
+</tr>
+<tr class="even">
+<td align="left">GSW</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0072464</td>
+</tr>
+<tr class="odd">
+<td align="left">HOU</td>
+<td align="left">-1,-1</td>
+<td align="right">5</td>
+<td align="right">0.1851852</td>
+</tr>
+<tr class="even">
+<td align="left">HOU</td>
+<td align="left">-1,1</td>
+<td align="right">6</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="odd">
+<td align="left">HOU</td>
+<td align="left">1,-1</td>
+<td align="right">6</td>
+<td align="right">0.2222222</td>
+</tr>
+<tr class="even">
+<td align="left">HOU</td>
+<td align="left">1,1</td>
+<td align="right">9</td>
+<td align="right">0.3333333</td>
+</tr>
+<tr class="odd">
+<td align="left">HOU</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0370370</td>
+</tr>
+<tr class="even">
+<td align="left">IND</td>
+<td align="left">-1,-1</td>
+<td align="right">45</td>
+<td align="right">0.2432432</td>
+</tr>
+<tr class="odd">
+<td align="left">IND</td>
+<td align="left">-1,1</td>
+<td align="right">49</td>
+<td align="right">0.2648649</td>
+</tr>
+<tr class="even">
+<td align="left">IND</td>
+<td align="left">1,-1</td>
+<td align="right">49</td>
+<td align="right">0.2648649</td>
+</tr>
+<tr class="odd">
+<td align="left">IND</td>
+<td align="left">1,1</td>
+<td align="right">41</td>
+<td align="right">0.2216216</td>
+</tr>
+<tr class="even">
+<td align="left">IND</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0054054</td>
+</tr>
+<tr class="odd">
+<td align="left">LAC</td>
+<td align="left">-1,-1</td>
+<td align="right">62</td>
+<td align="right">0.2605042</td>
+</tr>
+<tr class="even">
+<td align="left">LAC</td>
+<td align="left">-1,1</td>
+<td align="right">57</td>
+<td align="right">0.2394958</td>
+</tr>
+<tr class="odd">
+<td align="left">LAC</td>
+<td align="left">1,-1</td>
+<td align="right">57</td>
+<td align="right">0.2394958</td>
+</tr>
+<tr class="even">
+<td align="left">LAC</td>
+<td align="left">1,1</td>
+<td align="right">61</td>
+<td align="right">0.2563025</td>
+</tr>
+<tr class="odd">
+<td align="left">LAC</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0042017</td>
+</tr>
+<tr class="even">
+<td align="left">LAL</td>
+<td align="left">-1,-1</td>
+<td align="right">47</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">LAL</td>
+<td align="left">-1,1</td>
+<td align="right">49</td>
+<td align="right">0.2606383</td>
+</tr>
+<tr class="even">
+<td align="left">LAL</td>
+<td align="left">1,-1</td>
+<td align="right">49</td>
+<td align="right">0.2606383</td>
+</tr>
+<tr class="odd">
+<td align="left">LAL</td>
+<td align="left">1,1</td>
+<td align="right">42</td>
+<td align="right">0.2234043</td>
+</tr>
+<tr class="even">
+<td align="left">LAL</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0053191</td>
+</tr>
+<tr class="odd">
+<td align="left">MEM</td>
+<td align="left">-1,-1</td>
+<td align="right">39</td>
+<td align="right">0.2600000</td>
+</tr>
+<tr class="even">
+<td align="left">MEM</td>
+<td align="left">-1,1</td>
+<td align="right">37</td>
+<td align="right">0.2466667</td>
+</tr>
+<tr class="odd">
+<td align="left">MEM</td>
+<td align="left">1,-1</td>
+<td align="right">36</td>
+<td align="right">0.2400000</td>
+</tr>
+<tr class="even">
+<td align="left">MEM</td>
+<td align="left">1,1</td>
+<td align="right">37</td>
+<td align="right">0.2466667</td>
+</tr>
+<tr class="odd">
+<td align="left">MEM</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0066667</td>
+</tr>
+<tr class="even">
+<td align="left">MIA</td>
+<td align="left">-1,-1</td>
+<td align="right">28</td>
+<td align="right">0.2089552</td>
+</tr>
+<tr class="odd">
+<td align="left">MIA</td>
+<td align="left">-1,1</td>
+<td align="right">37</td>
+<td align="right">0.2761194</td>
+</tr>
+<tr class="even">
+<td align="left">MIA</td>
+<td align="left">1,-1</td>
+<td align="right">38</td>
+<td align="right">0.2835821</td>
+</tr>
+<tr class="odd">
+<td align="left">MIA</td>
+<td align="left">1,1</td>
+<td align="right">30</td>
+<td align="right">0.2238806</td>
+</tr>
+<tr class="even">
+<td align="left">MIA</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0074627</td>
+</tr>
+<tr class="odd">
+<td align="left">MIL</td>
+<td align="left">-1,-1</td>
+<td align="right">22</td>
+<td align="right">0.2365591</td>
+</tr>
+<tr class="even">
+<td align="left">MIL</td>
+<td align="left">-1,1</td>
+<td align="right">23</td>
+<td align="right">0.2473118</td>
+</tr>
+<tr class="odd">
+<td align="left">MIL</td>
+<td align="left">1,-1</td>
+<td align="right">23</td>
+<td align="right">0.2473118</td>
+</tr>
+<tr class="even">
+<td align="left">MIL</td>
+<td align="left">1,1</td>
+<td align="right">24</td>
+<td align="right">0.2580645</td>
+</tr>
+<tr class="odd">
+<td align="left">MIL</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0107527</td>
+</tr>
+<tr class="even">
+<td align="left">MIN</td>
+<td align="left">-1,-1</td>
+<td align="right">16</td>
+<td align="right">0.2352941</td>
+</tr>
+<tr class="odd">
+<td align="left">MIN</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="even">
+<td align="left">MIN</td>
+<td align="left">1,-1</td>
+<td align="right">18</td>
+<td align="right">0.2647059</td>
+</tr>
+<tr class="odd">
+<td align="left">MIN</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2205882</td>
+</tr>
+<tr class="even">
+<td align="left">MIN</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0147059</td>
+</tr>
+<tr class="odd">
+<td align="left">NOP</td>
+<td align="left">-1,-1</td>
+<td align="right">63</td>
+<td align="right">0.3315789</td>
+</tr>
+<tr class="even">
+<td align="left">NOP</td>
+<td align="left">-1,1</td>
+<td align="right">37</td>
+<td align="right">0.1947368</td>
+</tr>
+<tr class="odd">
+<td align="left">NOP</td>
+<td align="left">1,-1</td>
+<td align="right">37</td>
+<td align="right">0.1947368</td>
+</tr>
+<tr class="even">
+<td align="left">NOP</td>
+<td align="left">1,1</td>
+<td align="right">52</td>
+<td align="right">0.2736842</td>
+</tr>
+<tr class="odd">
+<td align="left">NOP</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0052632</td>
+</tr>
+<tr class="even">
+<td align="left">NYK</td>
+<td align="left">-1,-1</td>
+<td align="right">36</td>
+<td align="right">0.3636364</td>
+</tr>
+<tr class="odd">
+<td align="left">NYK</td>
+<td align="left">-1,1</td>
+<td align="right">21</td>
+<td align="right">0.2121212</td>
+</tr>
+<tr class="even">
+<td align="left">NYK</td>
+<td align="left">1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2121212</td>
+</tr>
+<tr class="odd">
+<td align="left">NYK</td>
+<td align="left">1,1</td>
+<td align="right">20</td>
+<td align="right">0.2020202</td>
+</tr>
+<tr class="even">
+<td align="left">NYK</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0101010</td>
+</tr>
+<tr class="odd">
+<td align="left">OKC</td>
+<td align="left">-1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2837838</td>
+</tr>
+<tr class="even">
+<td align="left">OKC</td>
+<td align="left">-1,1</td>
+<td align="right">17</td>
+<td align="right">0.2297297</td>
+</tr>
+<tr class="odd">
+<td align="left">OKC</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2297297</td>
+</tr>
+<tr class="even">
+<td align="left">OKC</td>
+<td align="left">1,1</td>
+<td align="right">18</td>
+<td align="right">0.2432432</td>
+</tr>
+<tr class="odd">
+<td align="left">OKC</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0135135</td>
+</tr>
+<tr class="even">
+<td align="left">ORL</td>
+<td align="left">-1,-1</td>
+<td align="right">35</td>
+<td align="right">0.3125000</td>
+</tr>
+<tr class="odd">
+<td align="left">ORL</td>
+<td align="left">-1,1</td>
+<td align="right">24</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="even">
+<td align="left">ORL</td>
+<td align="left">1,-1</td>
+<td align="right">24</td>
+<td align="right">0.2142857</td>
+</tr>
+<tr class="odd">
+<td align="left">ORL</td>
+<td align="left">1,1</td>
+<td align="right">28</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="even">
+<td align="left">ORL</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0089286</td>
+</tr>
+<tr class="odd">
+<td align="left">PHI</td>
+<td align="left">-1,-1</td>
+<td align="right">40</td>
+<td align="right">0.2631579</td>
+</tr>
+<tr class="even">
+<td align="left">PHI</td>
+<td align="left">-1,1</td>
+<td align="right">34</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="odd">
+<td align="left">PHI</td>
+<td align="left">1,-1</td>
+<td align="right">34</td>
+<td align="right">0.2236842</td>
+</tr>
+<tr class="even">
+<td align="left">PHI</td>
+<td align="left">1,1</td>
+<td align="right">43</td>
+<td align="right">0.2828947</td>
+</tr>
+<tr class="odd">
+<td align="left">PHI</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0065789</td>
+</tr>
+<tr class="even">
+<td align="left">PHO</td>
+<td align="left">-1,-1</td>
+<td align="right">13</td>
+<td align="right">0.3023256</td>
+</tr>
+<tr class="odd">
+<td align="left">PHO</td>
+<td align="left">-1,1</td>
+<td align="right">11</td>
+<td align="right">0.2558140</td>
+</tr>
+<tr class="even">
+<td align="left">PHO</td>
+<td align="left">1,-1</td>
+<td align="right">11</td>
+<td align="right">0.2558140</td>
+</tr>
+<tr class="odd">
+<td align="left">PHO</td>
+<td align="left">1,1</td>
+<td align="right">7</td>
+<td align="right">0.1627907</td>
+</tr>
+<tr class="even">
+<td align="left">PHO</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0232558</td>
+</tr>
+<tr class="odd">
+<td align="left">POR</td>
+<td align="left">-1,-1</td>
+<td align="right">14</td>
+<td align="right">0.1971831</td>
+</tr>
+<tr class="even">
+<td align="left">POR</td>
+<td align="left">-1,1</td>
+<td align="right">22</td>
+<td align="right">0.3098592</td>
+</tr>
+<tr class="odd">
+<td align="left">POR</td>
+<td align="left">1,-1</td>
+<td align="right">21</td>
+<td align="right">0.2957746</td>
+</tr>
+<tr class="even">
+<td align="left">POR</td>
+<td align="left">1,1</td>
+<td align="right">13</td>
+<td align="right">0.1830986</td>
+</tr>
+<tr class="odd">
+<td align="left">POR</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0140845</td>
+</tr>
+<tr class="even">
+<td align="left">SAC</td>
+<td align="left">-1,-1</td>
+<td align="right">24</td>
+<td align="right">0.1951220</td>
+</tr>
+<tr class="odd">
+<td align="left">SAC</td>
+<td align="left">-1,1</td>
+<td align="right">31</td>
+<td align="right">0.2520325</td>
+</tr>
+<tr class="even">
+<td align="left">SAC</td>
+<td align="left">1,-1</td>
+<td align="right">31</td>
+<td align="right">0.2520325</td>
+</tr>
+<tr class="odd">
+<td align="left">SAC</td>
+<td align="left">1,1</td>
+<td align="right">36</td>
+<td align="right">0.2926829</td>
+</tr>
+<tr class="even">
+<td align="left">SAC</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0081301</td>
+</tr>
+<tr class="odd">
+<td align="left">SAS</td>
+<td align="left">-1,-1</td>
+<td align="right">34</td>
+<td align="right">0.2809917</td>
+</tr>
+<tr class="even">
+<td align="left">SAS</td>
+<td align="left">-1,1</td>
+<td align="right">28</td>
+<td align="right">0.2314050</td>
+</tr>
+<tr class="odd">
+<td align="left">SAS</td>
+<td align="left">1,-1</td>
+<td align="right">29</td>
+<td align="right">0.2396694</td>
+</tr>
+<tr class="even">
+<td align="left">SAS</td>
+<td align="left">1,1</td>
+<td align="right">29</td>
+<td align="right">0.2396694</td>
+</tr>
+<tr class="odd">
+<td align="left">SAS</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0082645</td>
+</tr>
+<tr class="even">
+<td align="left">TOR</td>
+<td align="left">-1,-1</td>
+<td align="right">33</td>
+<td align="right">0.2340426</td>
+</tr>
+<tr class="odd">
+<td align="left">TOR</td>
+<td align="left">-1,1</td>
+<td align="right">38</td>
+<td align="right">0.2695035</td>
+</tr>
+<tr class="even">
+<td align="left">TOR</td>
+<td align="left">1,-1</td>
+<td align="right">37</td>
+<td align="right">0.2624113</td>
+</tr>
+<tr class="odd">
+<td align="left">TOR</td>
+<td align="left">1,1</td>
+<td align="right">32</td>
+<td align="right">0.2269504</td>
+</tr>
+<tr class="even">
+<td align="left">TOR</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0070922</td>
+</tr>
+<tr class="odd">
+<td align="left">UTA</td>
+<td align="left">-1,-1</td>
+<td align="right">17</td>
+<td align="right">0.2833333</td>
+</tr>
+<tr class="even">
+<td align="left">UTA</td>
+<td align="left">-1,1</td>
+<td align="right">14</td>
+<td align="right">0.2333333</td>
+</tr>
+<tr class="odd">
+<td align="left">UTA</td>
+<td align="left">1,-1</td>
+<td align="right">13</td>
+<td align="right">0.2166667</td>
+</tr>
+<tr class="even">
+<td align="left">UTA</td>
+<td align="left">1,1</td>
+<td align="right">15</td>
+<td align="right">0.2500000</td>
+</tr>
+<tr class="odd">
+<td align="left">UTA</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0166667</td>
+</tr>
+<tr class="even">
+<td align="left">WAS</td>
+<td align="left">-1,-1</td>
+<td align="right">28</td>
+<td align="right">0.3010753</td>
+</tr>
+<tr class="odd">
+<td align="left">WAS</td>
+<td align="left">-1,1</td>
+<td align="right">18</td>
+<td align="right">0.1935484</td>
+</tr>
+<tr class="even">
+<td align="left">WAS</td>
+<td align="left">1,-1</td>
+<td align="right">17</td>
+<td align="right">0.1827957</td>
+</tr>
+<tr class="odd">
+<td align="left">WAS</td>
+<td align="left">1,1</td>
+<td align="right">29</td>
+<td align="right">0.3118280</td>
+</tr>
+<tr class="even">
+<td align="left">WAS</td>
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0107527</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>knitr::kable(a_team_data_agg)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">a</th>
+<th align="right">n</th>
+<th align="right">prop</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0,0</td>
+<td align="right">53113</td>
+<td align="right">0.4385662</td>
+</tr>
+<tr class="even">
+<td align="left">0,1</td>
+<td align="right">8054</td>
+<td align="right">0.0665037</td>
+</tr>
+<tr class="odd">
+<td align="left">1,0</td>
+<td align="right">8054</td>
+<td align="right">0.0665037</td>
+</tr>
+<tr class="even">
+<td align="left">1,1</td>
+<td align="right">51884</td>
+<td align="right">0.4284181</td>
+</tr>
+<tr class="odd">
+<td align="left">NA</td>
+<td align="right">1</td>
+<td align="right">0.0000083</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>##prediction model using lgr and relevant factors for predicting top player performance
+mod1 &lt;-top_player_data22 %&gt;%ungroup() %&gt;% glm(formula=factor(direction)~ts_pct +off_rtg+usg_pct,family=binomial())
+mod1 %&gt;%coef()</code></pre>
+<pre><code>##  (Intercept)       ts_pct      off_rtg      usg_pct 
+## -12.00327332   7.28139427   0.03335965  16.44253372</code></pre>
+<pre class="r"><code>tableas&lt;-broom::glance(mod1)
+grid &lt;- top_player_data22   %&gt;%ungroup() %&gt;%
+  mutate(pred = predict(mod1, newdata = ., type = &#39;response&#39;))
+
+
+ggplot(grid) +geom_point(aes(y=pred,x=pts,color=direction))+stat_smooth(aes(x=pts,y=pred),method=&quot;glm&quot;, se=FALSE, fullrange=TRUE, method.args = list(family=binomial))</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<pre><code>## Warning in eval(family$initialize): non-integer #successes in a binomial glm!</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/model%20building-1.png" width="672" /></p>
+<pre class="r"><code>##prediction model using modified expected equations from popular sports model maker Ken Pomeroy
+
+expected_pos &lt;- function(t1_p,t2_p,la_p){
+  t1_p &lt;-t1_p / la_p
+  t2_p &lt;-t2_p / la_p
+  e_pos &lt;-t1_p *t2_p *la_p
+  return(e_pos)
+}
+expected_output &lt;-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
+  t1_out &lt;-(t1_or /100) *(t2_dr /100) *la_or
+  e_pos &lt;-expected_pos(t1_p,t2_p,la_p)
+  t1_out &lt;-t1_out *(e_pos/100)
+  
+  return(t1_out)
+}
+
+model_data &lt;- data  %&gt;% distinct(game_id,.keep_all = TRUE) %&gt;% group_by(Team_Abbrev) %&gt;% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %&gt;%ungroup() %&gt;%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
+
+model_data &lt;-model_data %&gt;% select(Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
+preds &lt;- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
+model_data &lt;-model_data %&gt;% cbind(preds)</code></pre>
+<pre class="r"><code>#cdf and pdf for player points
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = &quot;step&quot;)</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(best_streaks_2022,aes(max_streak))+geom_density()</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(top_player_data22,aes(pts)) +geom_density()</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-3.png" width="672" /></p>
+<pre class="r"><code>#cdf and pdf for team points
+
+ggplot(best_team_streaks_2022,aes(max_streak))+stat_ecdf(geom = &quot;step&quot;)</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-4.png" width="672" /></p>
+<pre class="r"><code>ggplot(best_team_streaks_2022,aes(max_streak))+geom_density()</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-5.png" width="672" /></p>
+<pre class="r"><code>ggplot(top_team_data22,aes(Team_Score)) +geom_density()</code></pre>
+<p><img src="/Leo_EDA_files/figure-html/other%20stat%20graphs-6.png" width="672" /></p>
