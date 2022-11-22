@@ -236,7 +236,7 @@ knitr::kable(a_team_data_agg)</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Finally, lets try and predict points scored based off of some key columns that I think are the most relevant. There are some flaws in the model that I want to address and work out later, but for this blog post I think it will be sufficient to show my progress. First off, I would ideally like the target variable to be direction and not points scored, but I ran into some difficulty. Additionally, I am not lagging the results in anyway. I am using the entire seasons data to predict games in which that data would not have been available. Ideally, I would like to use lags of 4-6 games to calculate the prediction, as I believe that having too much data does not represent key factors like load management, player mentality, and fatigue. This will certainly come later. Additionally, at least for the team data, I would like to include a predictive model based on the very popular and promenent work of legendary data analyst Ken Pomeroy. He uses a metric that weighs a teams offensive and opponents defensive ratings,the expected number of posessions, and their league averages in a game to create a prediction for points scored by each team. Dividing this score by a players usage percentage should give me a good estimation for how a player will perform. I would like to use this model as a baseline for further predictions. I used this xgboost template to create a model. <a href="https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/" class="uri">https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/</a></p>
+<p>Finally, lets try and predict points scored based off of some key columns that I think are the most relevant. There are some flaws in the model that I want to address and work out later, but for this blog post I think it will be sufficient to show my progress. First off, I would ideally like the target variable to be direction and not points scored, but I ran into some difficulty. Additionally, I am not lagging the results in any way. I am using the entire seasons data to predict games in which that data would not have been available. Ideally, I would like to use lags of 4-6 games to calculate the prediction, as I believe that having too much data does not represent key factors like load management, player mentality, and fatigue. This will certainly come later. Additionally, at least for the team data, I would like to include a predictive model based on the very popular and promenent work of legendary data analyst Ken Pomeroy. He uses a metric that weighs a teams offensive and opponents defensive ratings,the expected number of posessions, and their league averages in a game to create a prediction for points scored by each team. Dividing this score by a players usage percentage should give me a good estimation for how a player will perform. I would like to use this model as a baseline for further predictions. I used this xgboost template to create a model. <a href="https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/" class="uri">https://www.r-bloggers.com/2020/05/using-xgboost-with-tidymodels/</a></p>
 <pre class="r"><code>library(tidymodels)</code></pre>
 <pre><code>## ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──</code></pre>
 <pre><code>## ✔ broom        1.0.1     ✔ rsample      1.1.0
@@ -253,7 +253,7 @@ knitr::kable(a_team_data_agg)</code></pre>
 ## ✖ dplyr::lag()      masks stats::lag()
 ## ✖ yardstick::spec() masks readr::spec()
 ## ✖ recipes::step()   masks stats::step()
-## • Use tidymodels_prefer() to resolve common conflicts.</code></pre>
+## • Use suppressPackageStartupMessages() to eliminate package startup messages</code></pre>
 <pre class="r"><code>xgboost_data &lt;-data %&gt;% distinct(game_id,.keep_all=TRUE) %&gt;% select(starts_with(&#39;Team&#39;),starts_with(&#39;Opponent&#39;))  %&gt;% group_by(Team_Abbrev) %&gt;%  mutate(change_net = Team_Score - mean(Team_Score),direction  = sign(change_net))  %&gt;%mutate(streak = cumsum(direction = lag(direction, default = 0))) %&gt;% mutate(max_streak=max(streak)) %&gt;% mutate(direction=ifelse(direction==-1,0,1))
 
 train_test_split &lt;- rsample::initial_split(
@@ -313,40 +313,40 @@ knitr::kable(head(xgboost_grid))</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">26</td>
-<td align="right">3</td>
-<td align="right">0.0000735</td>
-<td align="right">0.0000000</td>
+<td align="right">18</td>
+<td align="right">10</td>
+<td align="right">0.0679453</td>
+<td align="right">0.0208816</td>
 </tr>
 <tr class="even">
-<td align="right">2</td>
-<td align="right">10</td>
+<td align="right">20</td>
+<td align="right">4</td>
 <td align="right">0.0000000</td>
-<td align="right">0.0000009</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="odd">
 <td align="right">6</td>
-<td align="right">2</td>
-<td align="right">0.0004266</td>
-<td align="right">0.9618958</td>
+<td align="right">3</td>
+<td align="right">0.0005279</td>
+<td align="right">0.0000002</td>
 </tr>
 <tr class="even">
-<td align="right">4</td>
-<td align="right">13</td>
-<td align="right">0.0030856</td>
-<td align="right">0.0000000</td>
+<td align="right">25</td>
+<td align="right">1</td>
+<td align="right">0.0000001</td>
+<td align="right">0.0001036</td>
 </tr>
 <tr class="odd">
-<td align="right">17</td>
-<td align="right">5</td>
-<td align="right">0.0000006</td>
-<td align="right">0.0001464</td>
+<td align="right">22</td>
+<td align="right">12</td>
+<td align="right">0.0000192</td>
+<td align="right">0.0000000</td>
 </tr>
 <tr class="even">
-<td align="right">5</td>
+<td align="right">30</td>
 <td align="right">13</td>
-<td align="right">0.0000003</td>
-<td align="right">0.0712528</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000114</td>
 </tr>
 </tbody>
 </table>
@@ -419,8 +419,8 @@ xgboost_tuned &lt;- tune::tune_grid(
 <col width="10%" />
 <col width="9%" />
 <col width="2%" />
-<col width="7%" />
-<col width="20%" />
+<col width="9%" />
+<col width="19%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -438,64 +438,64 @@ xgboost_tuned &lt;- tune::tune_grid(
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">4</td>
-<td align="right">13</td>
-<td align="right">0.0030856</td>
-<td align="right">0.0000000</td>
+<td align="right">18</td>
+<td align="right">10</td>
+<td align="right">0.0679453</td>
+<td align="right">0.0208816</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.0228422</td>
+<td align="right">0.0151824</td>
 <td align="right">2</td>
-<td align="right">1e-07</td>
-<td align="left">Preprocessor1_Model4</td>
-</tr>
-<tr class="even">
-<td align="right">6</td>
-<td align="right">2</td>
-<td align="right">0.0004266</td>
-<td align="right">0.9618958</td>
-<td align="left">rmse</td>
-<td align="left">standard</td>
-<td align="right">0.3265447</td>
-<td align="right">2</td>
-<td align="right">4e-07</td>
-<td align="left">Preprocessor1_Model3</td>
-</tr>
-<tr class="odd">
-<td align="right">26</td>
-<td align="right">3</td>
-<td align="right">0.0000735</td>
-<td align="right">0.0000000</td>
-<td align="left">rmse</td>
-<td align="left">standard</td>
-<td align="right">0.4646300</td>
-<td align="right">2</td>
-<td align="right">1e-07</td>
+<td align="right">0.0115265</td>
 <td align="left">Preprocessor1_Model1</td>
 </tr>
 <tr class="even">
-<td align="right">17</td>
-<td align="right">5</td>
-<td align="right">0.0000006</td>
-<td align="right">0.0001464</td>
+<td align="right">6</td>
+<td align="right">3</td>
+<td align="right">0.0005279</td>
+<td align="right">0.0000002</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.4997020</td>
+<td align="right">0.2953348</td>
 <td align="right">2</td>
-<td align="right">0e+00</td>
-<td align="left">Preprocessor1_Model5</td>
+<td align="right">0.0002447</td>
+<td align="left">Preprocessor1_Model3</td>
 </tr>
 <tr class="odd">
-<td align="right">5</td>
-<td align="right">13</td>
-<td align="right">0.0000003</td>
-<td align="right">0.0712528</td>
+<td align="right">22</td>
+<td align="right">12</td>
+<td align="right">0.0000192</td>
+<td align="right">0.0000000</td>
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="right">0.4998656</td>
+<td align="right">0.4905093</td>
 <td align="right">2</td>
-<td align="right">2e-07</td>
-<td align="left">Preprocessor1_Model6</td>
+<td align="right">0.0000068</td>
+<td align="left">Preprocessor1_Model5</td>
+</tr>
+<tr class="even">
+<td align="right">25</td>
+<td align="right">1</td>
+<td align="right">0.0000001</td>
+<td align="right">0.0001036</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.4999253</td>
+<td align="right">2</td>
+<td align="right">0.0000001</td>
+<td align="left">Preprocessor1_Model4</td>
+</tr>
+<tr class="odd">
+<td align="right">20</td>
+<td align="right">4</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+<td align="left">rmse</td>
+<td align="left">standard</td>
+<td align="right">0.5000000</td>
+<td align="right">2</td>
+<td align="right">0.0000000</td>
+<td align="left">Preprocessor1_Model2</td>
 </tr>
 </tbody>
 </table>
@@ -514,11 +514,11 @@ knitr::kable(xgboost_best_params)</code></pre>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">4</td>
-<td align="right">13</td>
-<td align="right">0.0030856</td>
-<td align="right">0</td>
-<td align="left">Preprocessor1_Model4</td>
+<td align="right">18</td>
+<td align="right">10</td>
+<td align="right">0.0679453</td>
+<td align="right">0.0208816</td>
+<td align="left">Preprocessor1_Model1</td>
 </tr>
 </tbody>
 </table>
@@ -552,7 +552,7 @@ knitr::kable(xgboost_score_train)</code></pre>
 <tr class="odd">
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="left">111.54</td>
+<td align="left">111.57</td>
 </tr>
 <tr class="even">
 <td align="left">rsq</td>
@@ -562,7 +562,7 @@ knitr::kable(xgboost_score_train)</code></pre>
 <tr class="odd">
 <td align="left">mae</td>
 <td align="left">standard</td>
-<td align="left">110.86</td>
+<td align="left">110.89</td>
 </tr>
 </tbody>
 </table>
@@ -594,17 +594,17 @@ knitr::kable(xgboost_score)</code></pre>
 <tr class="odd">
 <td align="left">rmse</td>
 <td align="left">standard</td>
-<td align="left">5.30</td>
+<td align="left">0.67</td>
 </tr>
 <tr class="even">
 <td align="left">rsq</td>
 <td align="left">standard</td>
-<td align="left">0.99</td>
+<td align="left">1.00</td>
 </tr>
 <tr class="odd">
 <td align="left">mae</td>
 <td align="left">standard</td>
-<td align="left">5.11</td>
+<td align="left">0.32</td>
 </tr>
 </tbody>
 </table>
