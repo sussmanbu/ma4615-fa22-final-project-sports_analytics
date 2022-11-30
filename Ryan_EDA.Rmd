@@ -94,7 +94,7 @@ sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
          above = (ops_diff > 0)) %>% ungroup() %>% group_by(player) %>%
   summarize(games_above = sum(above), games = n(), per = games_above/games,
             ops = mean(ops), pa = sum(pa), home_runs = sum(home_runs),
-            bb = sum(bb))
+            bb = sum(bb), so = sum(so))
   
 model_21 <- lm(per ~ ops, data = sim_21)
 (beta <- coef(model_21))
@@ -130,11 +130,11 @@ bat_data_day_21 %>% filter(player == "Will Smith") %>%
 log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
   mutate(streaky = ifelse(s_res_21 < 0, 1, 0))
 
-log_model_21 <- glm(streaky ~ bb, data = log_sim_21, family = binomial)
+log_model_21 <- glm(streaky ~ so, data = log_sim_21, family = binomial)
 (beta <- coef(log_model_21))
-(grid <- log_sim_21 %>% data_grid(bb) %>%
+(grid <- log_sim_21 %>% data_grid(so) %>%
     add_predictions(log_model_21, type = "response"))
-ggplot(log_sim_21, aes(bb)) + geom_point(aes(y = streaky)) +
+ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
   geom_line(aes(y = pred), data = grid, color = "red", size = 1)
 ```
 
