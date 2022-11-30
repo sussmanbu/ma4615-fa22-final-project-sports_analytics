@@ -1,0 +1,80 @@
+```{r}
+install.packages("Hmisc")
+install.packages("segmented")
+
+library(segmented)
+library(tidyverse)  
+library(Hmisc)
+```
+
+
+```{r prepare_data}
+bat_data <- read_csv("dataset/MLB_bat_data_2021.csv") %>% 
+  group_by(player_id) %>% 
+  arrange(game_date) %>% 
+  mutate(hr_total = sum(home_runs), hr_cum = cumsum(home_runs), temp =1, games = cumsum(temp), plate_appearances = sum(pa)) %>%
+  filter(hr_total>15, plate_appearances>502)
+```
+
+
+```{r calculate_paces_function}
+segment_model <- function(batter, stat, dataset){
+  if (dataset == "MLB")      {d1 <- bat_data %>% filter(player_id==batter)} 
+  else if (dtatset == "NBA") {d1 <- offense_data %>% filter(player_id==batter)} 
+  else                       {print("invalid dataset")}
+  
+  if (stat == "hr")          {fit_lm <- lm(hr_cum ~ 1 + games, data = d1)
+                             total <- max(d1$hr_total)}
+  else if (stat =="hits")    {fit_lm <- lm(hit_cum ~ 1 + games, data = d1)
+                             total <- max(d1$hit_total)}
+  else                       {print("invalid stat")}
+  
+  #fit_lm <- lm(hr_cum ~ 1 + games, data = d1)
+  fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+  
+  #total <- max(d1$hr_total)
+  total_games <- max(d1$games)
+  slope <- total/total_games
+  
+  a <- fit_segmented$psi
+  n <- length(a)/3
+  breakpoint <- c(0, a[(n+1):(2*n)], max(d1$games))
+  b <- fit_segmented$coefficients[2:(n+2)]
+  pace <- cumsum(b)
+  pace_length <- (breakpoint - lag(breakpoint))[2:(n+2)]
+  weighted_pace <- weighted.mean(pace, pace_length)
+  tibble(name = batter, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length)
+}
+```
+
+```{r caclulate paces}
+  paces <- map_dfr(unique(bat_data$player_id), segment_model, stat = "hr", dataset = "MLB")
+```
+
+```{r}
+  streakiness <- paces %>% 
+    group_by(name) %>% 
+    summarise(total=mean(total), streak=sqrt(wtd.var(pace,pace_length)))
+
+  exp <- lm(total ~ streak, data=streakiness)
+  summary(exp)
+  beta <- coef(exp)
+
+  ggplot(streakiness) +
+    geom_point(aes(x=streak, y=total)) +
+    geom_abline(intercept=beta[1], slope=beta[2], color="red")
+  
+  
+
+```
+
+```{r view_individual}
+# d1 <- bat_data %>% filter(player_id=="perezsa02")
+d1 <- bat_data %>% filter(player_id=="crawfbr01")
+# d1 <- bat_data %>% filter(player_id== "hanigmi01")
+
+fit_lm <- lm(hr_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented4)
+my_model <- data.frame(games = d1$games, hr_cum = my_fitted)
+ggplot(my_model4, aes(x = games, y = hr_cum)) + geom_line() + geom_point(data = d1, aes(x=games, y=hr_cum), color="red", alpha =0.1)
