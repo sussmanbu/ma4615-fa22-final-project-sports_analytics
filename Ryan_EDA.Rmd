@@ -82,7 +82,8 @@ MLB_avg_21 <- bat_data_21 %>%
   mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
          ops = obp + slg) %>% select(obp, slg, ops)
 
-bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
+bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player") %>%
+  mutate(MLB_diff = MLB_avg_21$ops - ops)
 
 sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
   group_by(game_date) %>%
@@ -91,43 +92,49 @@ sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
          ops_game = obp_game + slg_game,
          ops_diff = ops_game - MLB_avg_21$ops,
          above = (ops_diff > 0)) %>% ungroup() %>% group_by(player) %>%
-  summarize(games_above = sum(above), ops = mean(ops))
+  summarize(games_above = sum(above), games = n(), per = games_above/games,
+            ops = mean(ops), pa = sum(pa), home_runs = sum(home_runs),
+            bb = sum(bb), so = sum(so))
   
-model_21 <- lm(games_above ~ ops, data = sim_21)
+model_21 <- lm(per ~ ops, data = sim_21)
 (beta <- coef(model_21))
-ggplot(sim_21, aes(ops, games_above)) + geom_point() +
+ggplot(sim_21, aes(ops, per)) + geom_point() +
     geom_abline(intercept = beta[1], slope = beta[2])
 
 s_res_21 <- rstandard(model_21)
 sim_21 %>% cbind(s_res_21) %>%  ggplot(aes(ops, s_res_21)) +
   geom_ref_line(h = 0) + geom_point()
 
+sim_21 %>% cbind(s_res_21) %>%  filter(abs(s_res_21) >= 2)
+
 sim_21 %>% cbind(s_res_21) %>%
   mutate(streaky = ifelse(s_res_21 < 0, 1, 0)) %>%
   ggplot(aes(ops, streaky)) + geom_point()
 
-bat_data_day_21 %>% filter(player == "Rafael Devers") %>%
+bat_data_day_21 %>% filter(player == "Will Smith") %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
          ops_game = obp_game + slg_game,
          ops_diff = ops_game - ops,
          sign = sign(ops_diff)) %>%
-  ggplot(aes(game_date, ops_diff)) +
-  geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
-  labs(title = "Rafael Devers Game by Game OPS Data",
+  ggplot() +
+  geom_col(aes(game_date, ops_diff, fill = sign), position = "identity",
+           show.legend = FALSE) +
+  geom_line(aes(game_date, mean(MLB_diff)), color = "red") +
+  labs(title = "Will Smith Game by Game OPS Data",
        x = "Date", y = "Game OPS compared to average")
 
-bat_data_day_21 %>% filter(player == "Joey Votto") %>%
-  group_by(game_date) %>%
-  mutate(obp_game = stat_fct(on_base, pa),
-         slg_game = stat_fct(tb, ab),
-         ops_game = obp_game + slg_game,
-         ops_diff = ops_game - ops,
-         sign = sign(ops_diff)) %>%
-  ggplot(aes(game_date, ops_diff)) +
-  geom_col(aes(fill = sign), position = "identity", show.legend = FALSE) +
-  labs(title = "Joey Votto Game by Game OPS Data",
-       x = "Date", y = "Game OPS compared to average")
+
+
+log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
+  mutate(streaky = ifelse(s_res_21 < 0, 1, 0))
+
+log_model_21 <- glm(streaky ~ so, data = log_sim_21, family = binomial)
+(beta <- coef(log_model_21))
+(grid <- log_sim_21 %>% data_grid(so) %>%
+    add_predictions(log_model_21, type = "response"))
+ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid, color = "red", size = 1)
 ```
 
