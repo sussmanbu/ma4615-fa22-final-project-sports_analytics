@@ -6,19 +6,6 @@ output: html_document
 ---
 
 
-##what teams have the most players with streaks
-
-##Are the trends meaningfully different if we look at points, rebounds, and assists? 
-
-##How are players likely to perform relative to their last 5 performances? 
-##Visualize by how much players perform above average in games that they do well
-
-##analyze how players perform against teams much better than them
-
-##pick top 5, middle 5, bottom 5 players to display
-
-##for visualization, show how changing ts pct,usg pct, off rtg changes probability of changing prediction maybe using sliding value
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -38,6 +25,8 @@ problems()
 all_data <-data %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),pts_direction  = 
 sign(change_net),change_net_PRA=PRA - mean(PRA),PRA_direction=sign(change_net_PRA)) %>%mutate(pts_streak=ave(pts_direction, cumsum(pts_direction==-1), FUN = seq_along) - 1,PRA_streak=ave(PRA_direction, cumsum(PRA_direction==-1), FUN = seq_along) - 1)
 
+all_data <-all_data  %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100))
+
 #visualize distribution of positive player points streaks and PRA streaks
 streak <-all_data$pts_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
@@ -55,19 +44,77 @@ top_player_data22 <-top_player_data22 %>% group_by(player) %>% mutate(a=10*lag(p
 top_player_proportions <-top_player_data22 %>% mutate(a=str_c(lag(pts_direction),pts_direction,sep = ',')) %>% count(a) %>% group_by(a)
 top_player_proportions
 
+player_data <-all_data %>% group_by(player) %>% mutate(a=10*lag(pts_direction)+pts_direction)%>% mutate(a=str_c(lag(pts_direction),pts_direction,sep = ',')) %>% count(a) %>% group_by(a) %>% mutate(prop=cumsum(a))
+
 #cdf and pdf for player points
 ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
 ggplot(best_streaks_2022,aes(max_streak))+geom_density()
 ggplot(top_player_data22,aes(pts)) +geom_density()
 
-#model building
-mod1 <-all_data %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct +off_rtg+usg_pct+usg_pct:ts_pct,family=binomial())
+#model building by player
+mod1 <-all_data %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
 mod1$coefficients
 exp(mod1$coefficients)
 
 all_data <-all_data %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
-grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),off_rtg=seq_range(off_rtg,3),usg_pct= seq_range(usg_pct,3)) %>% add_predictions(mod1, type = "response" )
 
-ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred, color = factor(usg_pct), linetype = factor(off_rtg)),data=grid)
+grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_range(usg_pct,5)) %>% add_predictions(mod1, type = "response" )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
+
+scoring<-all_data %>% filter(player == 'Brandon Ingram',season == '2022') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+
+
+
+##model building using modified expected equations from popular sports model maker Ken Pomeroy
+
+expected_pos <- function(t1_p,t2_p,la_p){
+  t1_p <-t1_p / la_p
+  t2_p <-t2_p / la_p
+  e_pos <-t1_p *t2_p *la_p
+  return(e_pos)
+}
+expected_output <-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
+  coef<-.8
+  t1_out <-(t1_or /100) *(t2_dr /100) *la_or
+  e_pos <-expected_pos(t1_p,t2_p,la_p)
+  t1_out <-t1_out *(e_pos/100) * coef
+  
+  return(t1_out)
+}
+
+model_data <- all_data  %>% distinct(game_id,.keep_all = TRUE) %>% group_by(Team_Abbrev) %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %>%ungroup() %>%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
+
+model_data <-model_data %>% select(Team_Score,Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
+preds <- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
+model_data <-model_data %>% cbind(preds) 
+
+
+model_data <- model_data %>% mutate(differential=preds-Team_Score) %>%mutate(z_score=(Team_Score-mean(Team_Score))/sd(Team_Score)) %>%mutate(probability=pnorm(z_score,mean=0,sd=1))
+
+
+# Dvoretzky–Kiefer–Wolfowitz inequality:
+# P ( sup|F_n - F| > epsilon  ) leq 2*exp(-2n*epsilon^2)
+# set alpha to 0.05 and alpha=2*exp(-2n*epsilon^2):
+# --> epsilon_n = sqrt(-log(0.5*0.05)/(2*n))
+#
+#lower and upper bands:
+n <-nrow(model_data)
+L<-1:n
+U<-1:n
+
+epsilon_i = sqrt(log(2/0.05)/(2*n))
+L=pmax(1:n/n-epsilon_i, 0)
+U=pmin(1:n/n+epsilon_i, 1)
+sorted_model_data <- sort(model_data$Team_Score)
+
+ggplot(model_data,aes(x=Team_Score)) +stat_ecdf(geom = "step") +geom_line(aes(x=sorted_model_data,y= U, color="blue")) +geom_line(aes(x=sorted_model_data,y=L, color="r"))
 
 ```
