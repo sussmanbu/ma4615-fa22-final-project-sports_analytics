@@ -125,12 +125,48 @@ segment_model <- function(batter, stat, dataset){
 ```
   
 ```{r view_individual}
-# d1 <- bat_data %>% filter(player_id=="perezsa02")
-d1 <- bat_data %>% filter(player_id=="crawfbr01")
+d1 <- bat_data %>% filter(player_id=="perezsa02")
+# d1 <- bat_data %>% filter(player_id=="crawfbr01")
 # d1 <- bat_data %>% filter(player_id== "hanigmi01")
 
+# Home run fit
 fit_lm <- lm(hr_cum ~ 1 + games, data = d1)
 fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
-my_fitted <- fitted(fit_segmented4)
-my_model <- data.frame(games = d1$games, hr_cum = my_fitted)
-ggplot(my_model4, aes(x = games, y = hr_cum)) + geom_line() + geom_point(data = d1, aes(x=games, y=hr_cum), color="red", alpha =0.1)
+my_fitted <- fitted(fit_segmented)
+hr_model <- data.frame(games = d1$games, hr_cum = my_fitted)
+
+# hit fit
+fit_lm <- lm(hit_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+hit_model <- data.frame(games = d1$games, hit_cum = my_fitted)
+
+# strike outs model
+fit_lm <- lm(so_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+so_model <- data.frame(games = d1$games, so_cum = my_fitted)
+
+# walks model
+fit_lm <- lm(bb_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+bb_model <- data.frame(games = d1$games, bb_cum = my_fitted)
+
+p1 <- ggplot() + 
+  geom_line(data = hr_model, aes(x = games, y = hr_cum)) + 
+  geom_point(data = d1, aes(x=games, y=hr_cum), color="yellow", alpha =0.1)
+
+p2 <- ggplot() +
+  geom_line(data = hit_model, aes(x = games, y = hit_cum)) + 
+  geom_point(data = d1, aes(x=games, y=hit_cum), color="blue", alpha =0.1)
+
+p3 <- ggplot() +
+  geom_line(data = so_model, aes(x = games, y = so_cum)) + 
+  geom_point(data = d1, aes(x=games, y=so_cum), color="red", alpha =0.1)
+
+p4 <- ggplot() +
+  geom_line(data = bb_model, aes(x = games, y = bb_cum)) + 
+  geom_point(data = d1, aes(x=games, y=bb_cum), color="green", alpha =0.1)
+
+grid.arrange(p1, p2, p3, p4, ncol=2)
