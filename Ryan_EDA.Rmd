@@ -50,7 +50,7 @@ ops_data_month %>%
   geom_line()
 ```
 
-```{r}
+```{r MLB}
 library(tidyverse)
 library(modelr)
 library(ggrepel)
@@ -60,6 +60,7 @@ stat_fct <- function(x,y){
 }
 
 bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+  filter(pa > 0) %>%
   select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
   mutate(singles = h - (doubles + triples + home_runs),
          tb = singles + 2*doubles + 3*triples + 4*home_runs,
@@ -111,7 +112,9 @@ sim_21 %>% cbind(s_res_21) %>%
   mutate(streaky = ifelse(s_res_21 < 0, 1, 0)) %>%
   ggplot(aes(ops, streaky)) + geom_point()
 
-bat_data_day_21 %>% filter(player == "Will Smith") %>%
+
+
+bat_data_day_21 %>% filter(player == "Nathaniel Lowe") %>%
   group_by(game_date) %>%
   mutate(obp_game = stat_fct(on_base, pa),
          slg_game = stat_fct(tb, ab),
@@ -122,7 +125,7 @@ bat_data_day_21 %>% filter(player == "Will Smith") %>%
   geom_col(aes(game_date, ops_diff, fill = sign), position = "identity",
            show.legend = FALSE) +
   geom_line(aes(game_date, mean(MLB_diff)), color = "red") +
-  labs(title = "Will Smith Game by Game OPS Data",
+  labs(title = "Nathaniel Lowe Game by Game OPS Data",
        x = "Date", y = "Game OPS compared to average")
 
 
@@ -130,11 +133,40 @@ bat_data_day_21 %>% filter(player == "Will Smith") %>%
 log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
   mutate(streaky = ifelse(s_res_21 < 0, 1, 0))
 
-log_model_21 <- glm(streaky ~ so, data = log_sim_21, family = binomial)
-(beta <- coef(log_model_21))
-(grid <- log_sim_21 %>% data_grid(so) %>%
-    add_predictions(log_model_21, type = "response"))
+lm_hr <- lm(s_res_21 ~ home_runs, data = log_sim_21)
+(bt_hr <- coef(lm_hr))
+ggplot(log_sim_21, aes(home_runs, s_res_21)) + geom_point() +
+    geom_abline(intercept = bt_hr[1], slope = bt_hr[2], color = "red")
+
+lm_bb <- lm(s_res_21 ~ bb, data = log_sim_21)
+(bt_bb <- coef(lm_bb))
+ggplot(log_sim_21, aes(bb, s_res_21)) + geom_point() +
+    geom_abline(intercept = bt_bb[1], slope = bt_bb[2], color = "red")
+
+lm_so <- lm(s_res_21 ~ so, data = log_sim_21)
+(bt_so <- coef(lm_so))
+ggplot(log_sim_21, aes(so, s_res_21)) + geom_point() +
+    geom_abline(intercept = bt_so[1], slope = bt_so[2], color = "red")
+
+log_model_hr <- glm(streaky ~ home_runs, data = log_sim_21, family = binomial)
+(beta_hr <- coef(log_model_hr))
+(grid_hr <- log_sim_21 %>% data_grid(home_runs) %>%
+    add_predictions(log_model_hr, type = "response"))
+ggplot(log_sim_21, aes(home_runs)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid_hr, color = "red", size = 1)
+
+log_model_bb <- glm(streaky ~ bb, data = log_sim_21, family = binomial)
+(beta_bb <- coef(log_model_bb))
+(grid_bb <- log_sim_21 %>% data_grid(bb) %>%
+    add_predictions(log_model_bb, type = "response"))
+ggplot(log_sim_21, aes(bb)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid_bb, color = "red", size = 1)
+
+log_model_so <- glm(streaky ~ so, data = log_sim_21, family = binomial)
+(beta_so <- coef(log_model_so))
+(grid_so <- log_sim_21 %>% data_grid(so) %>%
+    add_predictions(log_model_so, type = "response"))
 ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
-  geom_line(aes(y = pred), data = grid, color = "red", size = 1)
+  geom_line(aes(y = pred), data = grid_so, color = "red", size = 1)
 ```
 
