@@ -73,7 +73,9 @@ server <- function(input, output) {
   
   output$summary <-renderPrint({
     local_max <-local_max %>% filter(player == input$player)
+    pts <- all_data%>% filter(player == input$player) %>% select(pts) %>%summarize(pts=mean(pts))
     summary(local_max)
+    pts
   })
   output$proportion <-renderPrint({
     player_data <-player_data %>% filter(player == input$player)

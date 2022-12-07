@@ -3,7 +3,7 @@ title: Analysis
 description:
 toc: true
 featuredVideo:
-featuredImage: https://upload.wikimedia.org/wikipedia/commons/7/77/Pebbleswithquarzite.jpg
+featuredImage: https://i0.wp.com/reflectionsonbaseball.com/wp-content/uploads/2020/01/mlbnba.png?fit=604%2C323&ssl=1
 draft: false
 ---
 
@@ -67,3 +67,11 @@ you will
   
   
 **NOTE**: Your Data Analysis can be broken up into multiple pages if that helps with your organization.
+
+* Introduce what motivates your Data Analysis (DA)
+  * Which variables and relationships are you most interested in?
+  * What questions are you interested in answering?
+  
+What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA
+
+
