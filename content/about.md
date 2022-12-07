@@ -21,7 +21,7 @@ https://github.com/leoseoane1
 Ryan is a second year Masters' student in Stats at BU.
 Github account page: https://github.com/ryanmaho
 
-## Haroon Quershi
+## Haroon Qureshi
 
 Haroon is a master’s student studying bioinformatics. 
 His GitHub is https://github.com/hmqure.
