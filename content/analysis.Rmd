@@ -189,11 +189,11 @@ Even among the best players, scoring over 20 points per game, the majority of pl
 
 One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
 
-##MLB Broad Analysis
+## MLB Broad Analysis
 
 To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:
 
-```{r eval=FALSE, include=TRUE}
+```{r echo=TRUE, results='hide'}
 library(tidyverse)
 library(modelr)
 library(ggrepel)
@@ -202,7 +202,7 @@ stat_fct <- function(x,y){
   ifelse(y > 0, x/y, 0)
 }
 
-bat_data_21 <- read_csv("dataset/MLB_bat_data_2021.csv") %>%
+bat_data_21 <- read_csv("../dataset/MLB_bat_data_2021.csv") %>%
   filter(pa > 0) %>%
   select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
   mutate(singles = h - (doubles + triples + home_runs),
@@ -242,14 +242,8 @@ sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
 
 model_21 <- lm(per ~ ops, data = sim_21)
 beta <- coef(model_21)
-summary(model_21)
-ggplot(sim_21, aes(ops, per)) + geom_point() +
-  geom_abline(intercept = beta[1], slope = beta[2], color = "red") +
-  labs(x = "OPS", y = "% of Games Above League Average")
 
 s_res_21 <- rstandard(model_21)
-sim_21 %>% cbind(s_res_21) %>%  ggplot(aes(ops, s_res_21)) +
-  geom_ref_line(h = 0) + geom_point()
 
 log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
   mutate(streaky = ifelse(s_res_21 < 0, 1, 0))
@@ -268,6 +262,7 @@ ggplot(sim_21, aes(ops, per)) + geom_point() +
 
 Fitting a linear regression to this data, we find a statistically significant correlation. For our step, we standardized the residuals and determined that players with high magnitude positive residuals were the most “consistent,” and ones with high magnitude negative residuals were the most “streaky.” Why is this? We would expect more streaky players to have a small number of games with big production and a large number of below average games.
 
+<br>
 To visualize this decision, here’s a game log of Jose Altuve, who is the most consistent player by our residual measure. The graph represents games where performed above or below his OWN average OPS, and the red line represents the MLB average:
 
 ```{r echo=FALSE}
@@ -306,6 +301,7 @@ bat_data_day_21 %>% filter(player == "Nathaniel Lowe") %>%
 
 Now we turned to analyze if there was a single stat that could most accurately predict whether a player was streaky or not. At first, we thought that walks would be the best stat, because of the idea that some players are “free swingers;” players that swing at a ton of pitches, don’t draw many walks, but are still on the roster because of their ability to get hot at certain times. However, walks ended up not being a great predictor. We also tried home runs, but that wasn’t a great predictor either.
 
+<br>
 Out of all stats we tried, strikeouts was the best predictor as seen by this linear regression:
 
 ```{r echo=FALSE}
@@ -332,4 +328,5 @@ ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
 
 So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.
 
+<br>
 There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
