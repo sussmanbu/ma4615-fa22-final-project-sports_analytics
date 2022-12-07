@@ -98,9 +98,11 @@ sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
             bb = sum(bb), so = sum(so))
   
 model_21 <- lm(per ~ ops, data = sim_21)
-(beta <- coef(model_21))
+beta <- coef(model_21)
+summary(model_21)
 ggplot(sim_21, aes(ops, per)) + geom_point() +
-    geom_abline(intercept = beta[1], slope = beta[2])
+  geom_abline(intercept = beta[1], slope = beta[2], color = "red") +
+  labs(x = "OPS", y = "% of Games Above League Average")
 
 s_res_21 <- rstandard(model_21)
 sim_21 %>% cbind(s_res_21) %>%  ggplot(aes(ops, s_res_21)) +
@@ -144,9 +146,11 @@ ggplot(log_sim_21, aes(bb, s_res_21)) + geom_point() +
     geom_abline(intercept = bt_bb[1], slope = bt_bb[2], color = "red")
 
 lm_so <- lm(s_res_21 ~ so, data = log_sim_21)
-(bt_so <- coef(lm_so))
+bt_so <- coef(lm_so)
+summary(lm_so)
 ggplot(log_sim_21, aes(so, s_res_21)) + geom_point() +
-    geom_abline(intercept = bt_so[1], slope = bt_so[2], color = "red")
+  geom_abline(intercept = bt_so[1], slope = bt_so[2], color = "red") +
+  labs(x = "Strikeouts", y = "Streakiness (Residual)")
 
 log_model_hr <- glm(streaky ~ home_runs, data = log_sim_21, family = binomial)
 (beta_hr <- coef(log_model_hr))
@@ -163,10 +167,12 @@ ggplot(log_sim_21, aes(bb)) + geom_point(aes(y = streaky)) +
   geom_line(aes(y = pred), data = grid_bb, color = "red", size = 1)
 
 log_model_so <- glm(streaky ~ so, data = log_sim_21, family = binomial)
-(beta_so <- coef(log_model_so))
-(grid_so <- log_sim_21 %>% data_grid(so) %>%
-    add_predictions(log_model_so, type = "response"))
+beta_so <- coef(log_model_so)
+grid_so <- log_sim_21 %>% data_grid(so) %>%
+    add_predictions(log_model_so, type = "response")
+summary(log_model_so)
 ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
-  geom_line(aes(y = pred), data = grid_so, color = "red", size = 1)
+  geom_line(aes(y = pred), data = grid_so, color = "red", size = 1) +
+  labs(x = "Strikeouts", y = "Streakiness (Binomial)")
 ```
 
