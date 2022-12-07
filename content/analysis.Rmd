@@ -11,7 +11,6 @@ draft: false
 
 you will
 
-
 * Introduce what motivates your Data Analysis (DA)
   * Which variables and relationships are you most interested in?
   * What questions are you interested in answering?
@@ -163,7 +162,7 @@ streaks2022 %>%
 
 As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a 'hot streak' to perform above their usual output.
 
-```{r nba ppgstreak}
+```{r nba 20ppgstreak}
 
 streaks2022 %>% 
   filter(ppg >= 20) %>%
