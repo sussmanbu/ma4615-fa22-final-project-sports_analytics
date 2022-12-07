@@ -114,9 +114,9 @@ ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
   geom_point() +
   geom_text(hjust=0, vjust=0) + 
   ggtitle(&quot;25+ PPG Scorers Against Field Goal Percentage&quot;)</code></pre>
-<pre class="r"><code>library(knitr)
-knitr::include_graphics(&#39;./post/2022-10-15-week2-blog/Rplot01.png&#39;)</code></pre>
-<p><img src="post/2022-10-15-week2-blog/Rplot01.png" width="400" /></p>
+<pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
+knitr::include_graphics(&#39;analysis_files/figure-html/Rplot01.png&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/Rplot01.png" width="400" /></p>
 <p>We see above that Lebron James and Joel Embiid scored the most points in the 2022 season, and that they were among the most efficient players in this pool, alongside Giannis Antetokounmpo, Nikola Jokic, and Kevin Durant. Because of their prolific and efficient scoring, we at first expected them to be the among the players with the longest streaks. However, because of their consistancy, it was instead hypothesized that the streakiest players, and therefore the players with the longest streaks, would be those with a lower usage rates and lower scoring - possibly role players who were infrequently given a chances to score above their usual means.</p>
 <p>Because we score streaks based on the individual game performance AGAINST their season average, we needed to join the calculated season averages to the entire game-by-game data, as shown below. Additionally, in this merged dataset, we calculated the deviation per game for each of the three following statistics: points, assists, and rebounds. The deviation was calculated as the statistic from one game substracted by that player’s season average in that statistic. For example, 5 <code>pts</code> scored in one game substracted from 10 <code>ppg</code> will result in a <code>deviationppg</code> of -5.</p>
 <pre class="r"><code>merged2022 &lt;- nba_ppg22 %&gt;% inner_join(nba_data22, by=&quot;player&quot;) %&gt;%
