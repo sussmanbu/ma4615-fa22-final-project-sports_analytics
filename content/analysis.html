@@ -3,7 +3,7 @@ title: Analysis
 description:
 toc: true
 featuredVideo:
-featuredImage: https://upload.wikimedia.org/wikipedia/commons/7/77/Pebbleswithquarzite.jpg
+featuredImage: https://i0.wp.com/reflectionsonbaseball.com/wp-content/uploads/2020/01/mlbnba.png?fit=604%2C323&ssl=1
 draft: false
 ---
 
@@ -58,6 +58,12 @@ draft: false
 </ul></li>
 </ul>
 <p><strong>NOTE</strong>: Your Data Analysis can be broken up into multiple pages if that helps with your organization.</p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+* Introduce what motivates your Data Analysis (DA)
+* Which variables and relationships are you most interested in?
+* What questions are you interested in answering?</p>
+<p>What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA</p>
+<p>=======</p>
 </div>
 <div id="goals" class="section level2">
 <h2>Goals:</h2>
@@ -70,18 +76,14 @@ draft: false
 <h2>Identifying Streaks:</h2>
 <p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. As stated in the Data page, the dataset had game-by-game data for each player, but did not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated.</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## -- Attaching packages --------------------------------------- tidyverse 1.3.2 --
-## v ggplot2 3.4.0      v purrr   0.3.5 
-## v tibble  3.1.8      v dplyr   1.0.10
-## v tidyr   1.2.1      v stringr 1.4.1 
-## v readr   2.1.3      v forcats 0.5.2</code></pre>
-<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;readr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## Warning: package &#39;purrr&#39; was built under R version 4.2.2</code></pre>
-<pre><code>## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>nba_data22 &lt;- read.csv(file = &#39;../dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
 
 nba_ppg22 &lt;- group_by(nba_data22, player) %&gt;%
@@ -94,7 +96,7 @@ nba_ppg22 &lt;- group_by(nba_data22, player) %&gt;%
             rpg = sum(trb)/total_games)
 
 print(nba_ppg22 %&gt;% head(10))</code></pre>
-<pre><code>## # A tibble: 10 x 6
+<pre><code>## # A tibble: 10 × 6
 ##    player            total_games    ppg fg_percentage   apg   rpg
 ##    &lt;chr&gt;                   &lt;int&gt;  &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
 ##  1 Aaron Gordon               75 15.0           0.520 2.51  5.84 
@@ -131,7 +133,6 @@ knitr::include_graphics(&#39;analysis_files/figure-html/Rplot01.png&#39;)</code>
   arrange(player, date)</code></pre>
 <p>The next step was to actually find the streaks. For this, we downloaded the package <code>data.table</code>. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive <code>deviationppg</code>, the <code>positive_dev_ppg</code> will be 1. This column is tracked by the <code>Consec_ppg</code> column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don’t overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency.</p>
 <pre class="r"><code>library(data.table)</code></pre>
-<pre><code>## Warning: package &#39;data.table&#39; was built under R version 4.2.2</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;data.table&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
@@ -740,7 +741,7 @@ print(streaks2022 %&gt;%
   select(player, max_streak) %&gt;% 
   arrange(-max_streak) %&gt;%
   head(10)</code></pre>
-<pre><code>## # A tibble: 10 x 2
+<pre><code>## # A tibble: 10 × 2
 ##    player             max_streak
 ##    &lt;chr&gt;                   &lt;int&gt;
 ##  1 Bruce Brown                18
@@ -761,7 +762,7 @@ print(streaks2022 %&gt;%
   select(player, max_streak) %&gt;% 
   arrange(-max_streak) %&gt;% 
   head(10)</code></pre>
-<pre><code>## # A tibble: 10 x 2
+<pre><code>## # A tibble: 10 × 2
 ##    player          max_streak
 ##    &lt;chr&gt;                &lt;int&gt;
 ##  1 DeMar DeRozan           12
@@ -778,5 +779,6 @@ print(streaks2022 %&gt;%
 </div>
 <div id="flawslimitations" class="section level2">
 <h2>Flaws/Limitations:</h2>
-<p>One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.</p>
+<p>One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.<br />
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; 452fb10ec62944edfb124575f1823da25ada054e</p>
 </div>
