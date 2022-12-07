@@ -7,47 +7,11 @@ featuredImage: https://upload.wikimedia.org/wikipedia/commons/7/77/Pebbleswithqu
 draft: false
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 <div id="TOC">
 
 </div>
 
-<p>This comes from the file <code>content/analysis.Rmd</code>.</p>
-<p>We describe here our detailed data analysis.</p>
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
-<pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-## ✓ tibble  3.1.6     ✓ dplyr   1.0.8
-## ✓ tidyr   1.1.4     ✓ stringr 1.4.0
-## ✓ readr   2.1.1     ✓ forcats 0.5.1</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>print(getwd())</code></pre>
-<pre><code>## [1] &quot;/Users/dsussman/Dropbox (Personal)/Teaching/MA_415/project_template/content&quot;</code></pre>
-<pre class="r"><code>data &lt;- read_csv(here::here(&quot;dataset/loan_refusal_clean.csv&quot;))</code></pre>
-<pre><code>## Rows: 20 Columns: 5</code></pre>
-<pre><code>## ── Column specification ────────────────────────────────────────────────────────
-## Delimiter: &quot;,&quot;
-## chr (1): bank
-## dbl (4): min, white, himin, hiwhite
-## 
-## ℹ Use `spec()` to retrieve the full column specification for this data.
-## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-<pre class="r"><code>load(here::here(&quot;dataset/loan_refusal.RData&quot;))
-print(ls())</code></pre>
-<pre><code>## [1] &quot;data&quot;            &quot;loan_data_clean&quot;</code></pre>
-<div id="note-on-attribution" class="section level2">
-<h2>Note on Attribution</h2>
-<p>If you are directly quoting from a source, please make that clear. You can show quotes using <code>&gt;</code> like this</p>
-<pre><code>&gt; To be or not to be.</code></pre>
-<blockquote>
-<p>To be or not to be.</p>
-</blockquote>
-<p>Also, make sure to provide a link or citation to where you are quoting from.</p>
-<hr />
-</div>
 <div id="rubric-on-this-page" class="section level2">
 <h2>Rubric: On this page</h2>
 <p>you will</p>
@@ -94,4 +58,725 @@ print(ls())</code></pre>
 </ul></li>
 </ul>
 <p><strong>NOTE</strong>: Your Data Analysis can be broken up into multiple pages if that helps with your organization.</p>
+</div>
+<div id="goals" class="section level2">
+<h2>Goals:</h2>
+<p>Here we aim to detail our explarotary data analysis on both the NBA and MLB data.</p>
+</div>
+<div id="nba-eda" class="section level2">
+<h2>NBA EDA:</h2>
+</div>
+<div id="identifying-streaks" class="section level2">
+<h2>Identifying Streaks:</h2>
+<p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. As stated in the Data page, the dataset had game-by-game data for each player, but did not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## -- Attaching packages --------------------------------------- tidyverse 1.3.2 --
+## v ggplot2 3.4.0      v purrr   0.3.5 
+## v tibble  3.1.8      v dplyr   1.0.10
+## v tidyr   1.2.1      v stringr 1.4.1 
+## v readr   2.1.3      v forcats 0.5.2</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## Warning: package &#39;tidyr&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## Warning: package &#39;readr&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## Warning: package &#39;purrr&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>nba_data22 &lt;- read.csv(file = &#39;../dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
+
+nba_ppg22 &lt;- group_by(nba_data22, player) %&gt;%
+  filter(mp != &#39;0:00&#39;) %&gt;%
+  distinct(game_date, .keep_all = TRUE) %&gt;%
+  summarize(total_games = n(),
+            ppg = sum(pts)/total_games,
+            fg_percentage = sum(fg)/sum(fga),
+            apg = sum(ast)/total_games,
+            rpg = sum(trb)/total_games)
+
+print(nba_ppg22 %&gt;% head(10))</code></pre>
+<pre><code>## # A tibble: 10 x 6
+##    player            total_games    ppg fg_percentage   apg   rpg
+##    &lt;chr&gt;                   &lt;int&gt;  &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1 Aaron Gordon               75 15.0           0.520 2.51  5.84 
+##  2 Aaron Henry                 6  0.333         0.2   0     0.167
+##  3 Aaron Holiday              63  6.35          0.447 2.43  1.94 
+##  4 Aaron Nesmith              52  3.77          0.396 0.423 1.71 
+##  5 Aaron Wiggins              50  8.32          0.463 1.36  3.56 
+##  6 Abdel Nader                14  2.43          0.343 0.5   1.93 
+##  7 Ade Murkey                  1  0           NaN     0     0    
+##  8 Admiral Schofield          38  3.84          0.419 0.658 2.34 
+##  9 Ahmad Caver                 1  2             1     0     0    
+## 10 Al Horford                 69 10.2           0.467 3.36  7.68</code></pre>
+<p>We wanted to take a look at the most efficient scorers amongst the top scorers. Temporarily setting a threshold for players who scored at least 20 points per game, we made a scatterplot that visualized this relationship to get a sense of who we might expect to have the longest streaks, seen below.</p>
+<pre class="r"><code>scoring &lt;- filter(nba_ppg22, ppg &gt;= 25)
+
+ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
+  geom_point() +
+  geom_text(hjust=0, vjust=0) + 
+  ggtitle(&quot;25+ PPG Scorers Against Field Goal Percentage&quot;)</code></pre>
+<pre class="r"><code># To Prevent Needing to Rerun EDA Each Time
+knitr::include_graphics(&#39;analysis_files/figure-html/Rplot01.png&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/Rplot01.png" width="400" /></p>
+<p>We see above that Lebron James and Joel Embiid scored the most points in the 2022 season, and that they were among the most efficient players in this pool, alongside Giannis Antetokounmpo, Nikola Jokic, and Kevin Durant. Because of their prolific and efficient scoring, we at first expected them to be the among the players with the longest streaks. However, because of their consistancy, it was instead hypothesized that the streakiest players, and therefore the players with the longest streaks, would be those with a lower usage rates and lower scoring - possibly role players who were infrequently given a chances to score above their usual means.</p>
+<p>Because we score streaks based on the individual game performance AGAINST their season average, we needed to join the calculated season averages to the entire game-by-game data, as shown below. Additionally, in this merged dataset, we calculated the deviation per game for each of the three following statistics: points, assists, and rebounds. The deviation was calculated as the statistic from one game substracted by that player’s season average in that statistic. For example, 5 <code>pts</code> scored in one game substracted from 10 <code>ppg</code> will result in a <code>deviationppg</code> of -5.</p>
+<pre class="r"><code>merged2022 &lt;- nba_ppg22 %&gt;% inner_join(nba_data22, by=&quot;player&quot;) %&gt;%
+  filter(mp != &#39;0:00&#39;) %&gt;%
+  group_by(player) %&gt;%
+  distinct(game_date, .keep_all = TRUE) %&gt;%
+  ungroup() %&gt;%
+  mutate(date = as.Date(game_date, format = &quot;%Y-%m-%d&quot;)) %&gt;%
+  mutate(deviationppg = pts-ppg,
+         deviationapg = ast-apg,
+         deviationrpg = trb-rpg) %&gt;%
+  arrange(player, date)</code></pre>
+<p>The next step was to actually find the streaks. For this, we downloaded the package <code>data.table</code>. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive <code>deviationppg</code>, the <code>positive_dev_ppg</code> will be 1. This column is tracked by the <code>Consec_ppg</code> column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don’t overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency.</p>
+<pre class="r"><code>library(data.table)</code></pre>
+<pre><code>## Warning: package &#39;data.table&#39; was built under R version 4.2.2</code></pre>
+<pre><code>## 
+## Attaching package: &#39;data.table&#39;</code></pre>
+<pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
+## 
+##     between, first, last</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     transpose</code></pre>
+<pre class="r"><code>streaks2022 &lt;- merged2022
+
+setDT(streaks2022)
+
+streaks2022[, positive_dev_ppg := +(deviationppg &gt; 0)
+][positive_dev_ppg == 0]</code></pre>
+<pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
+##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     3:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     4:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     5:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##    ---                                                                      
+## 14451: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14452: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14453: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14454: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14455:  Zylan Cheatham           1  0.000000     0.0000000 0.000000 0.000000
+##             game_id  game_date OT H_A Team_Abbrev Team_Score Team_pace
+##     1: 202110200PHO 2021-10-20  0   A         DEN        110      98.7
+##     2: 202110220DEN 2021-10-22  0   H         DEN        102     101.3
+##     3: 202110250DEN 2021-10-25  0   H         DEN         87      96.3
+##     4: 202110290DEN 2021-10-29  0   H         DEN        106      99.0
+##     5: 202110300MIN 2021-10-30  0   A         DEN         93      95.0
+##    ---                                                                
+## 14451: 202203240MEM 2022-03-24  0   H         MEM        133      98.0
+## 14452: 202203260MEM 2022-03-26  0   H         MEM        127     100.3
+## 14453: 202203280MEM 2022-03-28  0   H         MEM        123     101.4
+## 14454: 202203300SAS 2022-03-30  0   A         MEM        112      93.8
+## 14455: 202201120UTA 2022-01-12  0   H         UTA         91      92.2
+##        Team_efg_pct Team_tov_pct Team_orb_pct Team_ft_rate Team_off_rtg
+##     1:        0.633         16.4         15.0        0.060        111.5
+##     2:        0.564         19.0         20.0        0.058        100.7
+##     3:        0.459         18.7         22.4        0.093         90.4
+##     4:        0.584         17.6         14.3        0.108        107.0
+##     5:        0.460         15.9         31.1        0.136         97.9
+##    ---                                                                 
+## 14451:        0.651         12.2         42.1        0.129        135.7
+## 14452:        0.544          6.7         33.3        0.157        126.6
+## 14453:        0.533         10.8         28.3        0.272        121.3
+## 14454:        0.571         11.1         28.6        0.088        119.4
+## 14455:        0.494          7.2          8.5        0.082         98.7
+##                                                                                                              Inactives
+##     1:                                                                                     Vlatko Cancar, Jamal Murray
+##     2:                                                                                     Vlatko Cancar, Jamal Murray
+##     3:                                                                                     Vlatko Cancar, Jamal Murray
+##     4:                                                                                     Vlatko Cancar, Jamal Murray
+##     5:                                                                      Vlatko Cancar, Petr Cornelie, Jamal Murray
+##    ---                                                                                                                
+## 14451:                               Dillon Brooks, Brandon Clarke, Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 14452:                                                         Brandon Clarke, Ja Morant, Tyrell Terry, Killian Tillie
+## 14453:                             Santi Aldama, Jaren Jackson Jr., Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 14454:                                                              Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 14455: Udoka Azubuike, Jared Butler, Malik Fitts, Rudy Gay, Rudy Gobert, Elijah Hughes, Norvel Pelle, Hassan Whiteside
+##        Opponent_Abbrev Opponent_Score Opponent_pace Opponent_efg_pct
+##     1:             PHO             98          98.7            0.494
+##     2:             SAS             96         101.3            0.512
+##     3:             CLE             99          96.3            0.506
+##     4:             DAL             75          99.0            0.346
+##     5:             MIN             91          95.0            0.466
+##    ---                                                              
+## 14451:             IND            103          98.0            0.473
+## 14452:             MIL            102         100.3            0.435
+## 14453:             GSW             95         101.4            0.463
+## 14454:             SAS            111          93.8            0.590
+## 14455:             CLE            111          92.2            0.599
+##        Opponent_tov_pct Opponent_orb_pct Opponent_ft_rate Opponent_off_rtg
+##     1:             16.0             21.6            0.138             99.3
+##     2:             18.2             17.5            0.119             94.8
+##     3:             13.4             23.4            0.195            102.8
+##     4:             14.3             11.5            0.269             75.7
+##     5:             17.7             30.6            0.090             95.8
+##    ---                                                                    
+## 14451:              9.7             18.8            0.174            105.1
+## 14452:             11.1             26.9            0.226            101.7
+## 14453:             14.0             15.2            0.247             93.7
+## 14454:             13.5             20.0            0.157            118.3
+## 14455:             12.8             20.0            0.173            120.4
+##        player_id starter    mp fg fga fg_pct fg3 fg3a fg3_pct ft fta ft_pct orb
+##     1: gordoaa01       1 29:01  5   6  0.833   1    1    1.00  1   2   0.50   2
+##     2: gordoaa01       1 29:49  3   6  0.500   0    1    0.00  2   2   1.00   2
+##     3: gordoaa01       1 28:05  5  14  0.357   1    5    0.20  1   2   0.50   3
+##     4: gordoaa01       1 23:35  6   9  0.667   1    2    0.50  0   1   0.00   1
+##     5: gordoaa01       1 31:12  4  10  0.400   0    2    0.00  4   4   1.00   2
+##    ---                                                                         
+## 14451: willizi02       1 30:09  1   5  0.200   1    5    0.20  0   0   0.00   0
+## 14452: willizi02       0 17:42  3   6  0.500   1    4    0.25  0   2   0.00   0
+## 14453: willizi02       0 23:49  2   5  0.400   1    4    0.25  3   4   0.75   1
+## 14454: willizi02       0 11:03  1   4  0.250   0    2    0.00  1   1   1.00   0
+## 14455: cheatzy01       0  5:11  0   3  0.000   0    2    0.00  0   0   0.00   0
+##        drb trb ast stl blk tov pf pts plus_minus did_not_play is_inactive
+##     1:   6   8   4   0   1   3  2  12         22            0           0
+##     2:   3   5   1   0   0   3  5   8          5            0           0
+##     3:   6   9   1   0   0   3  2  12         -7            0           0
+##     4:   4   5   2   1   1   2  1  13         24            0           0
+##     5:   2   4   2   2   2   0  0  12         26            0           0
+##    ---                                                                   
+## 14451:   2   2   5   1   0   3  4   3         18            0           0
+## 14452:   3   3   3   1   1   0  1   7         17            0           0
+## 14453:   3   4   4   1   0   1  1   8         14            0           0
+## 14454:   1   1   0   1   1   1  0   3          4            0           0
+## 14455:   0   0   0   0   0   0  0   0        -13            0           0
+##        ts_pct efg_pct fg3a_per_fga_pct fta_per_fga_pct orb_pct drb_pct trb_pct
+##     1:  0.872   0.917            0.167           0.333     8.3    19.5    14.5
+##     2:  0.581   0.500            0.167           0.333     8.0    12.1    10.1
+##     3:  0.403   0.393            0.357           0.143    10.5    21.8    16.0
+##     4:  0.689   0.722            0.222           0.111     5.8    15.7    11.7
+##     5:  0.510   0.400            0.200           0.400     6.8     6.3     6.5
+##    ---                                                                        
+## 14451:  0.300   0.300            1.000           0.000     0.0     6.6     3.7
+## 14452:  0.509   0.583            0.667           0.333     0.0    15.6     8.1
+## 14453:  0.592   0.500            0.800           0.800     4.4    13.1     8.8
+## 14454:  0.338   0.250            0.500           0.250     0.0    12.4     5.6
+## 14455:  0.000   0.000            0.667           0.000     0.0     0.0     0.0
+##        ast_pct stl_pct blk_pct tov_pct usg_pct off_rtg def_rtg   bpm season
+##     1:    18.5     0.0     3.3    30.4    15.7     133     100   6.2   2022
+##     2:     4.1     0.0     0.0    30.4    14.4      92     100  -7.9   2022
+##     3:     6.5     0.0     0.0    16.8    27.2      76     107  -6.5   2022
+##     4:    13.2     2.1     5.0    17.5    21.6     111      74   8.5   2022
+##     5:    10.3     3.2     6.4     0.0    16.0     126      97   5.3   2022
+##    ---                                                                     
+## 14451:    16.4     1.6     0.0    37.5    11.1      82     109 -10.1   2022
+## 14452:    19.9     2.7     4.4     0.0    15.5     122      99   5.9   2022
+## 14453:    20.7     2.0     0.0    12.9    13.0     130      97   5.1   2022
+## 14454:     0.0     4.6     9.0    18.4    21.9      61     107  -7.7   2022
+## 14455:     0.0     0.0     0.0     0.0    28.7       0     127 -30.3   2022
+##          minutes double_double triple_double   DKP  FDP   SDP DKP_per_minute
+##     1: 29.016667             0             0 29.00 27.6 28.50      0.9994256
+##     2: 29.816667             0             0 14.25 12.5 12.75      0.4779206
+##     3: 28.083333             0             0 23.75 21.3 22.25      0.8456973
+##     4: 23.583333             0             0 25.75 26.0 26.75      1.0918728
+##     5: 31.200000             0             0 28.00 31.8 32.00      0.8974359
+##    ---                                                                      
+## 14451: 30.150000             0             0 14.00 12.9 13.50      0.4643449
+## 14452: 17.700000             0             0 19.75 21.1 21.75      1.1158192
+## 14453: 23.816667             0             0 21.00 20.8 21.50      0.8817355
+## 14454: 11.050000             0             0  7.75  9.2  9.25      0.7013575
+## 14455:  5.183333             0             0  0.00  0.0  0.00      0.0000000
+##        FDP_per_minute SDP_per_minute pf_per_minute    ts
+##     1:      0.9511775      0.9821941    0.06892590  6.88
+##     2:      0.4192286      0.4276132    0.16769145  6.88
+##     3:      0.7584570      0.7922849    0.07121662 14.88
+##     4:      1.1024735      1.1342756    0.04240283  9.44
+##     5:      1.0192308      1.0256410    0.00000000 11.76
+##    ---                                                  
+## 14451:      0.4278607      0.4477612    0.13266998  5.00
+## 14452:      1.1920904      1.2288136    0.05649718  6.88
+## 14453:      0.8733380      0.9027292    0.04198740  6.76
+## 14454:      0.8325792      0.8371041    0.00000000  4.44
+## 14455:      0.0000000      0.0000000    0.00000000  3.00
+##        last_60_minutes_per_game_starting last_60_minutes_per_game_bench PG. SG.
+##     1:                                NA                             NA   0   0
+##     2:                          29.01667                       15.68844   0   0
+##     3:                          29.41667                       15.90471   0   0
+##     4:                          30.26250                       16.36203   0   0
+##     5:                          28.92667                       15.63978   0   0
+##    ---                                                                         
+## 14451:                          24.19737                       16.22000   0   1
+## 14452:                          24.55175                       16.22000   0   1
+## 14453:                          24.48241                       16.46667   0   1
+## 14454:                          24.31765                       17.51667   0   1
+## 14455:                           0.00000                        0.00000   0   0
+##        SF. PF. C. active_position_minutes       date deviationppg deviationapg
+##     1:  51  46  3                      NA 2021-10-20  -3.01333333    1.4933333
+##     2:  51  46  3                56.96878 2021-10-22  -7.01333333   -1.5066667
+##     3:  51  46  3                56.32487 2021-10-25  -3.01333333   -1.5066667
+##     4:  51  46  3                56.45623 2021-10-29  -2.01333333   -0.5066667
+##     5:  51  46  3                55.59639 2021-10-30  -3.01333333   -0.5066667
+##    ---                                                                        
+## 14451:  96   3  0                39.39552 2022-03-24  -5.08064516    3.9516129
+## 14452:  96   3  0                64.75952 2022-03-26  -1.08064516    1.9516129
+## 14453:  96   3  0                64.91949 2022-03-28  -0.08064516    2.9516129
+## 14454:  96   3  0                66.40481 2022-03-30  -5.08064516   -1.0483871
+## 14455:   0 100  0                38.59359 2022-01-12   0.00000000    0.0000000
+##        deviationrpg positive_dev_ppg
+##     1:   2.16000000                0
+##     2:  -0.84000000                0
+##     3:   3.16000000                0
+##     4:  -0.84000000                0
+##     5:  -1.84000000                0
+##    ---                              
+## 14451:  -0.08064516                0
+## 14452:   0.91935484                0
+## 14453:   1.91935484                0
+## 14454:  -1.08064516                0
+## 14455:   0.00000000                0</code></pre>
+<pre class="r"><code>streaks2022[, positive_dev_apg := +(deviationapg &gt; 0)
+][positive_dev_apg == 0]</code></pre>
+<pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
+##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     3:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     4:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     5:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##    ---                                                                      
+## 15267: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 15268: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 15269: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 15270: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 15271:  Zylan Cheatham           1  0.000000     0.0000000 0.000000 0.000000
+##             game_id  game_date OT H_A Team_Abbrev Team_Score Team_pace
+##     1: 202110220DEN 2021-10-22  0   H         DEN        102     101.3
+##     2: 202110250DEN 2021-10-25  0   H         DEN         87      96.3
+##     3: 202110260UTA 2021-10-26  0   A         DEN        110     100.1
+##     4: 202110290DEN 2021-10-29  0   H         DEN        106      99.0
+##     5: 202110300MIN 2021-10-30  0   A         DEN         93      95.0
+##    ---                                                                
+## 15267: 202203300SAS 2022-03-30  0   A         MEM        112      93.8
+## 15268: 202204050UTA 2022-04-05  1   A         MEM        115     103.2
+## 15269: 202204070DEN 2022-04-07  0   A         MEM        109      97.4
+## 15270: 202204100MEM 2022-04-10  0   H         MEM        110     102.1
+## 15271: 202201120UTA 2022-01-12  0   H         UTA         91      92.2
+##        Team_efg_pct Team_tov_pct Team_orb_pct Team_ft_rate Team_off_rtg
+##     1:        0.564         19.0         20.0        0.058        100.7
+##     2:        0.459         18.7         22.4        0.093         90.4
+##     3:        0.566         12.2         13.2        0.193        109.9
+##     4:        0.584         17.6         14.3        0.108        107.0
+##     5:        0.460         15.9         31.1        0.136         97.9
+##    ---                                                                 
+## 15267:        0.571         11.1         28.6        0.088        119.4
+## 15268:        0.450          9.5         17.2        0.238        100.9
+## 15269:        0.534         11.0         22.2        0.157        111.9
+## 15270:        0.456          8.1         31.1        0.167        107.8
+## 15271:        0.494          7.2          8.5        0.082         98.7
+##                                                                                                              Inactives
+##     1:                                                                                     Vlatko Cancar, Jamal Murray
+##     2:                                                                                     Vlatko Cancar, Jamal Murray
+##     3:                                                                                     Vlatko Cancar, Jamal Murray
+##     4:                                                                                     Vlatko Cancar, Jamal Murray
+##     5:                                                                      Vlatko Cancar, Petr Cornelie, Jamal Murray
+##    ---                                                                                                                
+## 15267:                                                              Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 15268:                                                          Dillon Brooks, Ja Morant, Tyrell Terry, Killian Tillie
+## 15269:                                                         Jarrett Culver, Ja Morant, Tyrell Terry, Killian Tillie
+## 15270:             Steven Adams, Dillon Brooks, Jaren Jackson Jr., Ja Morant, Tyrell Terry, Killian Tillie, Tyus Jones
+## 15271: Udoka Azubuike, Jared Butler, Malik Fitts, Rudy Gay, Rudy Gobert, Elijah Hughes, Norvel Pelle, Hassan Whiteside
+##        Opponent_Abbrev Opponent_Score Opponent_pace Opponent_efg_pct
+##     1:             SAS             96         101.3            0.512
+##     2:             CLE             99          96.3            0.506
+##     3:             UTA            122         100.1            0.588
+##     4:             DAL             75          99.0            0.346
+##     5:             MIN             91          95.0            0.466
+##    ---                                                              
+## 15267:             SAS            111          93.8            0.590
+## 15268:             UTA            121         103.2            0.479
+## 15269:             DEN            122          97.4            0.625
+## 15270:             BOS            139         102.1            0.636
+## 15271:             CLE            111          92.2            0.599
+##        Opponent_tov_pct Opponent_orb_pct Opponent_ft_rate Opponent_off_rtg
+##     1:             18.2             17.5            0.119             94.8
+##     2:             13.4             23.4            0.195            102.8
+##     3:             11.7             21.1            0.259            121.9
+##     4:             14.3             11.5            0.269             75.7
+##     5:             17.7             30.6            0.090             95.8
+##    ---                                                                    
+## 15267:             13.5             20.0            0.157            118.3
+## 15268:             12.2             24.1            0.302            106.2
+## 15269:             15.7             25.0            0.275            125.3
+## 15270:             12.5             35.0            0.131            136.2
+## 15271:             12.8             20.0            0.173            120.4
+##        player_id starter    mp fg fga fg_pct fg3 fg3a fg3_pct ft fta ft_pct orb
+##     1: gordoaa01       1 29:49  3   6  0.500   0    1   0.000  2   2    1.0   2
+##     2: gordoaa01       1 28:05  5  14  0.357   1    5   0.200  1   2    0.5   3
+##     3: gordoaa01       1 34:08  9  13  0.692   0    3   0.000  2   4    0.5   1
+##     4: gordoaa01       1 23:35  6   9  0.667   1    2   0.500  0   1    0.0   1
+##     5: gordoaa01       1 31:12  4  10  0.400   0    2   0.000  4   4    1.0   2
+##    ---                                                                         
+## 15267: willizi02       0 11:03  1   4  0.250   0    2   0.000  1   1    1.0   0
+## 15268: willizi02       1 35:15  2   6  0.333   1    4   0.250  4   4    1.0   0
+## 15269: willizi02       0 19:10  4   8  0.500   2    5   0.400  2   2    1.0   0
+## 15270: willizi02       1 27:41  6  18  0.333   4   11   0.364  2   2    1.0   1
+## 15271: cheatzy01       0  5:11  0   3  0.000   0    2   0.000  0   0    0.0   0
+##        drb trb ast stl blk tov pf pts plus_minus did_not_play is_inactive
+##     1:   3   5   1   0   0   3  5   8          5            0           0
+##     2:   6   9   1   0   0   3  2  12         -7            0           0
+##     3:   6   7   1   1   1   4  5  20         -1            0           0
+##     4:   4   5   2   1   1   2  1  13         24            0           0
+##     5:   2   4   2   2   2   0  0  12         26            0           0
+##    ---                                                                   
+## 15267:   1   1   0   1   1   1  0   3          4            0           0
+## 15268:   0   0   1   2   0   1  3   9          6            0           0
+## 15269:   2   2   1   0   0   1  2  12        -10            0           0
+## 15270:   3   4   1   1   0   0  1  18        -18            0           0
+## 15271:   0   0   0   0   0   0  0   0        -13            0           0
+##        ts_pct efg_pct fg3a_per_fga_pct fta_per_fga_pct orb_pct drb_pct trb_pct
+##     1:  0.581   0.500            0.167           0.333     8.0    12.1    10.1
+##     2:  0.403   0.393            0.357           0.143    10.5    21.8    16.0
+##     3:  0.678   0.692            0.231           0.308     3.7    22.2    13.0
+##     4:  0.689   0.722            0.222           0.111     5.8    15.7    11.7
+##     5:  0.510   0.400            0.200           0.400     6.8     6.3     6.5
+##    ---                                                                        
+## 15267:  0.338   0.250            0.500           0.250     0.0    12.4     5.6
+## 15268:  0.580   0.417            0.667           0.667     0.0     0.0     0.0
+## 15269:  0.676   0.625            0.625           0.250     0.0    15.7     6.5
+## 15270:  0.477   0.444            0.611           0.111     2.8    13.0     6.9
+## 15271:  0.000   0.000            0.667           0.000     0.0     0.0     0.0
+##        ast_pct stl_pct blk_pct tov_pct usg_pct off_rtg def_rtg   bpm season
+##     1:     4.1     0.0     0.0    30.4    14.4      92     100  -7.9   2022
+##     2:     6.5     0.0     0.0    16.8    27.2      76     107  -6.5   2022
+##     3:     4.8     1.4     3.1    21.3    24.8     105     121  -3.2   2022
+##     4:    13.2     2.1     5.0    17.5    21.6     111      74   8.5   2022
+##     5:    10.3     3.2     6.4     0.0    16.0     126      97   5.3   2022
+##    ---                                                                     
+## 15267:     0.0     4.6     9.0    18.4    21.9      61     107  -7.7   2022
+## 15268:     4.2     2.6     0.0    11.4    10.5     109     112  -3.3   2022
+## 15269:     7.8     0.0     0.0    10.1    22.6     119     130  -1.5   2022
+## 15270:     6.1     1.7     0.0     0.0    26.4     108     139  -4.2   2022
+## 15271:     0.0     0.0     0.0     0.0    28.7       0     127 -30.3   2022
+##          minutes double_double triple_double   DKP  FDP   SDP DKP_per_minute
+##     1: 29.816667             0             0 14.25 12.5 12.75      0.4779206
+##     2: 28.083333             0             0 23.75 21.3 22.25      0.8456973
+##     3: 34.133333             0             0 32.25 31.9 32.25      0.9448242
+##     4: 23.583333             0             0 25.75 26.0 26.75      1.0918728
+##     5: 31.200000             0             0 28.00 31.8 32.00      0.8974359
+##    ---                                                                      
+## 15267: 11.050000             0             0  7.75  9.2  9.25      0.7013575
+## 15268: 35.250000             0             0 14.50 15.5 16.00      0.4113475
+## 15269: 19.166667             0             0 16.50 14.9 16.00      0.8608696
+## 15270: 27.683333             0             0 28.50 27.3 29.50      1.0295003
+## 15271:  5.183333             0             0  0.00  0.0  0.00      0.0000000
+##        FDP_per_minute SDP_per_minute pf_per_minute    ts
+##     1:      0.4192286      0.4276132    0.16769145  6.88
+##     2:      0.7584570      0.7922849    0.07121662 14.88
+##     3:      0.9345703      0.9448242    0.14648438 14.76
+##     4:      1.1024735      1.1342756    0.04240283  9.44
+##     5:      1.0192308      1.0256410    0.00000000 11.76
+##    ---                                                  
+## 15267:      0.8325792      0.8371041    0.00000000  4.44
+## 15268:      0.4397163      0.4539007    0.08510638  7.76
+## 15269:      0.7773913      0.8347826    0.10434783  8.88
+## 15270:      0.9861529      1.0656231    0.03612282 18.88
+## 15271:      0.0000000      0.0000000    0.00000000  3.00
+##        last_60_minutes_per_game_starting last_60_minutes_per_game_bench PG. SG.
+##     1:                          29.01667                       15.68844   0   0
+##     2:                          29.41667                       15.90471   0   0
+##     3:                          28.97222                       15.66441   0   0
+##     4:                          30.26250                       16.36203   0   0
+##     5:                          28.92667                       15.63978   0   0
+##    ---                                                                         
+## 15267:                          24.31765                       17.51667   0   1
+## 15268:                          23.78750                       16.70833   0   1
+## 15269:                          24.40729                       16.70833   0   1
+## 15270:                          24.57667                       17.46500   0   1
+## 15271:                           0.00000                        0.00000   0   0
+##        SF. PF. C. active_position_minutes       date deviationppg deviationapg
+##     1:  51  46  3                56.96878 2021-10-22   -7.0133333   -1.5066667
+##     2:  51  46  3                56.32487 2021-10-25   -3.0133333   -1.5066667
+##     3:  51  46  3                54.59788 2021-10-26    4.9866667   -1.5066667
+##     4:  51  46  3                56.45623 2021-10-29   -2.0133333   -0.5066667
+##     5:  51  46  3                55.59639 2021-10-30   -3.0133333   -0.5066667
+##    ---                                                                        
+## 15267:  96   3  0                66.40481 2022-03-30   -5.0806452   -1.0483871
+## 15268:  96   3  0                47.32089 2022-04-05    0.9193548   -0.0483871
+## 15269:  96   3  0                69.23579 2022-04-07    3.9193548   -0.0483871
+## 15270:  96   3  0                45.95412 2022-04-10    9.9193548   -0.0483871
+## 15271:   0 100  0                38.59359 2022-01-12    0.0000000    0.0000000
+##        deviationrpg positive_dev_ppg positive_dev_apg
+##     1:  -0.84000000                0                0
+##     2:   3.16000000                0                0
+##     3:   1.16000000                1                0
+##     4:  -0.84000000                0                0
+##     5:  -1.84000000                0                0
+##    ---                                               
+## 15267:  -1.08064516                0                0
+## 15268:  -2.08064516                1                0
+## 15269:  -0.08064516                1                0
+## 15270:   1.91935484                1                0
+## 15271:   0.00000000                0                0</code></pre>
+<pre class="r"><code>streaks2022[, positive_dev_rpg := +(deviationrpg &gt; 0)
+][positive_dev_rpg == 0]</code></pre>
+<pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
+##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     3:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     4:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##     5:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
+##    ---                                                                      
+## 14487: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14488: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14489: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14490: Ziaire Williams          62  8.080645     0.4504717 1.048387 2.080645
+## 14491:  Zylan Cheatham           1  0.000000     0.0000000 0.000000 0.000000
+##             game_id  game_date OT H_A Team_Abbrev Team_Score Team_pace
+##     1: 202110220DEN 2021-10-22  0   H         DEN        102     101.3
+##     2: 202110290DEN 2021-10-29  0   H         DEN        106      99.0
+##     3: 202110300MIN 2021-10-30  0   A         DEN         93      95.0
+##     4: 202111030MEM 2021-11-03  0   A         DEN        106      94.2
+##     5: 202111060DEN 2021-11-06  0   H         DEN         95      94.5
+##    ---                                                                
+## 14487: 202203240MEM 2022-03-24  0   H         MEM        133      98.0
+## 14488: 202203300SAS 2022-03-30  0   A         MEM        112      93.8
+## 14489: 202204050UTA 2022-04-05  1   A         MEM        115     103.2
+## 14490: 202204070DEN 2022-04-07  0   A         MEM        109      97.4
+## 14491: 202201120UTA 2022-01-12  0   H         UTA         91      92.2
+##        Team_efg_pct Team_tov_pct Team_orb_pct Team_ft_rate Team_off_rtg
+##     1:        0.564         19.0         20.0        0.058        100.7
+##     2:        0.584         17.6         14.3        0.108        107.0
+##     3:        0.460         15.9         31.1        0.136         97.9
+##     4:        0.516         10.2         25.0        0.132        112.5
+##     5:        0.455         10.2         20.0        0.157        100.6
+##    ---                                                                 
+## 14487:        0.651         12.2         42.1        0.129        135.7
+## 14488:        0.571         11.1         28.6        0.088        119.4
+## 14489:        0.450          9.5         17.2        0.238        100.9
+## 14490:        0.534         11.0         22.2        0.157        111.9
+## 14491:        0.494          7.2          8.5        0.082         98.7
+##                                                                                                              Inactives
+##     1:                                                                                     Vlatko Cancar, Jamal Murray
+##     2:                                                                                     Vlatko Cancar, Jamal Murray
+##     3:                                                                      Vlatko Cancar, Petr Cornelie, Jamal Murray
+##     4:                                                                      Vlatko Cancar, Petr Cornelie, Jamal Murray
+##     5:                                                                      Vlatko Cancar, Petr Cornelie, Jamal Murray
+##    ---                                                                                                                
+## 14487:                               Dillon Brooks, Brandon Clarke, Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 14488:                                                              Ja Morant, Yves Pons, Tyrell Terry, Killian Tillie
+## 14489:                                                          Dillon Brooks, Ja Morant, Tyrell Terry, Killian Tillie
+## 14490:                                                         Jarrett Culver, Ja Morant, Tyrell Terry, Killian Tillie
+## 14491: Udoka Azubuike, Jared Butler, Malik Fitts, Rudy Gay, Rudy Gobert, Elijah Hughes, Norvel Pelle, Hassan Whiteside
+##        Opponent_Abbrev Opponent_Score Opponent_pace Opponent_efg_pct
+##     1:             SAS             96         101.3            0.512
+##     2:             DAL             75          99.0            0.346
+##     3:             MIN             91          95.0            0.466
+##     4:             MEM            108          94.2            0.617
+##     5:             HOU             94          94.5            0.520
+##    ---                                                              
+## 14487:             IND            103          98.0            0.473
+## 14488:             SAS            111          93.8            0.590
+## 14489:             UTA            121         103.2            0.479
+## 14490:             DEN            122          97.4            0.625
+## 14491:             CLE            111          92.2            0.599
+##        Opponent_tov_pct Opponent_orb_pct Opponent_ft_rate Opponent_off_rtg
+##     1:             18.2             17.5            0.119             94.8
+##     2:             14.3             11.5            0.269             75.7
+##     3:             17.7             30.6            0.090             95.8
+##     4:             11.2              8.3            0.099            114.6
+##     5:             15.8             16.7            0.213             99.5
+##    ---                                                                    
+## 14487:              9.7             18.8            0.174            105.1
+## 14488:             13.5             20.0            0.157            118.3
+## 14489:             12.2             24.1            0.302            106.2
+## 14490:             15.7             25.0            0.275            125.3
+## 14491:             12.8             20.0            0.173            120.4
+##        player_id starter    mp fg fga fg_pct fg3 fg3a fg3_pct ft fta ft_pct orb
+##     1: gordoaa01       1 29:49  3   6  0.500   0    1    0.00  2   2      1   2
+##     2: gordoaa01       1 23:35  6   9  0.667   1    2    0.50  0   1      0   1
+##     3: gordoaa01       1 31:12  4  10  0.400   0    2    0.00  4   4      1   2
+##     4: gordoaa01       1 30:02  4   5  0.800   1    1    1.00  0   0      0   1
+##     5: gordoaa01       1 27:42  3   7  0.429   3    6    0.50  0   0      0   1
+##    ---                                                                         
+## 14487: willizi02       1 30:09  1   5  0.200   1    5    0.20  0   0      0   0
+## 14488: willizi02       0 11:03  1   4  0.250   0    2    0.00  1   1      1   0
+## 14489: willizi02       1 35:15  2   6  0.333   1    4    0.25  4   4      1   0
+## 14490: willizi02       0 19:10  4   8  0.500   2    5    0.40  2   2      1   0
+## 14491: cheatzy01       0  5:11  0   3  0.000   0    2    0.00  0   0      0   0
+##        drb trb ast stl blk tov pf pts plus_minus did_not_play is_inactive
+##     1:   3   5   1   0   0   3  5   8          5            0           0
+##     2:   4   5   2   1   1   2  1  13         24            0           0
+##     3:   2   4   2   2   2   0  0  12         26            0           0
+##     4:   0   1   1   0   2   1  5   9          5            0           0
+##     5:   2   3   2   0   2   1  1   9          6            0           0
+##    ---                                                                   
+## 14487:   2   2   5   1   0   3  4   3         18            0           0
+## 14488:   1   1   0   1   1   1  0   3          4            0           0
+## 14489:   0   0   1   2   0   1  3   9          6            0           0
+## 14490:   2   2   1   0   0   1  2  12        -10            0           0
+## 14491:   0   0   0   0   0   0  0   0        -13            0           0
+##        ts_pct efg_pct fg3a_per_fga_pct fta_per_fga_pct orb_pct drb_pct trb_pct
+##     1:  0.581   0.500            0.167           0.333     8.0    12.1    10.1
+##     2:  0.689   0.722            0.222           0.111     5.8    15.7    11.7
+##     3:  0.510   0.400            0.200           0.400     6.8     6.3     6.5
+##     4:  0.900   0.900            0.200           0.000     3.6     0.0     2.0
+##     5:  0.643   0.643            0.857           0.000     3.5     8.3     5.7
+##    ---                                                                        
+## 14487:  0.300   0.300            1.000           0.000     0.0     6.6     3.7
+## 14488:  0.338   0.250            0.500           0.250     0.0    12.4     5.6
+## 14489:  0.580   0.417            0.667           0.667     0.0     0.0     0.0
+## 14490:  0.676   0.625            0.625           0.250     0.0    15.7     6.5
+## 14491:  0.000   0.000            0.667           0.000     0.0     0.0     0.0
+##        ast_pct stl_pct blk_pct tov_pct usg_pct off_rtg def_rtg   bpm season
+##     1:     4.1     0.0     0.0    30.4    14.4      92     100  -7.9   2022
+##     2:    13.2     2.1     5.0    17.5    21.6     111      74   8.5   2022
+##     3:    10.3     3.2     6.4     0.0    16.0     126      97   5.3   2022
+##     4:     4.4     0.0     6.8    16.7     8.9     146     114  -1.3   2022
+##     5:    11.3     0.0     7.4    12.5    12.9     119     102   3.5   2022
+##    ---                                                                     
+## 14487:    16.4     1.6     0.0    37.5    11.1      82     109 -10.1   2022
+## 14488:     0.0     4.6     9.0    18.4    21.9      61     107  -7.7   2022
+## 14489:     4.2     2.6     0.0    11.4    10.5     109     112  -3.3   2022
+## 14490:     7.8     0.0     0.0    10.1    22.6     119     130  -1.5   2022
+## 14491:     0.0     0.0     0.0     0.0    28.7       0     127 -30.3   2022
+##          minutes double_double triple_double   DKP  FDP   SDP DKP_per_minute
+##     1: 29.816667             0             0 14.25 12.5 12.75      0.4779206
+##     2: 23.583333             0             0 25.75 26.0 26.75      1.0918728
+##     3: 31.200000             0             0 28.00 31.8 32.00      0.8974359
+##     4: 30.033333             0             0 15.75 16.7 17.25      0.5244173
+##     5: 27.700000             0             0 20.75 20.6 22.25      0.7490975
+##    ---                                                                      
+## 14487: 30.150000             0             0 14.00 12.9 13.50      0.4643449
+## 14488: 11.050000             0             0  7.75  9.2  9.25      0.7013575
+## 14489: 35.250000             0             0 14.50 15.5 16.00      0.4113475
+## 14490: 19.166667             0             0 16.50 14.9 16.00      0.8608696
+## 14491:  5.183333             0             0  0.00  0.0  0.00      0.0000000
+##        FDP_per_minute SDP_per_minute pf_per_minute    ts
+##     1:      0.4192286      0.4276132    0.16769145  6.88
+##     2:      1.1024735      1.1342756    0.04240283  9.44
+##     3:      1.0192308      1.0256410    0.00000000 11.76
+##     4:      0.5560488      0.5743618    0.16648169  5.00
+##     5:      0.7436823      0.8032491    0.03610108  7.00
+##    ---                                                  
+## 14487:      0.4278607      0.4477612    0.13266998  5.00
+## 14488:      0.8325792      0.8371041    0.00000000  4.44
+## 14489:      0.4397163      0.4539007    0.08510638  7.76
+## 14490:      0.7773913      0.8347826    0.10434783  8.88
+## 14491:      0.0000000      0.0000000    0.00000000  3.00
+##        last_60_minutes_per_game_starting last_60_minutes_per_game_bench PG. SG.
+##     1:                          29.01667                       15.68844   0   0
+##     2:                          30.26250                       16.36203   0   0
+##     3:                          28.92667                       15.63978   0   0
+##     4:                          29.15476                       15.76311   0   0
+##     5:                          29.26458                       15.82248   0   0
+##    ---                                                                         
+## 14487:                          24.19737                       16.22000   0   1
+## 14488:                          24.31765                       17.51667   0   1
+## 14489:                          23.78750                       16.70833   0   1
+## 14490:                          24.40729                       16.70833   0   1
+## 14491:                           0.00000                        0.00000   0   0
+##        SF. PF. C. active_position_minutes       date deviationppg deviationapg
+##     1:  51  46  3                56.96878 2021-10-22   -7.0133333   -1.5066667
+##     2:  51  46  3                56.45623 2021-10-29   -2.0133333   -0.5066667
+##     3:  51  46  3                55.59639 2021-10-30   -3.0133333   -0.5066667
+##     4:  51  46  3                54.89566 2021-11-03   -6.0133333   -1.5066667
+##     5:  51  46  3                54.50099 2021-11-06   -6.0133333   -0.5066667
+##    ---                                                                        
+## 14487:  96   3  0                39.39552 2022-03-24   -5.0806452    3.9516129
+## 14488:  96   3  0                66.40481 2022-03-30   -5.0806452   -1.0483871
+## 14489:  96   3  0                47.32089 2022-04-05    0.9193548   -0.0483871
+## 14490:  96   3  0                69.23579 2022-04-07    3.9193548   -0.0483871
+## 14491:   0 100  0                38.59359 2022-01-12    0.0000000    0.0000000
+##        deviationrpg positive_dev_ppg positive_dev_apg positive_dev_rpg
+##     1:  -0.84000000                0                0                0
+##     2:  -0.84000000                0                0                0
+##     3:  -1.84000000                0                0                0
+##     4:  -4.84000000                0                0                0
+##     5:  -2.84000000                0                0                0
+##    ---                                                                
+## 14487:  -0.08064516                0                1                0
+## 14488:  -1.08064516                0                0                0
+## 14489:  -2.08064516                1                0                0
+## 14490:  -0.08064516                1                0                0
+## 14491:   0.00000000                0                0                0</code></pre>
+<pre class="r"><code>streaks2022[, Consec_ppg := ifelse(positive_dev_ppg == 1, 1:.N, 0L), by = rleid(positive_dev_ppg == 1, player)]
+
+streaks2022[, Consec_apg := ifelse(positive_dev_apg == 1, 1:.N, 0L), by = rleid(positive_dev_apg == 1, player)]
+
+streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(positive_dev_rpg == 1, player)]
+
+streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]
+
+print(streaks2022 %&gt;% 
+  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %&gt;% head(10))</code></pre>
+<pre><code>##           player       date      ppg pts deviationppg positive_dev_ppg
+##  1: Aaron Gordon 2021-10-20 15.01333  12  -3.01333333                0
+##  2: Aaron Gordon 2021-10-22 15.01333   8  -7.01333333                0
+##  3: Aaron Gordon 2021-10-25 15.01333  12  -3.01333333                0
+##  4: Aaron Gordon 2021-10-26 15.01333  20   4.98666667                1
+##  5: Aaron Gordon 2021-10-29 15.01333  13  -2.01333333                0
+##  6: Aaron Gordon 2021-10-30 15.01333  12  -3.01333333                0
+##  7: Aaron Gordon 2021-11-01 15.01333  15  -0.01333333                0
+##  8: Aaron Gordon 2021-11-03 15.01333   9  -6.01333333                0
+##  9: Aaron Gordon 2021-11-06 15.01333   9  -6.01333333                0
+## 10: Aaron Gordon 2021-11-08 15.01333  10  -5.01333333                0
+##     Consec_ppg      apg ast deviationapg positive_dev_apg Consec_apg  rpg trb
+##  1:          0 2.506667   4    1.4933333                1          1 5.84   8
+##  2:          0 2.506667   1   -1.5066667                0          0 5.84   5
+##  3:          0 2.506667   1   -1.5066667                0          0 5.84   9
+##  4:          1 2.506667   1   -1.5066667                0          0 5.84   7
+##  5:          0 2.506667   2   -0.5066667                0          0 5.84   5
+##  6:          0 2.506667   2   -0.5066667                0          0 5.84   4
+##  7:          0 2.506667   1   -1.5066667                0          0 5.84  10
+##  8:          0 2.506667   1   -1.5066667                0          0 5.84   1
+##  9:          0 2.506667   2   -0.5066667                0          0 5.84   3
+## 10:          0 2.506667   3    0.4933333                1          1 5.84   7
+##     deviationrpg positive_dev_rpg Consec_rpg game_number
+##  1:         2.16                1          1           1
+##  2:        -0.84                0          0           2
+##  3:         3.16                1          1           3
+##  4:         1.16                1          2           4
+##  5:        -0.84                0          0           5
+##  6:        -1.84                0          0           6
+##  7:         4.16                1          1           7
+##  8:        -4.84                0          0           8
+##  9:        -2.84                0          0           9
+## 10:         1.16                1          1          10</code></pre>
+<p>The above table shows the first 10 rows in the <code>streaks2022</code> dataset, showing the way the streaks were counted. Using this table, we could now see the players with the longest streaks.</p>
+<pre class="r"><code>streaks2022 %&gt;%
+  group_by(player) %&gt;%
+  summarize(max_streak = max(Consec_ppg)) %&gt;%
+  select(player, max_streak) %&gt;% 
+  arrange(-max_streak) %&gt;%
+  head(10)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    player             max_streak
+##    &lt;chr&gt;                   &lt;int&gt;
+##  1 Bruce Brown                18
+##  2 Jordan Poole               18
+##  3 Drew Eubanks               16
+##  4 Aleksej Pokusevski         13
+##  5 Coby White                 13
+##  6 Trendon Watford            13
+##  7 Cam Thomas                 12
+##  8 DeMar DeRozan              12
+##  9 Ben McLemore               11
+## 10 De&#39;Anthony Melton          11</code></pre>
+<p>As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a ‘hot streak’ to perform above their usual output.</p>
+<pre class="r"><code>streaks2022 %&gt;% 
+  filter(ppg &gt;= 20) %&gt;%
+  group_by(player) %&gt;%
+  summarize(max_streak = max(Consec_ppg)) %&gt;%
+  select(player, max_streak) %&gt;% 
+  arrange(-max_streak) %&gt;% 
+  head(10)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    player          max_streak
+##    &lt;chr&gt;                &lt;int&gt;
+##  1 DeMar DeRozan           12
+##  2 Jaylen Brown            10
+##  3 De&#39;Aaron Fox             9
+##  4 Bradley Beal             8
+##  5 Darius Garland           8
+##  6 Devin Booker             8
+##  7 Joel Embiid              8
+##  8 Dejounte Murray          7
+##  9 Ja Morant                7
+## 10 Julius Randle            7</code></pre>
+<p>Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.</p>
+</div>
+<div id="flawslimitations" class="section level2">
+<h2>Flaws/Limitations:</h2>
+<p>One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.</p>
 </div>

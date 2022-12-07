@@ -7,38 +7,10 @@ featuredImage: https://i0.wp.com/reflectionsonbaseball.com/wp-content/uploads/20
 draft: false
 ---
 
-This comes from the file `content/analysis.Rmd`.
-
-We describe here our detailed data analysis.
-
-
-```{r}
-library(tidyverse)
-print(getwd())
-data <- read_csv(here::here("dataset/loan_refusal_clean.csv"))
-load(here::here("dataset/loan_refusal.RData"))
-print(ls())
-```
-
-## Note on Attribution
-
-If you are directly quoting from a source, please make that clear. You can show quotes using `>` like this
-
-```
-> To be or not to be.
-```
-
-> To be or not to be.
-
-Also, make sure to provide a link or citation to where you are quoting from.
-
--------
-
-
 ## Rubric: On this page
 
-you will
 
+you will
 
 * Introduce what motivates your Data Analysis (DA)
   * Which variables and relationships are you most interested in?
@@ -68,6 +40,7 @@ you will
   
 **NOTE**: Your Data Analysis can be broken up into multiple pages if that helps with your organization.
 
+<<<<<<< HEAD
 * Introduce what motivates your Data Analysis (DA)
   * Which variables and relationships are you most interested in?
   * What questions are you interested in answering?
@@ -75,3 +48,144 @@ you will
 What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA
 
 
+=======
+
+## Goals:
+
+Here we aim to detail our explarotary data analysis on both the NBA and MLB data.
+
+## NBA EDA:
+
+## Identifying Streaks:
+
+For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. As stated in the Data page, the dataset had game-by-game data for each player, but did not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. 
+
+
+```{r nbadata}
+library(tidyverse)
+
+nba_data22 <- read.csv(file = '../dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
+nba_ppg22 <- group_by(nba_data22, player) %>%
+  filter(mp != '0:00') %>%
+  distinct(game_date, .keep_all = TRUE) %>%
+  summarize(total_games = n(),
+            ppg = sum(pts)/total_games,
+            fg_percentage = sum(fg)/sum(fga),
+            apg = sum(ast)/total_games,
+            rpg = sum(trb)/total_games)
+
+print(nba_ppg22 %>% head(10))
+
+```
+
+We wanted to take a look at the most efficient scorers amongst the top scorers. Temporarily setting a threshold for players who scored at least 20 points per game, we made a scatterplot that visualized this relationship to get a sense of who we might expect to have the longest streaks, seen below. 
+
+
+
+```{r eval=FALSE, include=TRUE}
+
+scoring <- filter(nba_ppg22, ppg >= 25)
+
+ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
+  geom_point() +
+  geom_text(hjust=0, vjust=0) + 
+  ggtitle("25+ PPG Scorers Against Field Goal Percentage")
+
+
+```
+``` {r 25pt_vs_fg}
+# To Prevent Needing to Rerun EDA Each Time
+knitr::include_graphics('analysis_files/figure-html/Rplot01.png')
+```
+
+We see above that Lebron James and Joel Embiid scored the most points in the 2022 season, and that they were among the most efficient players in this pool, alongside Giannis Antetokounmpo, Nikola Jokic, and Kevin Durant. Because of their prolific and efficient scoring, we at first expected them to be the among the players with the longest streaks. However, because of their consistancy, it was instead hypothesized that the streakiest players, and therefore the players with the longest streaks, would be those with a lower usage rates and lower scoring - possibly role players who were infrequently given a chances to score above their usual means. 
+
+Because we score streaks based on the individual game performance AGAINST their season average, we needed to join the calculated season averages to the entire game-by-game data, as shown below. Additionally, in this merged dataset, we calculated the deviation per game for each of the three following statistics: points, assists, and rebounds. The deviation was calculated as the statistic from one game substracted by that player's season average in that statistic. For example, 5 `pts` scored in one game substracted from 10 `ppg` will result in a `deviationppg` of -5. 
+
+```{r nba merge}
+
+merged2022 <- nba_ppg22 %>% inner_join(nba_data22, by="player") %>%
+  filter(mp != '0:00') %>%
+  group_by(player) %>%
+  distinct(game_date, .keep_all = TRUE) %>%
+  ungroup() %>%
+  mutate(date = as.Date(game_date, format = "%Y-%m-%d")) %>%
+  mutate(deviationppg = pts-ppg,
+         deviationapg = ast-apg,
+         deviationrpg = trb-rpg) %>%
+  arrange(player, date)
+
+
+```
+
+The next step was to actually find the streaks. For this, we downloaded the package `data.table`. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive `deviationppg`, the `positive_dev_ppg` will be 1. This column is tracked by the `Consec_ppg` column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don't overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency. 
+
+
+```{r nba streaks}
+
+library(data.table)
+
+streaks2022 <- merged2022
+
+setDT(streaks2022)
+
+streaks2022[, positive_dev_ppg := +(deviationppg > 0)
+][positive_dev_ppg == 0]
+
+streaks2022[, positive_dev_apg := +(deviationapg > 0)
+][positive_dev_apg == 0]
+
+streaks2022[, positive_dev_rpg := +(deviationrpg > 0)
+][positive_dev_rpg == 0]
+
+streaks2022[, Consec_ppg := ifelse(positive_dev_ppg == 1, 1:.N, 0L), by = rleid(positive_dev_ppg == 1, player)]
+
+streaks2022[, Consec_apg := ifelse(positive_dev_apg == 1, 1:.N, 0L), by = rleid(positive_dev_apg == 1, player)]
+
+streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(positive_dev_rpg == 1, player)]
+
+streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]
+
+print(streaks2022 %>% 
+  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %>% head(10))
+
+
+
+```
+
+The above table shows the first 10 rows in the `streaks2022` dataset, showing the way the streaks were counted. Using this table, we could now see the players with the longest streaks.
+
+```{r nba ppgstreak}
+
+streaks2022 %>%
+  group_by(player) %>%
+  summarize(max_streak = max(Consec_ppg)) %>%
+  select(player, max_streak) %>% 
+  arrange(-max_streak) %>%
+  head(10)
+
+
+```
+
+As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a 'hot streak' to perform above their usual output.
+
+```{r nba 20ppgstreak}
+
+streaks2022 %>% 
+  filter(ppg >= 20) %>%
+  group_by(player) %>%
+  summarize(max_streak = max(Consec_ppg)) %>%
+  select(player, max_streak) %>% 
+  arrange(-max_streak) %>% 
+  head(10)
+
+
+```
+
+Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.
+
+## Flaws/Limitations:
+
+One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
+>>>>>>> 452fb10ec62944edfb124575f1823da25ada054e
