@@ -188,4 +188,145 @@ Even among the best players, scoring over 20 points per game, the majority of pl
 ## Flaws/Limitations:
 
 One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
->>>>>>> 452fb10ec62944edfb124575f1823da25ada054e
+
+## MLB Broad Analysis
+
+To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:
+
+```{r echo=TRUE, results='hide'}
+library(tidyverse)
+library(modelr)
+library(ggrepel)
+
+stat_fct <- function(x,y){
+  ifelse(y > 0, x/y, 0)
+}
+
+bat_data_21 <- read_csv("../dataset/MLB_bat_data_2021.csv") %>%
+  filter(pa > 0) %>%
+  select(-game_id, -player_id, -details, -batting_order, -DKP, -FDP, -SDP) %>%
+  mutate(singles = h - (doubles + triples + home_runs),
+         tb = singles + 2*doubles + 3*triples + 4*home_runs,
+         on_base = h + bb + hit_by_pitch) %>%
+  arrange(player, game_date)
+
+ops_data_21 <- bat_data_21 %>% group_by(player) %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(player, obp, slg, ops)
+
+MLB_avg_21 <- bat_data_21 %>%
+  summarize(ab = sum(ab),
+            pa = sum(pa),
+            tb = sum(tb),
+            on_base = sum(on_base)) %>% 
+  mutate(obp = stat_fct(on_base, pa), slg = stat_fct(tb, ab),
+         ops = obp + slg) %>% select(obp, slg, ops)
+
+bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player") %>%
+  mutate(MLB_diff = MLB_avg_21$ops - ops)
+
+sim_21 <- bat_data_day_21 %>% group_by(player) %>% filter(sum(pa) >= 500) %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - MLB_avg_21$ops,
+         above = (ops_diff > 0)) %>% ungroup() %>% group_by(player) %>%
+  summarize(games_above = sum(above), games = n(), per = games_above/games,
+            ops = mean(ops), pa = sum(pa), home_runs = sum(home_runs),
+            bb = sum(bb), so = sum(so))
+
+model_21 <- lm(per ~ ops, data = sim_21)
+beta <- coef(model_21)
+
+s_res_21 <- rstandard(model_21)
+
+log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
+  mutate(streaky = ifelse(s_res_21 < 0, 1, 0))
+```
+
+The stat to determine a player’s value in this analysis is OPS. We then calculated among players with at least 500 plate appearances the percentage of their games where they recorded an OPS above the league average of .726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:
+
+```{r echo=FALSE}
+model_21 <- lm(per ~ ops, data = sim_21)
+beta <- coef(model_21)
+summary(model_21)
+ggplot(sim_21, aes(ops, per)) + geom_point() +
+  geom_abline(intercept = beta[1], slope = beta[2], color = "red") +
+  labs(x = "OPS", y = "% of Games Above League Average")
+```
+
+Fitting a linear regression to this data, we find a statistically significant correlation. For our step, we standardized the residuals and determined that players with high magnitude positive residuals were the most “consistent,” and ones with high magnitude negative residuals were the most “streaky.” Why is this? We would expect more streaky players to have a small number of games with big production and a large number of below average games.
+
+<br>
+To visualize this decision, here’s a game log of Jose Altuve, who is the most consistent player by our residual measure. The graph represents games where performed above or below his OWN average OPS, and the red line represents the MLB average:
+
+```{r echo=FALSE}
+bat_data_day_21 %>% filter(player == "Jose Altuve") %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - ops,
+         sign = sign(ops_diff)) %>%
+  ggplot() +
+  geom_col(aes(game_date, ops_diff, fill = sign), position = "identity",
+           show.legend = FALSE) +
+  geom_line(aes(game_date, mean(MLB_diff)), color = "red") +
+  labs(title = "Jose Altuve Game by Game OPS Data",
+       x = "Date", y = "Game OPS compared to average")
+```
+
+And here’s a game of log of Nathaniel Lowe, who is the most streaky player:
+
+```{r echo=FALSE}
+bat_data_day_21 %>% filter(player == "Nathaniel Lowe") %>%
+  group_by(game_date) %>%
+  mutate(obp_game = stat_fct(on_base, pa),
+         slg_game = stat_fct(tb, ab),
+         ops_game = obp_game + slg_game,
+         ops_diff = ops_game - ops,
+         sign = sign(ops_diff)) %>%
+  ggplot() +
+  geom_col(aes(game_date, ops_diff, fill = sign), position = "identity",
+           show.legend = FALSE) +
+  geom_line(aes(game_date, mean(MLB_diff)), color = "red") +
+  labs(title = "Nathaniel Lowe Game by Game OPS Data",
+       x = "Date", y = "Game OPS compared to average")
+```
+
+Now we turned to analyze if there was a single stat that could most accurately predict whether a player was streaky or not. At first, we thought that walks would be the best stat, because of the idea that some players are “free swingers;” players that swing at a ton of pitches, don’t draw many walks, but are still on the roster because of their ability to get hot at certain times. However, walks ended up not being a great predictor. We also tried home runs, but that wasn’t a great predictor either.
+
+<br>
+Out of all stats we tried, strikeouts was the best predictor as seen by this linear regression:
+
+```{r echo=FALSE}
+lm_so <- lm(s_res_21 ~ so, data = log_sim_21)
+bt_so <- coef(lm_so)
+summary(lm_so)
+ggplot(log_sim_21, aes(so, s_res_21)) + geom_point() +
+  geom_abline(intercept = bt_so[1], slope = bt_so[2], color = "red") +
+  labs(x = "Strikeouts", y = "Streakiness (Residual)")
+```
+
+As well as this logistic regression, where we labeled players as streaky or consistent by the SIGN of their residuals:
+
+```{r echo=FALSE}
+log_model_so <- glm(streaky ~ so, data = log_sim_21, family = binomial)
+beta_so <- coef(log_model_so)
+grid_so <- log_sim_21 %>% data_grid(so) %>%
+    add_predictions(log_model_so, type = "response")
+summary(log_model_so)
+ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid_so, color = "red", size = 1) +
+  labs(x = "Strikeouts", y = "Streakiness (Binomial)")
+```
+
+So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.
+
+<br>
+There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
