@@ -1,4 +1,11 @@
 ---
+title: "Leo_MLB_EDA"
+author: "Leo Seoane"
+date: "2022-12-07"
+output: html_document
+---
+
+---
 title: "Leo_EDA_2"
 author: "Leo Seoane"
 date: "2022-11-09"
@@ -14,8 +21,7 @@ suppressPackageStartupMessages(library(here))
 suppressPackageStartupMessages(library(modelr))
 ```
 ```{r data loading}
-load(here::here("dataset-ignore", "clean_nba_data.RData"))
-data <-data %>% mutate(PRA=pts+trb+ast) %>%mutate(usg_pct=usg_pct/100)
+load(here::here("dataset", "MLB_bat_data.RData"))
 problems()
 
 ```
@@ -79,48 +85,6 @@ xlab('Date')
 
 
 
-##model building using modified expected equations from popular sports model maker Ken Pomeroy
 
-expected_pos <- function(t1_p,t2_p,la_p){
-  t1_p <-t1_p / la_p
-  t2_p <-t2_p / la_p
-  e_pos <-t1_p *t2_p *la_p
-  return(e_pos)
-}
-expected_output <-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
-  coef<-.8
-  t1_out <-(t1_or /100) *(t2_dr /100) *la_or
-  e_pos <-expected_pos(t1_p,t2_p,la_p)
-  t1_out <-t1_out *(e_pos/100) * coef
-  
-  return(t1_out)
-}
-
-model_data <- all_data  %>% distinct(game_id,.keep_all = TRUE) %>% group_by(Team_Abbrev) %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %>%ungroup() %>%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
-
-model_data <-model_data %>% select(Team_Score,Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
-preds <- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
-model_data <-model_data %>% cbind(preds) 
-
-
-model_data <- model_data %>% mutate(differential=preds-Team_Score) %>%mutate(z_score=(Team_Score-mean(Team_Score))/sd(Team_Score)) %>%mutate(probability=pnorm(z_score,mean=0,sd=1))
-
-
-# Dvoretzky–Kiefer–Wolfowitz inequality:
-# P ( sup|F_n - F| > epsilon  ) leq 2*exp(-2n*epsilon^2)
-# set alpha to 0.05 and alpha=2*exp(-2n*epsilon^2):
-# --> epsilon_n = sqrt(-log(0.5*0.05)/(2*n))
-#
-#lower and upper bands:
-n <-nrow(model_data)
-L<-1:n
-U<-1:n
-
-epsilon_i = sqrt(log(2/0.05)/(2*n))
-L=pmax(1:n/n-epsilon_i, 0)
-U=pmin(1:n/n+epsilon_i, 1)
-sorted_model_data <- sort(model_data$Team_Score)
-
-ggplot(model_data,aes(x=Team_Score)) +stat_ecdf(geom = "step") +geom_line(aes(x=sorted_model_data,y= U, color="blue")) +geom_line(aes(x=sorted_model_data,y=L, color="r"))
 
 ```
