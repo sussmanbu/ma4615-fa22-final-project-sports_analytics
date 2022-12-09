@@ -40,15 +40,13 @@ you will
   
 **NOTE**: Your Data Analysis can be broken up into multiple pages if that helps with your organization.
 
-<<<<<<< HEAD
+
 * Introduce what motivates your Data Analysis (DA)
   * Which variables and relationships are you most interested in?
   * What questions are you interested in answering?
   
-What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA
+What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA. To accomplish this goal, we have split the project into two separate tasks. We first performed analysis on both the NBA and MLB data separately to gain insight into how streaks are distributed in their respective leagues. Once this was completed, we combined our findings to determine whether any relationships exist between baseball and basketball players.
 
-
-=======
 
 ## Goals:
 
@@ -58,7 +56,7 @@ Here we aim to detail our explarotary data analysis on both the NBA and MLB data
 
 ## Identifying Streaks:
 
-For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. As stated in the Data page, the dataset had game-by-game data for each player, but did not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. 
+For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and  usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team's offense, which is relevant for determining how much player's will score. For the KenPom team model used later, team offensive and defensive ratings are used along with pace. Pace is a metric for determining the amount of possesions and shot attempts the game will have. Defensive rating is a metric for determining how many points per 100 posessions a team is likely to allow. 
 
 
 ```{r nbadata}
@@ -185,9 +183,152 @@ streaks2022 %>%
 
 Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.
 
+
+#further analysis of streaks
+
+Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(here))
+suppressPackageStartupMessages(library(modelr))
+suppressPackageStartupMessages(library(runner))
+```
+
+```{r further data analysis loading}
+load(here::here("dataset-ignore", "clean_nba_data.RData"))
+data <-data %>% mutate(PRA=pts+trb+ast) %>%mutate(usg_pct=usg_pct/100)
+all_data <-data  %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),pts_direction  = 
+sign(change_net),change_net_PRA=PRA-mean(PRA),PRA_direction=sign(change_net_PRA)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(pts_streak=ifelse(pts_direction >0,streak_run(pts_direction),0),PRA_streak=ifelse(PRA_direction >0,streak_run(PRA_direction),0))  %>% ungroup() %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100))
+
+```
+
+```{r further EDA}
+
+#visualize distribution of positive player points streaks and PRA streaks
+ggplot(all_data) +geom_freqpoly(aes(x=pts_streak))
+summary(all_data$pts_streak)
+
+#PRA
+ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))
+summary(all_data$PRA_streak)
+
+#view proportion of  maximum continuing streaks for best, middle, and worst players
+
+streak <-all_data$pts_streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data,indices)
+
+all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(pts_streak)) %>% arrange(desc(max_streak))
+best_streaks_2022 <- all_streaks_2022 %>%head(5)
+bottom_streaks_2022 <- all_streaks_2022 %>% tail(5)
+
+ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+
+#PRA
+streak <-all_data$PRA_streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max_PRA <-slice(all_data,indices)
+
+all_PRA_streaks_2022 <- local_max_PRA %>% group_by(player) %>% summarize(max_streak=max(mean(PRA_streak))) %>% arrange(desc(max_streak))
+best_PRA_streaks_2022 <- all_PRA_streaks_2022 %>%head(5)
+bottom_PRA_streaks_2022 <- all_PRA_streaks_2022 %>% tail(5)
+ggplot(best_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+ggplot(bottom_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+
+
+
+#cdf for player points
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(best_streaks_2022,aes(max_streak))+geom_density()
+
+
+
+
+#spike plot
+scoring<-all_data %>% filter(player == 'Brandon Ingram',season == '2022') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+
+```
+
+#modeling and inference
+To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables increase. 
+
+```{r nba model 1}
+#model building by player
+mod1 <-all_data %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1$coefficients
+exp(mod1$coefficients)
+
+all_data <-all_data %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+
+grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_range(usg_pct,5)) %>% add_predictions(mod1, type = "response" )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
+```
+Second, for team based data we used a modified version of a popular college basketball model from one of the sports statistics legends Ken Pomeroy. This model uses the expected offensive production and posessions of one team, and the defensive rating of the opponent to calculate how a team will perform relative to league average. Again, we are interested in looking at how offensive and defensive rating affect the probability of performing above average as these values chamge. To further this, we created a DKW plot of the CDF to provide confidence intervals. 
+
+```{r nba model 2}
+expected_pos <- function(t1_p,t2_p,la_p){
+  t1_p <-t1_p / la_p
+  t2_p <-t2_p / la_p
+  e_pos <-t1_p *t2_p *la_p
+  return(e_pos)
+}
+expected_output <-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
+  coef<-.8
+  t1_out <-(t1_or /100) *(t2_dr /100) *la_or
+  e_pos <-expected_pos(t1_p,t2_p,la_p)
+  t1_out <-t1_out *(e_pos/100) * coef
+  
+  return(t1_out)
+}
+
+model_data <- all_data  %>% distinct(game_id,.keep_all = TRUE) %>% group_by(Team_Abbrev) %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %>%ungroup() %>%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
+
+model_data <-model_data %>% select(Team_Score,Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
+preds <- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
+model_data <-model_data %>% cbind(preds) 
+
+
+model_data <- model_data %>% mutate(differential=preds-Team_Score) %>%mutate(z_score=(Team_Score-mean(Team_Score))/sd(Team_Score)) %>%mutate(probability=pnorm(z_score,mean=0,sd=1))
+
+
+# Dvoretzky–Kiefer–Wolfowitz inequality:
+# P ( sup|F_n - F| > epsilon  ) leq 2*exp(-2n*epsilon^2)
+# set alpha to 0.05 and alpha=2*exp(-2n*epsilon^2):
+# --> epsilon_n = sqrt(-log(0.5*0.05)/(2*n))
+#
+#lower and upper bands:
+n <-nrow(model_data)
+L<-1:n
+U<-1:n
+
+epsilon_i = sqrt(log(2/0.05)/(2*n))
+L=pmax(1:n/n-epsilon_i, 0)
+U=pmin(1:n/n+epsilon_i, 1)
+sorted_model_data <- sort(model_data$Team_Score)
+
+ggplot(model_data,aes(x=Team_Score)) +stat_ecdf(geom = "step") +geom_line(aes(x=sorted_model_data,y= U, color="blue")) +geom_line(aes(x=sorted_model_data,y=L, color="r"))
+```
+
+
 ## Flaws/Limitations:
 
 One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
+
+#modeling flaws/limitations
+Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with logistic regression. Additionally, the original KenPom model consistently modeled the expected offensive output as too high, so I added a coeficient into the calculation to multiply the expected offensive output by .8 which yields an acceptable MSE. Unfortunately, the MLB dataset does not contain key statistics needed to replicate the KenPom model for team data, so this model was not replicated for the MLB. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. 
+
+
 
 ## MLB Broad Analysis
 
@@ -330,3 +471,64 @@ So we conclude that “free swingers” are not necessarily the streaky players,
 
 <br>
 There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
+
+
+##Further MLB analysis
+For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn. 
+
+
+```{r data loading}
+load(here::here("dataset", "MLB_bat_data_2021.RData"))
+problems()
+
+```
+
+```{r Final player EDA}
+#get all of our data by players who meet criteria and calculate streaks
+all_data <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>% ungroup()
+
+#visualize distribution of positive player hit streaks
+ggplot(all_data) +geom_freqpoly(aes(x=h_streak))
+summary(all_data$h_streak)
+
+#view proportion of  maximum continuing streaks for best, middle, and worst players
+streak <-all_data$h_streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data,indices)
+
+all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(mean(h_streak))) %>% arrange(desc(max_streak))
+best_streaks_2022 <- all_streaks_2022 %>%head(5)
+bottom_streaks_2022 <- all_streaks_2022 %>% tail(5)
+ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player))
+
+
+
+#cdf and pdf for player points
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(best_streaks_2022,aes(max_streak))+geom_density()
+
+#model building by player
+mod1 <-all_data %>%ungroup() %>% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())
+mod1$coefficients
+exp(mod1$coefficients)
+
+all_data <-all_data %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
+
+grid <- data_grid(ungroup(all_data), pa= seq_range(pa,3),rbi=seq_range(rbi,5),home_runs=seq_range(home_runs,5),so=seq_range(so,5)) %>% add_predictions(mod1, type = "response" )
+
+ggplot(all_data) +geom_line(aes(x=factor(pa),y=pred,color = factor(rbi)),data=grid)
+
+scoring<-all_data %>% filter(player == 'Trea Turner') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+```
+
+##Similarities between the NBA and MLB
+
+

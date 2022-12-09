@@ -37,8 +37,8 @@ ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))
 summary(all_data$PRA_streak)
 
 #view proportion of  maximum continuing streaks for best, middle, and worst players
-
-streak <-all_data$pts_streak
+data22 <-all_data %>% filter(season=='2022')
+streak <-data22$pts_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data,indices)
 
@@ -50,7 +50,7 @@ ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 
 #PRA
-streak <-all_data$PRA_streak
+streak <-data22$PRA_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max_PRA <-slice(all_data,indices)
 
@@ -77,7 +77,13 @@ grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_
 
 ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
 
-scoring<-all_data %>% filter(player == 'Brandon Ingram',season == '2022') %>%select(change_net,game_date)
+
+#spike plot
+scoring<-all_data %>% filter(player == 'James Harden',season == '2022') %>%select(change_net,game_date)
+scoring<-all_data %>% filter(player == 'OG Anunoby',season == '2022') %>%select(change_net,game_date)
+scoring<-all_data %>% filter(player == 'Cade Cunningham',season == '2022') %>%select(change_net,game_date)
+scoring<-all_data %>% filter(player == 'Josh Hart',season == '2022') %>%select(change_net,game_date)
+
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
