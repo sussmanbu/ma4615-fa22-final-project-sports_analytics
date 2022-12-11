@@ -155,7 +155,7 @@ suppressPackageStartupMessages(library(runner))
 ```
 
 ```{r further data analysis loading, echo=FALSE}
-load(here::here("dataset-ignore", "clean_nba_data.RData"))
+load(here::here("dataset", "clean_nba_data.RData"))
 data <-data %>% mutate(PRA=pts+trb+ast) %>%mutate(usg_pct=usg_pct/100)
 all_data <-data  %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),pts_direction  = 
 sign(change_net),change_net_PRA=PRA-mean(PRA),PRA_direction=sign(change_net_PRA)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(pts_streak=ifelse(pts_direction >0,streak_run(pts_direction),0),PRA_streak=ifelse(PRA_direction >0,streak_run(PRA_direction),0))  %>% ungroup() %>% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100))
@@ -211,7 +211,7 @@ ggplot(bottom_streaks_2022,aes(max_streak))+geom_density() + ggtitle('worst pts 
 
 ```
 
-```{r specific player analysis,echo=False}
+```{r specific player analysis,echo=FALSE}
 #spike plot
 scoring<-all_data %>% filter(player == 'OG Anunoby',season == '2022') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
