@@ -12,59 +12,10 @@ draft: false
 
 </div>
 
-<div id="rubric-on-this-page" class="section level2">
-<h2>Rubric: On this page</h2>
-<p>you will</p>
-<ul>
-<li>Introduce what motivates your Data Analysis (DA)
-<ul>
-<li>Which variables and relationships are you most interested in?</li>
-<li>What questions are you interested in answering?</li>
-</ul></li>
-<li>Breadth of the DA
-<ul>
-<li>Make sure that you ask enough initial questions to explore the different variables in your data.</li>
-<li>i.e. Do you explore more than just one or two variables? Do you explore a few different relationships or many?</li>
-</ul></li>
-<li>Depth of the DA
-<ul>
-<li>When you answer one question, usually more questions arise as well.</li>
-<li>The depth of the DA is about coming up with and exploring the answers to these questions, often iterating the process a few times.</li>
-</ul></li>
-<li>Modeling and Inference
-<ul>
-<li>You should also include some kind of formal statistical model and/or inference. This could be a linear regression, logistic regression, hypothesis testing etc.</li>
-<li>Explain the techniques you used for validating your results.</li>
-<li>Describe the results of your modelling and make sure to give a sense of the uncertainty in your estimates and conclusions.</li>
-</ul></li>
-<li>Explain the flaws and limitations of your analysis
-<ul>
-<li>Are there some assumptions that you needed to make that might not hold? Is there other data that would help to answer your questions? …</li>
-</ul></li>
-<li>Clarity Figures
-<ul>
-<li>Are your figures/tables/results easy to read, informative, without problems like overplotting, hard-to-read labels, etc?</li>
-<li>Each figure should provide a key insight. Too many figures or other data summaries can detract from this.</li>
-</ul></li>
-<li>Clarity of Explanations
-<ul>
-<li>Do you introduce why you are doing each analysis?</li>
-<li>How well do you explain each figure/result?</li>
-<li>Do you provide interpretations that suggest further analysis or explanations for observed phenomenon?</li>
-</ul></li>
-<li>Organization and cleanliness.
-<ul>
-<li>Make sure to remove excessive warnings, use clean easy-to-read code, organize with sections or multiple pages, use bullets, etc.</li>
-</ul></li>
-</ul>
-<p><strong>NOTE</strong>: Your Data Analysis can be broken up into multiple pages if that helps with your organization.</p>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-* Introduce what motivates your Data Analysis (DA)
+<p>##Introduce what motivates your Data Analysis (DA)
 * Which variables and relationships are you most interested in?
 * What questions are you interested in answering?</p>
-<p>What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA</p>
-<p>=======</p>
-</div>
+<p>What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. The main variables that we are interested in analyzing are hits, walks, and strikeouts in the MLB, and points,rebounds, and assists in the NBA. To accomplish this goal, we have split the project into two separate tasks. We first performed analysis on both the NBA and MLB data separately to gain insight into how streaks are distributed in their respective leagues. Once this was completed, we combined our findings to determine whether any relationships exist between baseball and basketball players.</p>
 <div id="goals" class="section level2">
 <h2>Goals:</h2>
 <p>Here we aim to detail our explarotary data analysis on both the NBA and MLB data.</p>
@@ -74,13 +25,13 @@ draft: false
 </div>
 <div id="identifying-streaks" class="section level2">
 <h2>Identifying Streaks:</h2>
-<p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. As stated in the Data page, the dataset had game-by-game data for each player, but did not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated.</p>
+<p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team’s offense, which is relevant for determining how much player’s will score. For the KenPom team model used later, team offensive and defensive ratings are used along with pace. Pace is a metric for determining the amount of possesions and shot attempts the game will have. Defensive rating is a metric for determining how many points per 100 posessions a team is likely to allow.</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
-## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-## ✔ tidyr   1.2.0      ✔ stringr 1.4.1 
-## ✔ readr   2.1.2      ✔ forcats 0.5.2 
+## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
+## ✔ readr   2.1.2     ✔ forcats 0.5.2
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -132,7 +83,6 @@ knitr::include_graphics(&#39;analysis_files/figure-html/Rplot01.png&#39;)</code>
          deviationrpg = trb-rpg) %&gt;%
   arrange(player, date)</code></pre>
 <p>The next step was to actually find the streaks. For this, we downloaded the package <code>data.table</code>. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive <code>deviationppg</code>, the <code>positive_dev_ppg</code> will be 1. This column is tracked by the <code>Consec_ppg</code> column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don’t overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency.</p>
-<pre class="r"><code>library(data.table)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;data.table&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:dplyr&#39;:
@@ -141,12 +91,6 @@ knitr::include_graphics(&#39;analysis_files/figure-html/Rplot01.png&#39;)</code>
 <pre><code>## The following object is masked from &#39;package:purrr&#39;:
 ## 
 ##     transpose</code></pre>
-<pre class="r"><code>streaks2022 &lt;- merged2022
-
-setDT(streaks2022)
-
-streaks2022[, positive_dev_ppg := +(deviationppg &gt; 0)
-][positive_dev_ppg == 0]</code></pre>
 <pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
 ##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
 ##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
@@ -327,8 +271,6 @@ streaks2022[, positive_dev_ppg := +(deviationppg &gt; 0)
 ## 14453:   1.91935484                0
 ## 14454:  -1.08064516                0
 ## 14455:   0.00000000                0</code></pre>
-<pre class="r"><code>streaks2022[, positive_dev_apg := +(deviationapg &gt; 0)
-][positive_dev_apg == 0]</code></pre>
 <pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
 ##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
 ##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
@@ -509,8 +451,6 @@ streaks2022[, positive_dev_ppg := +(deviationppg &gt; 0)
 ## 15269:  -0.08064516                1                0
 ## 15270:   1.91935484                1                0
 ## 15271:   0.00000000                0                0</code></pre>
-<pre class="r"><code>streaks2022[, positive_dev_rpg := +(deviationrpg &gt; 0)
-][positive_dev_rpg == 0]</code></pre>
 <pre><code>##                 player total_games       ppg fg_percentage      apg      rpg
 ##     1:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
 ##     2:    Aaron Gordon          75 15.013333     0.5203837 2.506667 5.840000
@@ -691,16 +631,6 @@ streaks2022[, positive_dev_ppg := +(deviationppg &gt; 0)
 ## 14489:  -2.08064516                1                0                0
 ## 14490:  -0.08064516                1                0                0
 ## 14491:   0.00000000                0                0                0</code></pre>
-<pre class="r"><code>streaks2022[, Consec_ppg := ifelse(positive_dev_ppg == 1, 1:.N, 0L), by = rleid(positive_dev_ppg == 1, player)]
-
-streaks2022[, Consec_apg := ifelse(positive_dev_apg == 1, 1:.N, 0L), by = rleid(positive_dev_apg == 1, player)]
-
-streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(positive_dev_rpg == 1, player)]
-
-streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]
-
-print(streaks2022 %&gt;% 
-  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %&gt;% head(10))</code></pre>
 <pre><code>##           player       date      ppg pts deviationppg positive_dev_ppg
 ##  1: Aaron Gordon 2021-10-20 15.01333  12  -3.01333333                0
 ##  2: Aaron Gordon 2021-10-22 15.01333   8  -7.01333333                0
@@ -776,19 +706,98 @@ print(streaks2022 %&gt;%
 ##  9 Ja Morant                7
 ## 10 Julius Randle            7</code></pre>
 <p>Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.</p>
+<p>#further analysis of streaks</p>
+<p>Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season.</p>
+<pre class="r"><code>#visualize distribution of positive player points streaks and PRA streaks
+ggplot(all_data) +geom_freqpoly(aes(x=pts_streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/further%20EDA-1.png" width="672" /></p>
+<pre class="r"><code>summary(all_data$pts_streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   1.044   1.000  22.000</code></pre>
+<pre class="r"><code>#PRA
+ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/further%20EDA-2.png" width="672" /></p>
+<pre class="r"><code>summary(all_data$PRA_streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   1.149   2.000  23.000</code></pre>
+<p>Next, lets take a closer look at some individual players and see how they are performing in 2022
+<img src="/analysis_files/figure-html/player%20analysis-1.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-2.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-3.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-4.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-5.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-6.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-7.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-8.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-9.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-10.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-11.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-12.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-13.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-14.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-15.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-16.png" width="672" /></p>
+<p>#modeling and inference
+To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables increase.</p>
+<pre class="r"><code>#model building by player
+mod1 &lt;-all_data %&gt;%ungroup() %&gt;% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1$coefficients</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##      -4.016258       1.715385      -8.964894      37.908866</code></pre>
+<pre class="r"><code>exp(mod1$coefficients)</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##   1.802028e-02   5.558813e+00   1.278191e-04   2.908114e+16</code></pre>
+<pre class="r"><code>all_data &lt;-all_data %&gt;%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+
+grid &lt;- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_range(usg_pct,5)) %&gt;% add_predictions(mod1, type = &quot;response&quot; )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)</code></pre>
+<p><img src="/analysis_files/figure-html/nba%20model%201-1.png" width="672" />
+Second, for team based data we used a modified version of a popular college basketball model from one of the sports statistics legends Ken Pomeroy. This model uses the expected offensive production and posessions of one team, and the defensive rating of the opponent to calculate how a team will perform relative to league average. Again, we are interested in looking at how offensive and defensive rating affect the probability of performing above average as these values chamge. To further this, we created a DKW plot of the CDF to provide confidence intervals.</p>
+<pre class="r"><code>expected_pos &lt;- function(t1_p,t2_p,la_p){
+  t1_p &lt;-t1_p / la_p
+  t2_p &lt;-t2_p / la_p
+  e_pos &lt;-t1_p *t2_p *la_p
+  return(e_pos)
+}
+expected_output &lt;-function(t1_or,t2_dr,la_or,t1_p,t2_p,la_p){
+  coef&lt;-.8
+  t1_out &lt;-(t1_or /100) *(t2_dr /100) *la_or
+  e_pos &lt;-expected_pos(t1_p,t2_p,la_p)
+  t1_out &lt;-t1_out *(e_pos/100) * coef
+  
+  return(t1_out)
+}
+
+model_data &lt;- all_data  %&gt;% distinct(game_id,.keep_all = TRUE) %&gt;% group_by(Team_Abbrev) %&gt;% mutate(Team_def_rtg=mean(Opponent_Score/Opponent_pace *100), Opponent_def_rtg=mean(Team_Score/Team_pace *100)) %&gt;%ungroup() %&gt;%mutate(la_pace=mean(Team_pace),la_or=mean(Team_off_rtg))
+
+model_data &lt;-model_data %&gt;% select(Team_Score,Team_off_rtg,Opponent_def_rtg,la_or,Team_pace,Opponent_pace,la_pace)
+preds &lt;- expected_output(model_data$Team_off_rtg,model_data$Opponent_def_rtg,model_data$la_or,model_data$Team_pace,model_data$Opponent_pace,model_data$la_pace)
+model_data &lt;-model_data %&gt;% cbind(preds) 
+
+
+model_data &lt;- model_data %&gt;% mutate(differential=preds-Team_Score) %&gt;%mutate(z_score=(Team_Score-mean(Team_Score))/sd(Team_Score)) %&gt;%mutate(probability=pnorm(z_score,mean=0,sd=1))
+
+
+# Dvoretzky–Kiefer–Wolfowitz inequality:
+# P ( sup|F_n - F| &gt; epsilon  ) leq 2*exp(-2n*epsilon^2)
+# set alpha to 0.05 and alpha=2*exp(-2n*epsilon^2):
+# --&gt; epsilon_n = sqrt(-log(0.5*0.05)/(2*n))
+#
+#lower and upper bands:
+n &lt;-nrow(model_data)
+L&lt;-1:n
+U&lt;-1:n
+
+epsilon_i = sqrt(log(2/0.05)/(2*n))
+L=pmax(1:n/n-epsilon_i, 0)
+U=pmin(1:n/n+epsilon_i, 1)
+sorted_model_data &lt;- sort(model_data$Team_Score)
+
+ggplot(model_data,aes(x=Team_Score)) +stat_ecdf(geom = &quot;step&quot;) +geom_line(aes(x=sorted_model_data,y= U, color=&quot;blue&quot;)) +geom_line(aes(x=sorted_model_data,y=L, color=&quot;r&quot;))</code></pre>
+<p><img src="/analysis_files/figure-html/nba%20model%202-1.png" width="672" /></p>
 </div>
 <div id="flawslimitations" class="section level2">
 <h2>Flaws/Limitations:</h2>
 <p>One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.</p>
+<p>#modeling flaws/limitations
+Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with logistic regression. Additionally, the original KenPom model consistently modeled the expected offensive output as too high, so I added a coeficient into the calculation to multiply the expected offensive output by .8 which yields an acceptable MSE. Unfortunately, the MLB dataset does not contain key statistics needed to replicate the KenPom model for team data, so this model was not replicated for the MLB. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for.</p>
 </div>
 <div id="mlb-broad-analysis" class="section level2">
 <h2>MLB Broad Analysis</h2>
 <p>To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:</p>
 <pre class="r"><code>library(tidyverse)
 library(modelr)
-library(ggrepel)
-
-stat_fct &lt;- function(x,y){
+library(ggrepel)</code></pre>
+<pre><code>## Warning: package &#39;ggrepel&#39; was built under R version 4.2.2</code></pre>
+<pre class="r"><code>stat_fct &lt;- function(x,y){
   ifelse(y &gt; 0, x/y, 0)
 }
 
@@ -920,4 +929,148 @@ Out of all stats we tried, strikeouts was the best predictor as seen by this lin
 <p>So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.</p>
 <p><br>
 There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.</p>
+<p>##Further MLB analysis
+For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.</p>
+<pre class="r"><code>load(here::here(&quot;dataset&quot;, &quot;MLB_bat_data_2021.RData&quot;))
+problems()</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/Final%20player%20EDA-1.png" width="672" /></p>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>
+<p><img src="/analysis_files/figure-html/Final%20player%20EDA-2.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-3.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-4.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-5.png" width="672" /></p>
+<pre><code>## (Intercept)          pa         rbi   home_runs          so 
+##  0.15367939 -0.02152003  1.17322956  0.86338277 -0.45927311</code></pre>
+<pre><code>## (Intercept)          pa         rbi   home_runs          so 
+##   1.1661170   0.9787099   3.2324151   2.3711683   0.6317427</code></pre>
+<p><img src="/analysis_files/figure-html/Final%20player%20EDA-6.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-7.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-8.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-9.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-10.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-11.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-12.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-13.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-14.png" width="672" /></p>
+<p>##Similarities between the NBA and MLB</p>
+<p>First, let’s look at the comparisons in aggregate data in the NBA and MLB by points,PRA, and hits. As you can see, surprisingly, there is a very similar trend among each league, and the distributions match very closely</p>
+<pre class="r"><code>ggplot(all_data_mlb) +geom_freqpoly(aes(x=h_streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%201-1.png" width="672" /></p>
+<pre class="r"><code>summary(all_data_mlb$h_streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>
+<pre class="r"><code>ggplot(all_data) +geom_freqpoly(aes(x=pts_streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%201-2.png" width="672" /></p>
+<pre class="r"><code>summary(all_data$pts_streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   1.044   1.000  22.000</code></pre>
+<pre class="r"><code>ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))</code></pre>
+<pre><code>## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%201-3.png" width="672" /></p>
+<pre class="r"><code>summary(all_data$PRA_streak)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   0.000   0.000   0.000   1.149   2.000  23.000</code></pre>
+<p>Next, lets look at the top performer in the MLB and the NBA</p>
+<pre class="r"><code>scoring&lt;-all_data_mlb %&gt;% filter(player == &#39;Austin Hays&#39;) %&gt;%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill=&quot;red&quot;, col=&quot;red&quot;, alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill=&quot;green&quot;, col=&quot;green&quot;, alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(&#39;AD Change&#39;) +
+ylab(&#39;Points Deviated from Average&#39;) +
+xlab(&#39;Date&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%202-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(scoring,aes(h_streak))+stat_ecdf(geom = &quot;step&quot;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%202-2.png" width="672" /></p>
+<pre class="r"><code>scoring&lt;-all_data %&gt;% filter(player == &#39;RJ Barrett&#39;) %&gt;%select(change_net,game_date,pts_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill=&quot;red&quot;, col=&quot;red&quot;, alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill=&quot;green&quot;, col=&quot;green&quot;, alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(&#39;RJ Change&#39;) +
+ylab(&#39;Points Deviated from Average&#39;) +
+xlab(&#39;Date&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%202-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = &quot;step&quot;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%202-4.png" width="672" />
+Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well. For the final comparison, we will use the models we have trained to see if the predictive capabilities of the model are similar. We will use the same players for comparison as the previous analysis.</p>
+<pre class="r"><code>#model building by NBA player
+mod1 &lt;-all_data %&gt;% filter(player==&#39;RJ Barrett&#39;,season==&#39;2022&#39;) %&gt;%ungroup() %&gt;% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1$coefficients</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##      -19.53108       23.45428       51.28271      -39.10093</code></pre>
+<pre class="r"><code>exp(mod1$coefficients)</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##   3.294264e-09   1.534839e+10   1.869806e+22   1.043958e-17</code></pre>
+<pre class="r"><code>summary(mod1)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = factor(pts_direction) ~ ts_pct + usg_pct + usg_pct:ts_pct, 
+##     family = binomial(), data = .)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.4714  -0.6064   0.2394   0.6340   1.7437  
+## 
+## Coefficients:
+##                Estimate Std. Error z value Pr(&gt;|z|)  
+## (Intercept)     -19.531      9.589  -2.037   0.0417 *
+## ts_pct           23.454     16.516   1.420   0.1556  
+## usg_pct          51.283     34.208   1.499   0.1338  
+## ts_pct:usg_pct  -39.101     60.930  -0.642   0.5210  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 88.298  on 67  degrees of freedom
+## Residual deviance: 53.007  on 64  degrees of freedom
+## AIC: 61.007
+## 
+## Number of Fisher Scoring iterations: 6</code></pre>
+<pre class="r"><code>mean(mod1$residuals^2)</code></pre>
+<pre><code>## [1] 9.754193</code></pre>
+<pre class="r"><code>all_data &lt;-all_data %&gt;%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+
+grid &lt;- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_range(usg_pct,5)) %&gt;% add_predictions(mod1, type = &quot;response&quot; )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%203-1.png" width="672" /></p>
+<pre class="r"><code>#model building by MLB player
+mod2 &lt;-all_data_mlb %&gt;% filter(player==&#39;Austin Hays&#39;) %&gt;% ungroup() %&gt;% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>mod2$coefficients</code></pre>
+<pre><code>## (Intercept)          pa         rbi   home_runs          so 
+##  -3.0726148   1.0429066   2.6477141  15.9652123  -0.7922636</code></pre>
+<pre class="r"><code>exp(mod2$coefficients)</code></pre>
+<pre><code>##  (Intercept)           pa          rbi    home_runs           so 
+## 4.629993e-02 2.837452e+00 1.412172e+01 8.582298e+06 4.528186e-01</code></pre>
+<pre class="r"><code>summary(mod2)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = factor(h_direction) ~ pa + rbi + home_runs + so, 
+##     family = binomial(), data = .)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.7778  -0.6298   0.1287   0.7584   2.0752  
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   -3.0726     1.2129  -2.533  0.01130 *  
+## pa             1.0429     0.3147   3.314  0.00092 ***
+## rbi            2.6477     1.0625   2.492  0.01270 *  
+## home_runs     15.9652  1822.7389   0.009  0.99301    
+## so            -0.7923     0.2668  -2.970  0.00298 ** 
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 155.954  on 130  degrees of freedom
+## Residual deviance:  99.153  on 126  degrees of freedom
+## AIC: 109.15
+## 
+## Number of Fisher Scoring iterations: 18</code></pre>
+<pre class="r"><code>mean(mod2$residuals^2)</code></pre>
+<pre><code>## [1] 4.064097</code></pre>
+<pre class="r"><code>all_data_mlb &lt;-all_data_mlb %&gt;%mutate(h_direction=ifelse(h_direction==-1,0,1))
+
+all_data_mlb_hays &lt;-all_data_mlb %&gt;% filter(player==&#39;Austin Hays&#39;) %&gt;% add_predictions(mod2, type = &quot;response&quot; )
+ggplot(all_data_mlb_hays) +geom_point(aes(x=h,y=pred,color=pa),position=&#39;jitter&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%203-2.png" width="672" />
+Unfortunately, we can’t use quite the same visualizations for the model, since the range of the number of hits is greatly constrained compared to the offensive rating of a player. In a further analysis, maybe batting average would provide the range necessary.</p>
 </div>
