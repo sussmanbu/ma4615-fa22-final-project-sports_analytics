@@ -78,11 +78,7 @@ grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_
 ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
 
 
-#spike plot
 scoring<-all_data %>% filter(player == 'James Harden',season == '2022') %>%select(change_net,game_date)
-scoring<-all_data %>% filter(player == 'OG Anunoby',season == '2022') %>%select(change_net,game_date)
-scoring<-all_data %>% filter(player == 'Cade Cunningham',season == '2022') %>%select(change_net,game_date)
-scoring<-all_data %>% filter(player == 'Josh Hart',season == '2022') %>%select(change_net,game_date)
 
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
@@ -91,8 +87,6 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle('Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-
-
 
 ##model building using modified expected equations from popular sports model maker Ken Pomeroy
 

@@ -7,41 +7,7 @@ featuredImage: https://i0.wp.com/reflectionsonbaseball.com/wp-content/uploads/20
 draft: false
 ---
 
-## Rubric: On this page
-
-
-you will
-
-* Introduce what motivates your Data Analysis (DA)
-  * Which variables and relationships are you most interested in?
-  * What questions are you interested in answering?
-* Breadth of the DA
-  * Make sure that you ask enough initial questions to explore the different variables in your data.
-  * i.e. Do you explore more than just one or two variables? Do you explore a few different relationships or many?
-* Depth of the DA
-  * When you answer one question, usually more questions arise as well. 
-  * The depth of the DA is about coming up with and exploring the answers to these questions, often iterating the process a few times.
-* Modeling and Inference 
-  * You should also include some kind of formal statistical model and/or inference. This could be a linear regression, logistic regression, hypothesis testing etc.
-  * Explain the techniques you used for validating your results.
-  * Describe the results of your modelling and make sure to give a sense of the uncertainty in your estimates and conclusions.
-* Explain the flaws and limitations of your analysis
-  * Are there some assumptions that you needed to make that might not hold? Is there other data that would help to answer your questions? ...
-* Clarity Figures
-  * Are your figures/tables/results easy to read, informative, without problems like overplotting, hard-to-read labels, etc?
-  * Each figure should provide a key insight. Too many figures or other data summaries can detract from this.
-* Clarity of Explanations
-  * Do you introduce why you are doing each analysis?
-  * How well do you explain each figure/result?
-  * Do you provide interpretations that suggest further analysis or explanations for observed phenomenon?
-* Organization and cleanliness.
-  * Make sure to remove excessive warnings, use clean easy-to-read code, organize with sections or multiple pages, use bullets, etc.
-  
-  
-**NOTE**: Your Data Analysis can be broken up into multiple pages if that helps with your organization.
-
-
-* Introduce what motivates your Data Analysis (DA)
+##Introduce what motivates your Data Analysis (DA)
   * Which variables and relationships are you most interested in?
   * What questions are you interested in answering?
   
@@ -196,7 +162,7 @@ suppressPackageStartupMessages(library(modelr))
 suppressPackageStartupMessages(library(runner))
 ```
 
-```{r further data analysis loading}
+```{r further data analysis loading, echo=FALSE}
 load(here::here("dataset-ignore", "clean_nba_data.RData"))
 data <-data %>% mutate(PRA=pts+trb+ast) %>%mutate(usg_pct=usg_pct/100)
 all_data <-data  %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) %>% mutate(change_net = pts - mean(pts),pts_direction  = 
@@ -205,7 +171,6 @@ sign(change_net),change_net_PRA=PRA-mean(PRA),PRA_direction=sign(change_net_PRA)
 ```
 
 ```{r further EDA}
-
 #visualize distribution of positive player points streaks and PRA streaks
 ggplot(all_data) +geom_freqpoly(aes(x=pts_streak))
 summary(all_data$pts_streak)
@@ -214,9 +179,14 @@ summary(all_data$pts_streak)
 ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))
 summary(all_data$PRA_streak)
 
-#view proportion of  maximum continuing streaks for best, middle, and worst players
 
-streak <-all_data$pts_streak
+```
+
+Next, lets take a closer look at some individual players and see how they are performing in 2022
+```{r player analysis, echo=FALSE}
+#view proportion of  maximum continuing streaks for best, middle, and worst players
+data22 <-all_data %>% filter(season=='2022')
+streak <-data22$pts_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data,indices)
 
@@ -228,7 +198,7 @@ ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 
 #PRA
-streak <-all_data$PRA_streak
+streak <-data22$PRA_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max_PRA <-slice(all_data,indices)
 
@@ -238,26 +208,55 @@ bottom_PRA_streaks_2022 <- all_PRA_streaks_2022 %>% tail(5)
 ggplot(best_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 ggplot(bottom_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 
-
-
-#cdf for player points
 ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
 ggplot(best_streaks_2022,aes(max_streak))+geom_density()
-
-
-
+ggplot(bottom_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
+ggplot(bottom_streaks_2022,aes(max_streak))+geom_density()
 
 #spike plot
-scoring<-all_data %>% filter(player == 'Brandon Ingram',season == '2022') %>%select(change_net,game_date)
+scoring<-all_data %>% filter(player == 'OG Anunoby',season == '2022') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
 geom_point()+
-geom_line(aes(y=0)) + ggtitle('Change') +
+geom_line(aes(y=0)) + ggtitle('OA Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data %>% filter(player == 'RJ Barrett',season == '2022') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(' RB Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data %>% filter(player == 'Kevin Durant',season == '2022') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(' KD Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data %>% filter(player == 'Klay Thompson',season == '2022') %>%select(change_net,game_date)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('KT Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")
 
 ```
+A
+
 
 #modeling and inference
 To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables increase. 
@@ -483,18 +482,18 @@ problems()
 
 ```
 
-```{r Final player EDA}
+```{r Final player EDA, echo=FALSE}
 #get all of our data by players who meet criteria and calculate streaks
-all_data <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>% ungroup()
+all_data_mlb <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>% ungroup()
 
 #visualize distribution of positive player hit streaks
-ggplot(all_data) +geom_freqpoly(aes(x=h_streak))
-summary(all_data$h_streak)
+ggplot(all_data_mlb) +geom_freqpoly(aes(x=h_streak))
+summary(all_data_mlb$h_streak)
 
 #view proportion of  maximum continuing streaks for best, middle, and worst players
-streak <-all_data$h_streak
+streak <-all_data_mlb$h_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
-local_max <-slice(all_data,indices)
+local_max <-slice(all_data_mlb,indices)
 
 all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(mean(h_streak))) %>% arrange(desc(max_streak))
 best_streaks_2022 <- all_streaks_2022 %>%head(5)
@@ -504,31 +503,128 @@ ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player))
 
 
 
-#cdf and pdf for player points
+#cdf and pdf for  best player points
 ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step")
 ggplot(best_streaks_2022,aes(max_streak))+geom_density()
 
+
 #model building by player
-mod1 <-all_data %>%ungroup() %>% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())
+mod1 <-all_data_mlb %>%ungroup() %>% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())
 mod1$coefficients
 exp(mod1$coefficients)
 
-all_data <-all_data %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
+all_data_mlb <-all_data_mlb %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
 
-grid <- data_grid(ungroup(all_data), pa= seq_range(pa,3),rbi=seq_range(rbi,5),home_runs=seq_range(home_runs,5),so=seq_range(so,5)) %>% add_predictions(mod1, type = "response" )
+all_data_mlb_turner <-all_data_mlb %>% filter(player=='Trea Turner') %>% add_predictions(mod2, type = "response" )
+ggplot(all_data_mlb_turner) +geom_point(aes(x=h,y=pred,color=pa),position='jitter')
 
-ggplot(all_data) +geom_line(aes(x=factor(pa),y=pred,color = factor(rbi)),data=grid)
-
-scoring<-all_data %>% filter(player == 'Trea Turner') %>%select(change_net,game_date)
+scoring<-all_data_mlb %>% filter(player == 'Trea Turner') %>%select(change_net,game_date,h_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
 geom_point()+
-geom_line(aes(y=0)) + ggtitle('Change') +
+geom_line(aes(y=0)) + ggtitle('TT Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
+ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data_mlb %>% filter(player == 'Austin Hays') %>%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('AD Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+
+ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step")
+scoring<-all_data_mlb %>% filter(player == 'Yoan Moncada') %>%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('YM Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data_mlb %>% filter(player == 'Yu Darvish') %>%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('YD Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step")
+
 ```
 
 ##Similarities between the NBA and MLB
 
+First, let's look at the comparisons in aggregate data in the NBA and MLB by points,PRA, and hits. As you can see, surprisingly, there is a very similar trend among each league, and the distributions match very closely
+```{r comparison 1}
+ggplot(all_data_mlb) +geom_freqpoly(aes(x=h_streak))
+summary(all_data_mlb$h_streak)
+ggplot(all_data) +geom_freqpoly(aes(x=pts_streak))
+summary(all_data$pts_streak)
+ggplot(all_data) +geom_freqpoly(aes(x=PRA_streak))
+summary(all_data$PRA_streak)
 
+```
+
+Next, lets look at the top performer in the MLB and the NBA
+```{r comparison 2}
+
+scoring<-all_data_mlb %>% filter(player == 'Austin Hays') %>%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('AD Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step")
+
+scoring<-all_data %>% filter(player == 'RJ Barrett') %>%select(change_net,game_date,pts_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle('RJ Change') +
+ylab('Points Deviated from Average') +
+xlab('Date')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")
+
+```
+Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well. For the final comparison, we will use the models we have trained to see if the predictive capabilities of the model are similar. We will use the same players for comparison as the previous analysis. 
+
+
+```{r comparison 3}
+#model building by NBA player
+mod1 <-all_data %>% filter(player=='RJ Barrett',season=='2022') %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1$coefficients
+exp(mod1$coefficients)
+summary(mod1)
+mean(mod1$residuals^2)
+
+all_data <-all_data %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+
+grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_range(usg_pct,5)) %>% add_predictions(mod1, type = "response" )
+
+ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
+
+
+#model building by MLB player
+mod2 <-all_data_mlb %>% filter(player=='Austin Hays') %>% ungroup() %>% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())
+mod2$coefficients
+exp(mod2$coefficients)
+summary(mod2)
+mean(mod2$residuals^2)
+all_data_mlb <-all_data_mlb %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
+
+all_data_mlb_hays <-all_data_mlb %>% filter(player=='Austin Hays') %>% add_predictions(mod2, type = "response" )
+ggplot(all_data_mlb_hays) +geom_point(aes(x=h,y=pred,color=pa),position='jitter')
+
+```
+Unfortunately, we can't use quite the same visualizations for the model, since the range of the number of hits is greatly constrained compared to the offensive rating of a player. In a further analysis, maybe batting average would provide the range necessary. 
