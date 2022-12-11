@@ -86,7 +86,7 @@ merged2022 <- nba_ppg22 %>% inner_join(nba_data22, by="player") %>%
 The next step was to actually find the streaks. For this, we downloaded the package `data.table`. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive `deviationppg`, the `positive_dev_ppg` will be 1. This column is tracked by the `Consec_ppg` column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don't overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency. 
 
 
-```{r nba streaks}
+```{r nba streaks, echo=FALSE}
 
 library(data.table)
 
