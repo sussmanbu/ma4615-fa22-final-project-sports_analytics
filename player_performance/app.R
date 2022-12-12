@@ -1,7 +1,7 @@
 
 
-library(shiny)
-library(tidyverse)
+suppressPackageStartupMessages(library(shiny))
+suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(here))
 suppressPackageStartupMessages(library(modelr))
 
@@ -11,23 +11,34 @@ all_data <-data %>% group_by(player)  %>% filter(mean(minutes) >25,minutes >15) 
                                                                                              sign(change_net),change_net_PRA=PRA - mean(PRA),PRA_direction=sign(change_net_PRA)) %>%mutate(pts_streak=ave(pts_direction, cumsum(pts_direction==-1), FUN = seq_along) - 1,PRA_streak=ave(PRA_direction, cumsum(PRA_direction==-1), FUN = seq_along) - 1)
 all_data <-all_data %>%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
 players <- all_data %>% pull(player) %>% unique() %>% sort()
-
 streak <-all_data$pts_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data,indices)
 local_max<-local_max %>%group_by(player) %>% select(pts_streak,change_net,change_net_PRA,PRA_streak) %>%filter(pts_streak >0,PRA_streak >0)
-
-
 player_data <-all_data %>% group_by(player) %>% mutate(a=10*lag(pts_direction)+pts_direction) %>% mutate(a=str_c(lag(pts_direction),pts_direction,sep = ',')) %>% count(a) %>% group_by(a)
 
+
+load(here::here("dataset", "MLB_bat_data_2021.RData"))
+all_data_mlb <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>% ungroup()
+mlb_players <- all_data_mlb %>% pull(player) %>% unique() %>% sort()
+
+streak <-all_data_mlb$h_streak
+indices<-which(diff(sign(diff(streak)))==-2)+1
+local_max <-slice(all_data_mlb,indices)
+all_mlb_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(mean(h_streak))) %>% arrange(desc(max_streak))
+
+league <-c('MLB','NBA')
 
 # Define UI for application that plots a player's likelihood of scoring above their average
 ui <- fluidPage(
 
     # Application title
     titlePanel("Analyzing Player Performance"),
+    selectInput(inputId = "league", label = "league", choices = league),
+    
     selectInput(inputId = "player", label = "player", choices = players),
-    ##selectInput(inputId = "game_lag", label = "game_lag", choices = lags),
+    selectInput(inputId = "mlb_player", label = "mlb_player", choices = mlb_players),
+    
     plotOutput("linePlot"),
     plotOutput('spikePlot'),
     verbatimTextOutput("summary"),
