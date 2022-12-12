@@ -7,7 +7,7 @@ featuredImage: https://i0.wp.com/reflectionsonbaseball.com/wp-content/uploads/20
 draft: false
 ---
 
-##Introduce what motivates your Data Analysis (DA)
+## Motivations of Our Data Analysis:
 What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. We define a streak as the measure of the number of consecutive games a player performs above their average in a specific statistic. We define streakiness as a players propensity to perform above their average, and to what degree over the course of a season.  The main variables that we are interested in analyzing are hits, walks,homeruns and strikeouts in the MLB, and points,rebounds, and assists in the NBA. To accomplish this goal, we have split the project into two separate tasks. We first performed analysis on both the NBA and MLB data separately to gain insight into how streaks are distributed in their respective leagues. Once this was completed, we combined our findings to determine whether any relationships exist between baseball and basketball players.
 
 ## NBA EDA:
