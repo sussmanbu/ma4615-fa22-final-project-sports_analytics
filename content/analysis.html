@@ -35,7 +35,9 @@ draft: false
 <pre><code>## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>nba_data22 &lt;- read.csv(file = &#39;../dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
+<pre class="r"><code>library(knitr)
+
+nba_data22 &lt;- read.csv(file = &#39;../dataset/ASA All NBA Raw Data 2022 regular season.csv&#39;)
 
 nba_ppg22 &lt;- group_by(nba_data22, player) %&gt;%
   filter(mp != &#39;0:00&#39;) %&gt;%
@@ -46,20 +48,111 @@ nba_ppg22 &lt;- group_by(nba_data22, player) %&gt;%
             apg = sum(ast)/total_games,
             rpg = sum(trb)/total_games)
 
-print(nba_ppg22 %&gt;% head(10))</code></pre>
-<pre><code>## # A tibble: 10 x 6
-##    player            total_games    ppg fg_percentage   apg   rpg
-##    &lt;chr&gt;                   &lt;int&gt;  &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-##  1 Aaron Gordon               75 15.0           0.520 2.51  5.84 
-##  2 Aaron Henry                 6  0.333         0.2   0     0.167
-##  3 Aaron Holiday              63  6.35          0.447 2.43  1.94 
-##  4 Aaron Nesmith              52  3.77          0.396 0.423 1.71 
-##  5 Aaron Wiggins              50  8.32          0.463 1.36  3.56 
-##  6 Abdel Nader                14  2.43          0.343 0.5   1.93 
-##  7 Ade Murkey                  1  0           NaN     0     0    
-##  8 Admiral Schofield          38  3.84          0.419 0.658 2.34 
-##  9 Ahmad Caver                 1  2             1     0     0    
-## 10 Al Horford                 69 10.2           0.467 3.36  7.68</code></pre>
+head10 &lt;- nba_ppg22 %&gt;% head(10)
+
+knitr::kable(head10)</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="24%" />
+<col width="16%" />
+<col width="14%" />
+<col width="18%" />
+<col width="13%" />
+<col width="13%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="right">total_games</th>
+<th align="right">ppg</th>
+<th align="right">fg_percentage</th>
+<th align="right">apg</th>
+<th align="right">rpg</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="right">75</td>
+<td align="right">15.0133333</td>
+<td align="right">0.5203837</td>
+<td align="right">2.5066667</td>
+<td align="right">5.8400000</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Henry</td>
+<td align="right">6</td>
+<td align="right">0.3333333</td>
+<td align="right">0.2000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0.1666667</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Holiday</td>
+<td align="right">63</td>
+<td align="right">6.3492063</td>
+<td align="right">0.4467456</td>
+<td align="right">2.4285714</td>
+<td align="right">1.9365079</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Nesmith</td>
+<td align="right">52</td>
+<td align="right">3.7692308</td>
+<td align="right">0.3956044</td>
+<td align="right">0.4230769</td>
+<td align="right">1.7115385</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Wiggins</td>
+<td align="right">50</td>
+<td align="right">8.3200000</td>
+<td align="right">0.4629080</td>
+<td align="right">1.3600000</td>
+<td align="right">3.5600000</td>
+</tr>
+<tr class="even">
+<td align="left">Abdel Nader</td>
+<td align="right">14</td>
+<td align="right">2.4285714</td>
+<td align="right">0.3428571</td>
+<td align="right">0.5000000</td>
+<td align="right">1.9285714</td>
+</tr>
+<tr class="odd">
+<td align="left">Ade Murkey</td>
+<td align="right">1</td>
+<td align="right">0.0000000</td>
+<td align="right">NaN</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">Admiral Schofield</td>
+<td align="right">38</td>
+<td align="right">3.8421053</td>
+<td align="right">0.4186047</td>
+<td align="right">0.6578947</td>
+<td align="right">2.3421053</td>
+</tr>
+<tr class="odd">
+<td align="left">Ahmad Caver</td>
+<td align="right">1</td>
+<td align="right">2.0000000</td>
+<td align="right">1.0000000</td>
+<td align="right">0.0000000</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">Al Horford</td>
+<td align="right">69</td>
+<td align="right">10.1594203</td>
+<td align="right">0.4674868</td>
+<td align="right">3.3623188</td>
+<td align="right">7.6811594</td>
+</tr>
+</tbody>
+</table>
 <p>We wanted to take a look at the most efficient scorers amongst the top scorers. Temporarily setting a threshold for players who scored at least 20 points per game, we made a scatterplot that visualized this relationship to get a sense of who we might expect to have the longest streaks, seen below.</p>
 <pre class="r"><code>scoring &lt;- filter(nba_ppg22, ppg &gt;= 25)
 
@@ -113,82 +206,371 @@ streaks2022[, Consec_apg := ifelse(positive_dev_apg == 1, 1:.N, 0L), by = rleid(
 streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(positive_dev_rpg == 1, player)]
 
 streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]</code></pre>
-<pre class="r"><code>print(streaks2022 %&gt;% 
-  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %&gt;% head(10))</code></pre>
-<pre><code>##           player       date      ppg pts deviationppg positive_dev_ppg
-##  1: Aaron Gordon 2021-10-20 15.01333  12  -3.01333333                0
-##  2: Aaron Gordon 2021-10-22 15.01333   8  -7.01333333                0
-##  3: Aaron Gordon 2021-10-25 15.01333  12  -3.01333333                0
-##  4: Aaron Gordon 2021-10-26 15.01333  20   4.98666667                1
-##  5: Aaron Gordon 2021-10-29 15.01333  13  -2.01333333                0
-##  6: Aaron Gordon 2021-10-30 15.01333  12  -3.01333333                0
-##  7: Aaron Gordon 2021-11-01 15.01333  15  -0.01333333                0
-##  8: Aaron Gordon 2021-11-03 15.01333   9  -6.01333333                0
-##  9: Aaron Gordon 2021-11-06 15.01333   9  -6.01333333                0
-## 10: Aaron Gordon 2021-11-08 15.01333  10  -5.01333333                0
-##     Consec_ppg      apg ast deviationapg positive_dev_apg Consec_apg  rpg trb
-##  1:          0 2.506667   4    1.4933333                1          1 5.84   8
-##  2:          0 2.506667   1   -1.5066667                0          0 5.84   5
-##  3:          0 2.506667   1   -1.5066667                0          0 5.84   9
-##  4:          1 2.506667   1   -1.5066667                0          0 5.84   7
-##  5:          0 2.506667   2   -0.5066667                0          0 5.84   5
-##  6:          0 2.506667   2   -0.5066667                0          0 5.84   4
-##  7:          0 2.506667   1   -1.5066667                0          0 5.84  10
-##  8:          0 2.506667   1   -1.5066667                0          0 5.84   1
-##  9:          0 2.506667   2   -0.5066667                0          0 5.84   3
-## 10:          0 2.506667   3    0.4933333                1          1 5.84   7
-##     deviationrpg positive_dev_rpg Consec_rpg game_number
-##  1:         2.16                1          1           1
-##  2:        -0.84                0          0           2
-##  3:         3.16                1          1           3
-##  4:         1.16                1          2           4
-##  5:        -0.84                0          0           5
-##  6:        -1.84                0          0           6
-##  7:         4.16                1          1           7
-##  8:        -4.84                0          0           8
-##  9:        -2.84                0          0           9
-## 10:         1.16                1          1          10</code></pre>
+<table>
+<colgroup>
+<col width="6%" />
+<col width="5%" />
+<col width="4%" />
+<col width="2%" />
+<col width="6%" />
+<col width="8%" />
+<col width="5%" />
+<col width="4%" />
+<col width="2%" />
+<col width="6%" />
+<col width="8%" />
+<col width="5%" />
+<col width="2%" />
+<col width="2%" />
+<col width="6%" />
+<col width="8%" />
+<col width="5%" />
+<col width="6%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="left">date</th>
+<th align="right">ppg</th>
+<th align="right">pts</th>
+<th align="right">deviationppg</th>
+<th align="right">positive_dev_ppg</th>
+<th align="right">Consec_ppg</th>
+<th align="right">apg</th>
+<th align="right">ast</th>
+<th align="right">deviationapg</th>
+<th align="right">positive_dev_apg</th>
+<th align="right">Consec_apg</th>
+<th align="right">rpg</th>
+<th align="right">trb</th>
+<th align="right">deviationrpg</th>
+<th align="right">positive_dev_rpg</th>
+<th align="right">Consec_rpg</th>
+<th align="right">game_number</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-20</td>
+<td align="right">15.01333</td>
+<td align="right">12</td>
+<td align="right">-3.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">4</td>
+<td align="right">1.4933333</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">5.84</td>
+<td align="right">8</td>
+<td align="right">2.16</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-22</td>
+<td align="right">15.01333</td>
+<td align="right">8</td>
+<td align="right">-7.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">1</td>
+<td align="right">-1.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">5</td>
+<td align="right">-0.84</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-25</td>
+<td align="right">15.01333</td>
+<td align="right">12</td>
+<td align="right">-3.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">1</td>
+<td align="right">-1.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">9</td>
+<td align="right">3.16</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-26</td>
+<td align="right">15.01333</td>
+<td align="right">20</td>
+<td align="right">4.9866667</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">2.506667</td>
+<td align="right">1</td>
+<td align="right">-1.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">7</td>
+<td align="right">1.16</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">4</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-29</td>
+<td align="right">15.01333</td>
+<td align="right">13</td>
+<td align="right">-2.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">2</td>
+<td align="right">-0.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">5</td>
+<td align="right">-0.84</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-10-30</td>
+<td align="right">15.01333</td>
+<td align="right">12</td>
+<td align="right">-3.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">2</td>
+<td align="right">-0.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">4</td>
+<td align="right">-1.84</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-11-01</td>
+<td align="right">15.01333</td>
+<td align="right">15</td>
+<td align="right">-0.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">1</td>
+<td align="right">-1.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">10</td>
+<td align="right">4.16</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-11-03</td>
+<td align="right">15.01333</td>
+<td align="right">9</td>
+<td align="right">-6.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">1</td>
+<td align="right">-1.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">1</td>
+<td align="right">-4.84</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-11-06</td>
+<td align="right">15.01333</td>
+<td align="right">9</td>
+<td align="right">-6.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">2</td>
+<td align="right">-0.5066667</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">5.84</td>
+<td align="right">3</td>
+<td align="right">-2.84</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="left">Aaron Gordon</td>
+<td align="left">2021-11-08</td>
+<td align="right">15.01333</td>
+<td align="right">10</td>
+<td align="right">-5.0133333</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">2.506667</td>
+<td align="right">3</td>
+<td align="right">0.4933333</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">5.84</td>
+<td align="right">7</td>
+<td align="right">1.16</td>
+<td align="right">1</td>
+<td align="right">1</td>
+<td align="right">10</td>
+</tr>
+</tbody>
+</table>
 <p>The above table shows the first 10 rows in the <code>streaks2022</code> dataset, showing the way the streaks were counted. Using this table, we could now see the players with the longest streaks.</p>
-<pre class="r"><code>streaks2022 %&gt;%
+<pre class="r"><code>streaktable2 &lt;- streaks2022 %&gt;%
   group_by(player) %&gt;%
   summarize(max_streak = max(Consec_ppg)) %&gt;%
   select(player, max_streak) %&gt;% 
   arrange(-max_streak) %&gt;%
-  head(10)</code></pre>
-<pre><code>## # A tibble: 10 x 2
-##    player             max_streak
-##    &lt;chr&gt;                   &lt;int&gt;
-##  1 Bruce Brown                18
-##  2 Jordan Poole               18
-##  3 Drew Eubanks               16
-##  4 Aleksej Pokusevski         13
-##  5 Coby White                 13
-##  6 Trendon Watford            13
-##  7 Cam Thomas                 12
-##  8 DeMar DeRozan              12
-##  9 Ben McLemore               11
-## 10 De&#39;Anthony Melton          11</code></pre>
+  head(10)
+
+knitr::kable(streaktable2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="right">max_streak</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Bruce Brown</td>
+<td align="right">18</td>
+</tr>
+<tr class="even">
+<td align="left">Jordan Poole</td>
+<td align="right">18</td>
+</tr>
+<tr class="odd">
+<td align="left">Drew Eubanks</td>
+<td align="right">16</td>
+</tr>
+<tr class="even">
+<td align="left">Aleksej Pokusevski</td>
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="left">Coby White</td>
+<td align="right">13</td>
+</tr>
+<tr class="even">
+<td align="left">Trendon Watford</td>
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="left">Cam Thomas</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="left">DeMar DeRozan</td>
+<td align="right">12</td>
+</tr>
+<tr class="odd">
+<td align="left">Ben McLemore</td>
+<td align="right">11</td>
+</tr>
+<tr class="even">
+<td align="left">De’Anthony Melton</td>
+<td align="right">11</td>
+</tr>
+</tbody>
+</table>
 <p>As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player (DeMar DeRozan) in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a ‘hot streak’ to perform above their usual output.</p>
-<pre class="r"><code>streaks2022 %&gt;% 
+<pre class="r"><code>streaktable3 &lt;- streaks2022 %&gt;% 
   filter(ppg &gt;= 20) %&gt;%
   group_by(player) %&gt;%
   summarize(max_streak = max(Consec_ppg)) %&gt;%
   select(player, max_streak) %&gt;% 
   arrange(-max_streak) %&gt;% 
-  head(10)</code></pre>
-<pre><code>## # A tibble: 10 x 2
-##    player          max_streak
-##    &lt;chr&gt;                &lt;int&gt;
-##  1 DeMar DeRozan           12
-##  2 Jaylen Brown            10
-##  3 De&#39;Aaron Fox             9
-##  4 Bradley Beal             8
-##  5 Darius Garland           8
-##  6 Devin Booker             8
-##  7 Joel Embiid              8
-##  8 Dejounte Murray          7
-##  9 Ja Morant                7
-## 10 Julius Randle            7</code></pre>
+  head(10)
+
+knitr::kable(streaktable3)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">player</th>
+<th align="right">max_streak</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">DeMar DeRozan</td>
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="left">Jaylen Brown</td>
+<td align="right">10</td>
+</tr>
+<tr class="odd">
+<td align="left">De’Aaron Fox</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="left">Bradley Beal</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="left">Darius Garland</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="left">Devin Booker</td>
+<td align="right">8</td>
+</tr>
+<tr class="odd">
+<td align="left">Joel Embiid</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="left">Dejounte Murray</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="left">Ja Morant</td>
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="left">Julius Randle</td>
+<td align="right">7</td>
+</tr>
+</tbody>
+</table>
 <p>Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.</p>
 </div>
 <div id="further-analysis-of-streaks" class="section level1">

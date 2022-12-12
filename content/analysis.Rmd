@@ -19,6 +19,7 @@ For the NBA data, we first wanted to identify the longest streaks in the NBA. Th
 
 ```{r nbadata}
 library(tidyverse)
+library(knitr)
 
 nba_data22 <- read.csv(file = '../dataset/ASA All NBA Raw Data 2022 regular season.csv')
 
@@ -31,7 +32,9 @@ nba_ppg22 <- group_by(nba_data22, player) %>%
             apg = sum(ast)/total_games,
             rpg = sum(trb)/total_games)
 
-print(nba_ppg22 %>% head(10))
+head10 <- nba_ppg22 %>% head(10)
+
+knitr::kable(head10)
 
 ```
 
@@ -104,10 +107,12 @@ streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(
 streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]
 ```
 
-```{r head}
-print(streaks2022 %>% 
-  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %>% head(10))
+```{r head, echo = FALSE}
 
+streaktable <- streaks2022 %>% 
+  select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %>% head(10)
+
+knitr::kable(streaktable)
 
 
 ```
@@ -116,13 +121,14 @@ The above table shows the first 10 rows in the `streaks2022` dataset, showing th
 
 ```{r nba ppgstreak}
 
-streaks2022 %>%
+streaktable2 <- streaks2022 %>%
   group_by(player) %>%
   summarize(max_streak = max(Consec_ppg)) %>%
   select(player, max_streak) %>% 
   arrange(-max_streak) %>%
   head(10)
 
+knitr::kable(streaktable2)
 
 ```
 
@@ -130,7 +136,7 @@ As previously theorized, we were able to find that the players with the longest 
 
 ```{r nba 20ppgstreak}
 
-streaks2022 %>% 
+streaktable3 <- streaks2022 %>% 
   filter(ppg >= 20) %>%
   group_by(player) %>%
   summarize(max_streak = max(Consec_ppg)) %>%
@@ -138,6 +144,7 @@ streaks2022 %>%
   arrange(-max_streak) %>% 
   head(10)
 
+knitr::kable(streaktable3)
 
 ```
 
