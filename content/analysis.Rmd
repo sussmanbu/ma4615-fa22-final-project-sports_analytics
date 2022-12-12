@@ -78,7 +78,7 @@ merged2022 <- nba_ppg22 %>% inner_join(nba_data22, by="player") %>%
 The next step was to actually find the streaks. For this, we downloaded the package `data.table`. This assisted us in finding the longest consecutive strings of consecutive games for each statistic. Using points as an example, if a player had a game with a positive `deviationppg`, the `positive_dev_ppg` will be 1. This column is tracked by the `Consec_ppg` column, which increases by 1 each time a player has a positive deviation in a consecutive game. We accounted for each player, grouping by player within this function to ensure that the streaks don't overlap players by mistake. We also took this opportunity to find the number of games played by a player in the season. This allows us to plot using game number instead of game date for more consistency. 
 
 
-```{r nba streaks, echo=FALSE}
+```{r nba streaks, echo=TRUE, results='hide'}
 
 library(data.table)
 
@@ -102,7 +102,9 @@ streaks2022[, Consec_apg := ifelse(positive_dev_apg == 1, 1:.N, 0L), by = rleid(
 streaks2022[, Consec_rpg := ifelse(positive_dev_rpg == 1, 1:.N, 0L), by = rleid(positive_dev_rpg == 1, player)]
 
 streaks2022[, game_number := ifelse(positive_dev_ppg == 1 | positive_dev_ppg == 0, 1:.N, 0L), by = rleid(player)]
+```
 
+```{r head}
 print(streaks2022 %>% 
   select(player, date, ppg, pts, deviationppg, positive_dev_ppg, Consec_ppg, apg, ast, deviationapg, positive_dev_apg, Consec_apg, rpg, trb, deviationrpg, positive_dev_rpg, Consec_rpg, game_number) %>% head(10))
 
@@ -124,7 +126,7 @@ streaks2022 %>%
 
 ```
 
-As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a 'hot streak' to perform above their usual output.
+As previously theorized, we were able to find that the players with the longest streaks were those that were role players. Only one player (DeMar DeRozan) in the top 10 longest streaks scored over 20 points per game. This would agree with the idea that a longer streak would most likely be accomplished by a player with a lower season average, as a player could be given an opportunity, or go on a 'hot streak' to perform above their usual output.
 
 ```{r nba 20ppgstreak}
 
@@ -142,7 +144,7 @@ streaks2022 %>%
 Even among the best players, scoring over 20 points per game, the majority of players in the top 10 were those scoring in the low 20s. This again fortifies the theory that players who score prolifically in a season are usually less likely to go on streaks, as they are much more consistent and deviate much less significantly or less frequently.
 
 
-#further analysis of streaks
+# Further analysis of streaks:
 
 Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. Additionally, we will not just be examining a players max streak, but rather the players with the highest numbers of streaks defined as the players with the highest average streak value. This is a more informative metric, as any one player can have a big run once in a season, but it is much more indicative of a player's general streakiness if he consistently performs above his averages. 
 
@@ -255,7 +257,7 @@ ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")+ ggtitle('KT')
 ```
 
 
-#modeling and inference
+# Modeling and inference:
 To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables increase. Due to the massive number of variables present in the NBA data, we did not perform any model selection for the NBA model, but we handpicked variables that we believed to be the most relevant. 
 
 ```{r nba model 1}
@@ -270,15 +272,6 @@ grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_
 
 ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid)
 ```
-
-## Flaws/Limitations:
-
-One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
-
-#modeling flaws/limitations
-Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. RJ Barrett, another high performer, saw his role on the Knicks increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense.We can see this clearly defined in the case of RJ Barrett's spike plot, where his first few games he performed poorly, and the latter half of the season he performed very well. Because we define a streak as performing above their average over the whole season, players such as this may not have their innate "streakiness" accurately measured. 
-
-
 
 ## MLB Broad Analysis
 
@@ -600,3 +593,11 @@ summary(mod4)
 mean(mod4$residuals^2)
 all_data_mlb <-all_data_mlb %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
 ```
+
+## Flaws/Limitations:
+
+One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
+
+# Modeling flaws/limitations:
+Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. RJ Barrett, another high performer, saw his role on the Knicks increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense.We can see this clearly defined in the case of RJ Barrett's spike plot, where his first few games he performed poorly, and the latter half of the season he performed very well. Because we define a streak as performing above their average over the whole season, players such as this may not have their innate "streakiness" accurately measured. 
+
