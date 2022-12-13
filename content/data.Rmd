@@ -139,6 +139,6 @@ bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
 Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.
 
 ## Link to load_and_clean_data.R:
-``` {r}
-'/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R'
-```
+
+[Load and Clean Data](/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R/)
+
