@@ -153,7 +153,7 @@ Even among the best players, scoring over 20 points per game, the majority of pl
 
 # Further analysis of streaks:
 
-Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. Additionally, we will not just be examining a players max streak, but rather the players with the highest numbers of streaks defined as the players with the highest average streak value. This is a more informative metric, as any one player can have a big run once in a season, but it is much more indicative of a player's general streakiness if he consistently performs above his averages. 
+Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. Additionally, we will not just be examining a players max streak, but rather the players with the highest median number of streaks defined as the players with the highest median streak value. This is a more informative metric, as any one player can have a big run once in a season, but it is much more indicative of a player's general streakiness if he consistently performs above his averages. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -192,31 +192,23 @@ streak <-data22$pts_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data,indices)
 
-all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(pts_streak)) %>% arrange(desc(max_streak))
+all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(median(pts_streak))) %>% arrange(desc(max_streak))
 best_streaks_2022 <- all_streaks_2022 %>%head(5)
 bottom_streaks_2022 <- all_streaks_2022 %>% tail(5)
+
 
 #PRA
 streak <-data22$PRA_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max_PRA <-slice(all_data,indices)
 
-all_PRA_streaks_2022 <- local_max_PRA %>% group_by(player) %>% summarize(max_streak=max(mean(PRA_streak))) %>% arrange(desc(max_streak))
+all_PRA_streaks_2022 <- local_max_PRA %>% group_by(player) %>% summarize(max_streak=max(median(PRA_streak))) %>% arrange(desc(max_streak))
 best_PRA_streaks_2022 <- all_PRA_streaks_2022 %>%head(5)
 bottom_PRA_streaks_2022 <- all_PRA_streaks_2022 %>% tail(5)
 
 ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player)) + ggtitle('best pts streaks')
 ggplot(best_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player)) + ggtitle('best PRA streaks')
 
-ggplot(bottom_PRA_streaks_2022) +geom_col(aes(y=max_streak,x=player)) + ggtitle('worst PRA streaks')
-ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player)) + ggtitle('worst pts streaks')
-
-ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step") + ggtitle('best pts streaks')
-ggplot(best_streaks_2022,aes(max_streak))+geom_density() + ggtitle('best pts streaks')
-
-
-ggplot(bottom_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step") + ggtitle('worst pts streaks')
-ggplot(bottom_streaks_2022,aes(max_streak))+geom_density() + ggtitle('worst pts streaks')
 
 ```
 
@@ -232,15 +224,15 @@ ylab('Points Deviated from Average') +
 xlab('Date')
 ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step") + ggtitle('OA')
 
-scoring<-all_data %>% filter(player == 'RJ Barrett',season == '2022') %>%select(change_net,game_date,pts_streak)
+scoring<-all_data %>% filter(player == 'Josh Hart',season == '2022') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
 geom_point()+
-geom_line(aes(y=0)) + ggtitle(' RB Change') +
+geom_line(aes(y=0)) + ggtitle(' JH Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step") + ggtitle('RB')
+ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step") + ggtitle('JH')
 
 scoring<-all_data %>% filter(player == 'Kevin Durant',season == '2022') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
@@ -250,17 +242,7 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle(' KD Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step") + ggtitle('KD')
 
-scoring<-all_data %>% filter(player == 'Klay Thompson',season == '2022') %>%select(change_net,game_date,pts_streak)
-ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
-geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
-geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
-geom_point()+
-geom_line(aes(y=0)) + ggtitle('KT Change') +
-ylab('Points Deviated from Average') +
-xlab('Date')
-ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step")+ ggtitle('KT')
 ```
 
 
@@ -447,18 +429,17 @@ streak <-all_data_mlb$h_streak
 indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data_mlb,indices)
 
-all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(mean(h_streak))) %>% arrange(desc(max_streak))
+all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(median(h_streak))) %>% arrange(desc(max_streak))
 best_streaks_2022 <- all_streaks_2022 %>%head(5)
 bottom_streaks_2022 <- all_streaks_2022 %>% tail(5)
 
-ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))+ ggtitle('players with mean best streaks in MLB') 
-ggplot(bottom_streaks_2022) +geom_col(aes(y=max_streak,x=player)) +ggtitle('players with mean worst streaks in MLB') 
+ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))+ ggtitle('players with median best streaks in MLB') 
 
 
 
 #cdf and pdf for  best player hits
-ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step") +ggtitle('CDF of max streaks in MLB') 
-ggplot(best_streaks_2022,aes(max_streak))+geom_density()+ ggtitle('Density of max streaks in MLB') 
+ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step") +ggtitle('CDF of max median streaks in MLB') 
+ggplot(best_streaks_2022,aes(max_streak))+geom_density()+ ggtitle('Density of max median streaks in MLB') 
 
 
 #model building by player
@@ -468,18 +449,6 @@ exp(mod2$coefficients)
 
 all_data_mlb <-all_data_mlb %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
 
-all_data_mlb_turner <-all_data_mlb %>% filter(player=='Trea Turner') %>% add_predictions(mod2, type = "response" )
-ggplot(all_data_mlb_turner) +geom_point(aes(x=h,y=pred,color=pa),position='jitter')
-
-scoring<-all_data_mlb %>% filter(player == 'Trea Turner') %>%select(change_net,game_date,h_streak)
-ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
-geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
-geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
-geom_point()+
-geom_line(aes(y=0)) + ggtitle('TT Change') +
-ylab('Points Deviated from Average') +
-xlab('Date')
-ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step") + ggtitle('TT Change') 
 
 scoring<-all_data_mlb %>% filter(player == 'Austin Hays') %>%select(change_net,game_date,h_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
@@ -509,7 +478,6 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle('YD Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(h_streak))+stat_ecdf(geom = "step") + ggtitle('YD Change') 
 
 ```
 
@@ -538,23 +506,23 @@ ylab('Points Deviated from Average') +
 xlab('Date')
 ggplot(scoring,aes(h_streak))+geom_density()
 
-scoring<-all_data %>% filter(player == 'RJ Barrett') %>%select(change_net,game_date,pts_streak)
+scoring<-all_data %>% filter(player == 'Josh Hart') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
 geom_point()+
-geom_line(aes(y=0)) + ggtitle('RJ Change') +
+geom_line(aes(y=0)) + ggtitle('Josh Hart Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
 ggplot(scoring,aes(pts_streak))+geom_density()
 
 ```
-Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well. For the final comparison, we will use the models we have trained to see if the predictive capabilities of the model are similar. We will use the same players for comparison as the previous analysis. 
+Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well.  For the final comparison, we will use the models we have trained to see if the predictive capabilities of the model are similar. We will use the same players for comparison as the previous analysis. 
 
 
 ```{r comparison 3 between invidual players}
 #model building by NBA player
-mod1 <-all_data %>% filter(player=='RJ Barrett',season=='2022') %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
+mod1 <-all_data %>% filter(player=='Josh Hart',season=='2022') %>%ungroup() %>% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())
 mod1$coefficients
 exp(mod1$coefficients)
 summary(mod1)
@@ -606,5 +574,5 @@ all_data_mlb <-all_data_mlb %>%mutate(h_direction=ifelse(h_direction==-1,0,1))
 One of the main flaws in this analysis are the innate differences of basketball and baseball in both offensive and defensive aspects of the game. Baseball, especially when on offense, is a more individualistic game, whereas basketball relies heavily on the entire team. When a player is batting, their only objective is to hit the ball, while a basketball player may have to pass, changing the potential outcome, especially for those players with high usage rate. These innate differences cause difficulty when trying to make a 1:1 assessment between the two leagues.  
 
 # Modeling flaws/limitations:
-Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. RJ Barrett, another high performer, saw his role on the Knicks increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense.We can see this clearly defined in the case of RJ Barrett's spike plot, where his first few games he performed poorly, and the latter half of the season he performed very well. Because we define a streak as performing above their average over the whole season, players such as this may not have their innate "streakiness" accurately measured. 
+Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. RJ Barrett, another high performer, saw his role on the Knicks increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense. Because we define a streak as performing above their average over the whole season, players such as this may not have their innate "streakiness" accurately measured. 
 
