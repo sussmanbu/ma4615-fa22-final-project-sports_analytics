@@ -1,12 +1,14 @@
 ```{r}
 install.packages("Hmisc")
 install.packages("segmented")
-
+install.packages("gridExtra")
+```
+``` {r}
 library(segmented)
 library(tidyverse)  
 library(Hmisc)
+library(gridExtra)
 ```
-
 
 ```{r prepare_data}
 bat_data <- read_csv("dataset/MLB_bat_data_2021.csv") %>% 
@@ -53,7 +55,7 @@ segment_model <- function(batter, stat, dataset){
   pace <- cumsum(b)
   pace_length <- (breakpoint - lag(breakpoint))[2:(n+2)]
   weighted_pace <- weighted.mean(pace, pace_length)
-  tibble(name = batter, team = team, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length)
+  tibble(name = batter, team = team, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length, start = breakpoint[1:(n+1)])
 }
 ```
 
@@ -70,9 +72,12 @@ segment_model <- function(batter, stat, dataset){
   summary(exp)
   beta <- coef(exp)
 
+  cor(hr_streakiness$total, hr_streakiness$streak)
+  
   ggplot(hr_streakiness) +
     geom_point(aes(x=streak, y=total)) +
-    geom_abline(intercept=beta[1], slope=beta[2], color="red")
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Home Runs Streakiness", y="Total Home Runs in Season", title="MLB Home Runs Streakiness")
 ```
 
 ```{r caclulate_hit_paces}
@@ -87,9 +92,12 @@ segment_model <- function(batter, stat, dataset){
   summary(exp)
   beta <- coef(exp)
 
+  cor(hit_streakiness$total, hit_streakiness$streak)
+  
   ggplot(hit_streakiness) +
     geom_point(aes(x=streak, y=total)) +
-    geom_abline(intercept=beta[1], slope=beta[2], color="red")
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Hits Streakiness", y="Total Hits in Season", title="MLB Hits Streakiness")
 ```
 
 ```{r caclulate_so_paces}
@@ -103,10 +111,13 @@ segment_model <- function(batter, stat, dataset){
   exp <- lm(total ~ streak, data=so_streakiness)
   summary(exp)
   beta <- coef(exp)
-
+  
+  cor(so_streakiness$total, so_streakiness$streak)
+   
   ggplot(so_streakiness) +
     geom_point(aes(x=streak, y=total)) +
-    geom_abline(intercept=beta[1], slope=beta[2], color="red")
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Strike Out Streakiness", y="Total Strike Outs in Season", title="MLB Strike Outs Streakiness")
 ```
 
 ```{r caclulate_bb_paces}
@@ -120,16 +131,18 @@ segment_model <- function(batter, stat, dataset){
   exp <- lm(total ~ streak, data=bb_streakiness)
   summary(exp)
   beta <- coef(exp)
-
+  
+  cor(bb_streakiness$total, bb_streakiness$streak)
+  
   ggplot(bb_streakiness) +
     geom_point(aes(x=streak, y=total)) +
-    geom_abline(intercept=beta[1], slope=beta[2], color="red")
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Walks Streakiness", y="Total Walks in Season", title="MLB Walks Streakiness")
 ```
   
 ```{r player_dataframe}
 player_dataframe <- function(batter, stat, dataset){
   if (dataset == "MLB")      {d1 <- bat_data %>% filter(player==batter)} 
-  else if (dtatset == "NBA") {d1 <- offense_data %>% filter(player==batter)} 
   else                       {print("invalid dataset")}
   
   if (stat == "hr")          {fit_lm <- lm(hr_cum ~ 1 + games, data = d1)
@@ -152,13 +165,34 @@ player_dataframe <- function(batter, stat, dataset){
 ```
 
 ```{r individual_dataframes}
-  bb_datframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "bb", dataset = "MLB")
+  bb_dataframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "bb", dataset = "MLB")
 
-  so_datframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "so", dataset = "MLB")
+  so_dataframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "so", dataset = "MLB")
   
-  hit_datframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "hit", dataset = "MLB")
+  hit_dataframe <- map_dfr(unique(bat_data$player), player_dataframe, stat = "hit", dataset = "MLB")
   
+  hr_data <- bat_data %>% filter(hr_total>15)
   hr_datframe <- map_dfr(unique(hr_data$player), player_dataframe, stat = "hr", dataset = "MLB")
+  
+  batting_dataframe <- bat_data %>% dplyr::select(team_abbrev, player_id, player, games, plate_appearances, hit_total, hit_cum, hr_total, hr_cum, so_total, so_cum, bb_total, bb_cum)
+```
+
+```{r save data}
+  # Peicewise linear fits
+  save(bb_dataframe, file = "shiny_app/final_interactive/segmented_model/MLB/bb_predicted.RData")
+  save(so_dataframe, file = "shiny_app/final_interactive/segmented_model/MLB/so_predicted.RData")
+  save(hr_dataframe, file = "shiny_app/final_interactive/segmented_model/MLB/hr_predicted.RData")
+  save(hit_dataframe, file="shiny_app/final_interactive/segmented_model/MLB/hit_predicted.RData")
+  
+  # real stats
+  save(batting_dataframe, file = "shiny_app/final_interactive/segmented_model/MLB/batting_real.RData")
+  
+  #paces
+  save(bb_paces, file = "shiny_app/final_interactive/segmented_model/MLB/bb_paces.RData")
+  save(so_paces, file = "shiny_app/final_interactive/segmented_model/MLB/so_paces.RData")
+  save(hr_paces, file = "shiny_app/final_interactive/segmented_model/MLB/hr_paces.RData")
+  save(hit_paces, file = "shiny_app/final_interactive/segmented_model/MLB/hit_paces.RData")
+  
 ```
 
   
@@ -193,19 +227,19 @@ bb_model <- data.frame(games = d1$games, bb_cum = my_fitted)
 
 p1 <- ggplot() + 
   geom_line(data = hr_model, aes(x = games, y = hr_cum)) + 
-  geom_point(data = d1, aes(x=games, y=hr_cum), color="yellow", alpha =0.1)
+  geom_point(data = d1, aes(x=games, y=hr_cum), color="gold4", alpha =0.2, size=1)
 
 p2 <- ggplot() +
   geom_line(data = hit_model, aes(x = games, y = hit_cum)) + 
-  geom_point(data = d1, aes(x=games, y=hit_cum), color="blue", alpha =0.1)
+  geom_point(data = d1, aes(x=games, y=hit_cum), color="blue", alpha =0.2, size=1)
 
 p3 <- ggplot() +
   geom_line(data = so_model, aes(x = games, y = so_cum)) + 
-  geom_point(data = d1, aes(x=games, y=so_cum), color="red", alpha =0.1)
+  geom_point(data = d1, aes(x=games, y=so_cum), color="red", alpha =0.2, size=1)
 
 p4 <- ggplot() +
   geom_line(data = bb_model, aes(x = games, y = bb_cum)) + 
-  geom_point(data = d1, aes(x=games, y=bb_cum), color="green", alpha =0.1)
+  geom_point(data = d1, aes(x=games, y=bb_cum), color="green", alpha =0.2, size=1)
 
 grid.arrange(p1, p2, p3, p4, ncol=2)
 ```
@@ -223,20 +257,22 @@ grid.arrange(p1, p2, p3, p4, ncol=2)
 ```{r prepare_NBA_data}
 load("dataset/clean_nba_data.RData")
 scoring_data <- data %>% 
+  filter(game_date > "2021-10-01") %>% 
   dplyr::select(game_date, Team_Abbrev, player, player_id, mp, trb, ast, pts) %>% 
   group_by(player_id) %>%
   arrange(game_date) %>% 
   mutate(temp = (mp!=0), games = cumsum(temp), total_games = max(games), avg_min = mean(mp)) %>%
   mutate(pts_total=sum(pts) , ast_total=sum(ast) , rb_total=sum(trb)) %>% 
   mutate(pts_cum=cumsum(pts), ast_cum=cumsum(ast), rb_cum=cumsum(trb)) %>% 
-  filter(total_games>58, mp>54000)
+  filter(total_games>58, avg_min>54000, mp!=0)
 
 ## filter for qualified players = 58 games played with any minutes, and for players with average 15 minutes pergame
 ```
 
 ```{r calculateNBA__paces_function}
-segment_model <- function(bb_player, stat){
-  d1 <- offense_data %>% filter(player==bb_player)
+NBA_segment_model <- function(bb_player, stat){
+  #print(bb_player)
+  d1 <- scoring_data %>% filter(player==bb_player)
   
   if (stat == "pts")        {fit_lm <- lm(pts_cum ~ 1 + games, data = d1)
                              total <- max(d1$pts_total)}
@@ -246,8 +282,13 @@ segment_model <- function(bb_player, stat){
                              total <- max(d1$rb_total)}
   else                      {print("invalid stat")}
   
-  
-  fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+  # for some reason marcus smart and assists errors out so manually determined best fit
+  if (bb_player=="Marcus Smart" & stat == "ast"){
+    fit_segmented = segmented(fit_lm, seg.Z = ~games, npsi=4)
+  }
+  else{
+    fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 30)) 
+  }
   
   total_games <- max(d1$games)
   slope <- total/total_games
@@ -261,12 +302,72 @@ segment_model <- function(bb_player, stat){
   pace <- cumsum(b)
   pace_length <- (breakpoint - lag(breakpoint))[2:(n+2)]
   weighted_pace <- weighted.mean(pace, pace_length)
-  tibble(name = bb_player, team = team, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length)
+  tibble(name = bb_player, team = team, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length, start = breakpoint[1:(n+1)])
 }
 ```
 
+```{r caclulate_pts_paces}
+## Points
+  pts_paces <- map_dfr(unique(scoring_data$player), NBA_segment_model, stat = "pts")
+  
+  pts_streakiness <- pts_paces %>% 
+    group_by(name) %>% 
+    summarise(total=mean(total), streak=sqrt(wtd.var(pace,pace_length)))
+
+  exp <- lm(total ~ streak, data=pts_streakiness)
+  summary(exp)
+  beta <- coef(exp)
+  
+  cor(pts_streakiness$total, pts_streakiness$streak)
+  
+  ggplot(pts_streakiness) +
+    geom_point(aes(x=streak, y=total)) +
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Points Streakiness", y="Total Points in Season", title="NBA Points Streakiness")
+```
+
+```{r caclulate_ast_paces}
+## Assists
+  ast_paces <- map_dfr(unique(scoring_data$player), NBA_segment_model, stat = "ast")
+  
+  ast_streakiness <- ast_paces %>% 
+    group_by(name) %>% 
+    summarise(total=mean(total), streak=sqrt(wtd.var(pace,pace_length)))
+
+  exp <- lm(total ~ streak, data=ast_streakiness)
+  summary(exp)
+  beta <- coef(exp)
+
+  cor(ast_streakiness$total, ast_streakiness$streak)
+  
+  ggplot(ast_streakiness) +
+    geom_point(aes(x=streak, y=total)) +
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Assists Streakiness", y="Total Assists in Season", title="NBA Assists Streakiness")
+```
+
+```{r caclulate_rb_paces}
+## Rebounds
+  rb_paces <- map_dfr(unique(scoring_data$player), NBA_segment_model, stat = "rb")
+  
+  rb_streakiness <- rb_paces %>% 
+    group_by(name) %>% 
+    summarise(total=mean(total), streak=sqrt(wtd.var(pace,pace_length)))
+
+  exp <- lm(total ~ streak, data=rb_streakiness)
+  summary(exp)
+  beta <- coef(exp)
+
+  cor(rb_streakiness$total, rb_streakiness$streak)
+  
+  ggplot(rb_streakiness) +
+    geom_point(aes(x=streak, y=total)) +
+    geom_abline(intercept=beta[1], slope=beta[2], color="red") +
+    labs(x="Rebounds Streakiness", y="Total Rebounds in Season", title="NBA Rebounds Streakiness")
+```
+
 ```{r NBA_view_individual}
-d1 <- scoring_data %>% filter(player_id=="lowryky01")
+d1 <- scoring_data %>% filter(player_id=="smartma01")
 
 # Points fit
 fit_lm <- lm(pts_cum ~ 1 + games, data = d1)
@@ -300,4 +401,57 @@ p3 <- ggplot() +
   geom_point(data = d1, aes(x=games, y=rb_cum), color="red", alpha =0.1)
 
 grid.arrange(p1, p2, p3, ncol=2)
+```
+
+```{r NBA_player_dataframe}
+NBA_player_dataframe <- function(bb_player, stat){
+  d1 <- scoring_data %>% filter(player==bb_player)
+  
+  if (stat == "pts")        {fit_lm <- lm(pts_cum ~ 1 + games, data = d1)
+                             total <- max(d1$pts_total)}
+  else if (stat =="ast")    {fit_lm <- lm(ast_cum ~ 1 + games, data = d1)
+                             total <- max(d1$ast_total)}
+  else if (stat =="rb")     {fit_lm <- lm(rb_cum ~ 1 + games, data = d1)
+                             total <- max(d1$rb_total)}
+  else                      {print("invalid stat")}
+  
+  # for some reason marcus smart and assists errors out so manually determined best fit
+  if (bb_player=="Marcus Smart" & stat == "ast"){
+    fit_segmented = segmented(fit_lm, seg.Z = ~games, npsi=4)
+  }
+  else{
+    fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 30))
+  }
+  
+  team = max(d1$Team_Abbrev)
+  
+  my_fitted <- fitted(fit_segmented)
+  data.frame(player = bb_player, team = team, games = d1$games, stat_cum = my_fitted)
+}
+```
+
+```{r individual_dataframes}
+  pts_dataframe <- map_dfr(unique(scoring_data$player), NBA_player_dataframe, stat = "pts")
+
+  ast_dataframe <- map_dfr(unique(scoring_data$player), NBA_player_dataframe, stat = "ast")
+  
+  rb_dataframe <- map_dfr(unique(scoring_data$player), NBA_player_dataframe, stat = "rb")
+  
+  scoring_dataframe <- scoring_data 
+```
+
+```{r save data}
+  # Peicewise linear fits
+  save(pts_dataframe, file="shiny_app/final_interactive/segmented_model/NBA/pts_predicted.RData")
+  save(ast_dataframe, file="shiny_app/final_interactive/segmented_model/NBA/ast_predicted.RData")
+  save(rb_dataframe, file = "shiny_app/final_interactive/segmented_model/NBA/rb_predicted.RData")
+
+  
+  # real stats
+  save(scoring_dataframe, file = "shiny_app/final_interactive/segmented_model/NBA/scoring_real.RData")
+  
+  #paces
+  save(pts_paces, file = "shiny_app/final_interactive/segmented_model/NBA/pts_paces.RData")
+  save(ast_paces, file = "shiny_app/final_interactive/segmented_model/NBA/ast_paces.RData")
+  save(rb_paces, file = "shiny_app/final_interactive/segmented_model/NBA/rb_paces.RData")
 ```
