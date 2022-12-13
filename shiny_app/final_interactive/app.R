@@ -35,12 +35,12 @@ load(here::here("shiny_app/final_interactive/segmented_model/NBA", "pts_paces.RD
 load(here::here("shiny_app/final_interactive/segmented_model/NBA", "ast_paces.RData"))
 load(here::here("shiny_app/final_interactive/segmented_model/NBA", "rb_paces.RData"))
 
-load("clean_nba_data_app.RData")
-load("clean_nba_data22_app.RData")
-load("clean_mlb_data_app.RData")
+load(here::here("shiny_app/final_interactive", "clean_nba_data_app.RData"))
+load(here::here("shiny_app/final_interactive", "clean_nba_data22_app.RData"))
+load(here::here("shiny_app/final_interactive", "clean_mlb_data_app.RData"))
 
 nba_players <- all_data %>% pull(player) %>% unique() %>% sort()
-mlb_players <- batting_real %>% pull(player) %>% unique() %>% sort()
+mlb_players <- batting_dataframe %>% pull(player) %>% unique() %>% sort()
 
 league <-c('MLB','NBA')
 
