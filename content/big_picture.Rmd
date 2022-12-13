@@ -2,63 +2,12 @@
 title: Big Picture
 description:
 toc: true
-featuredImage: /images/The_Big_Picture_2.jpeg
+featuredImage: https://fansided.com/wp-content/uploads/getty-images/2018/08/489676914.jpeg
 featuredVideo:
 draft: false
 ---
 
-## Rubric: On this page
 
-You will
-
-
-
-* Title
-  * Your big picture page should have a creative/click-baity title/headline that provides a hint about your thesis.
-* Clarity of Explanation
-  * You should have a clear thesis/goal for this page. What are you trying to show? Make sure that you explain your analysis in detail but don't go into top much mathematics or statistics. The audience for this page is the general public (to the extent possible).
-* Quality of Figures
-  * Each figure should be very polished and also not too complicated. There should be a clear interpretation of the figure so the figure has a clear purpose. Even something like a histogram can be difficult to interpret for non-experts.
-* Creativity
-  * Do your best to make things interesting. Think of a story. Think of how each part of your analysis supports the previous part or provides a different perspective.
-  
-**Note**: This page should have no code visible, i.e. use `echo=FALSE`.  
-
----
-
-## Rubric: Other components
-
-### Interactive
-
-You will also be required to make an interactive dashboard like [this one](/flex/flex.html).
-
-Your Big Data page should include a link to an interactive dashboard. The dashboard should be created either using Shiny or FlexDashboard (or another tool with professor's approval). This interactive component should in some way support your thesis from your big picture page. Good interactives often provide both high-level understanding of the data while allowing a user to investigate specific scenarios, observations, subgroups, etc.
-
-* Quality and ease of use of the interactive components.
-Is it clear what can be explored using your interactive components?
-Does it enhance and reinforce your conclusions from the Big Picture?
-Plotly with default hover text will get no credit. Be creative!
-
-
-### Video Recording
-
-Make a video recording (probably using Zoom) demonstrating your interactive components.
-You should provide a quick explanation of your data and demonstrate some of the conclusions from your EDA.
-This video should be no longer than 4 minutes.
-Include a link to your video (and password if needed) in your README.md file on your Github repository. You are not required to provide a link on the website.
-This can be presented by any subset of the team members.
-
-
-### Rest of the Site
-
-Finally, here are important things to keep in mind for the rest of the site. 
-
-The main title of your page is informative.
-Each post has an author/description/informative title.
-All lab required posts are present.
-Each page (including the home page) has a nice featured image associated with it.
-Your about page is up to date and clean.
-You have removed the generic posts from the initial site template.
 
 ## The Hot Hand. Just some Hot Air?: 
 
@@ -72,9 +21,15 @@ One way we decided to assess the validity of streaks was by looking at two diffe
 
 We have defined streaks as a player performing above their average in a specific stat, or a combination of stats in a number of successive games. We suggest that not only is there a method to predict when these players get on “hot streaks,” but we can perform similar analyses across different sports, and even identify whether certain players are “streaky” in general. If you participate in fantasy sports leagues, our findings may help you get a leg up in your workplace league, anticipating breakout players or finding players that may give you that extra boost you need to finally beat Martha in accounting. If you place bets on games, our findings may help you break out of your slump... and get back the money you lost from betting on the Sacramento Kings to win it all. If you are simply interested in sports and want to have a new way to assess player output and find trends within our data, then our findings are for you. 
 
+
+## Interactive:
+In our interactive, we have a dashboard that shows the probability that a player will perform above their average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. We also have a summary of their streaks to see what the likelihood of them continuing the streak might be. To use it, select the sport's league you would like to analyze and then select your player of interest. Start with your favorite player!
+
+
 ```{r interactive, echo=FALSE}
 library(rsconnect)
+library(knitr)
 
-knitr::include_app("https://leose.shinyapps.io/final_interactive/")
+knitr::include_app("https://leose.shinyapps.io/final_interactive/", height = "600px")
 
 ```
