@@ -37,9 +37,11 @@ load(here::here("shiny_app/final_interactive/segmented_model/NBA", "rb_paces.RDa
 
 load("clean_nba_data_app.RData")
 load("clean_nba_data22_app.RData")
-nba_players <- all_data %>% pull(player) %>% unique() %>% sort()
 load("clean_mlb_data_app.RData")
-mlb_players <- all_data_mlb %>% pull(player) %>% unique() %>% sort()
+
+nba_players <- all_data %>% pull(player) %>% unique() %>% sort()
+mlb_players <- batting_real %>% pull(player) %>% unique() %>% sort()
+
 league <-c('MLB','NBA')
 
 get_leagues <- function(league){
@@ -144,7 +146,7 @@ server <- function(input, output) {
   
   output$spikePlot <-renderPlot({
     if(input$league =='MLB'){
-      scoring <-all_data_mlb %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date,h_streak) 
+      scoring <-all_data_mlb %>% ungroup() %>% filter(player == input$playerID) %>%dplyr::select(change_net,game_date,h_streak) 
       ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
       geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
       geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
@@ -156,7 +158,7 @@ server <- function(input, output) {
       
       }
     else{
-      scoring <-data22 %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date,pts_streak) 
+      scoring <-data22 %>% ungroup() %>% filter(player == input$playerID) %>%dplyr::select(change_net,game_date,pts_streak) 
       ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
       geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
       geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
