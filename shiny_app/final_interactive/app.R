@@ -15,10 +15,10 @@ suppressPackageStartupMessages(library(modelr))
 suppressPackageStartupMessages(library(rsconnect))
 
 
-load(here::here("dataset", "clean_nba_data_app.RData"))
-load(here::here("dataset", "clean_nba_data22_app.RData"))
+load(here::here("shiny_app/final_interactive", "clean_nba_data_app.RData"))
+load(here::here("shiny_app/final_interactive", "clean_nba_data22_app.RData"))
 nba_players <- all_data %>% pull(player) %>% unique() %>% sort()
-load(here::here("dataset", "clean_mlb_data_app.RData"))
+load(here::here("shiny_app/final_interactive", "clean_mlb_data_app.RData"))
 mlb_players <- all_data_mlb %>% pull(player) %>% unique() %>% sort()
 league <-c('MLB','NBA')
 
