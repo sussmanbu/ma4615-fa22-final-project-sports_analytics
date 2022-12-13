@@ -51,7 +51,7 @@ server <- function(input, output) {
   
   output$spikePlot <-renderPlot({
     if(input$league =='MLB'){
-      scoring <-all_data_mlb %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date) 
+      scoring <-all_data_mlb %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date,h_streak) 
       ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
       geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
       geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
@@ -59,10 +59,11 @@ server <- function(input, output) {
       geom_line(aes(y=0)) + ggtitle('Change') +
       ylab('Points Deviated from Average') +
       xlab('Date')
+      ggplot(scoring,aes(h_streak))+geom_density() 
       
       }
     else{
-      scoring <-data22 %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date) 
+      scoring <-data22 %>% ungroup() %>% filter(player == input$playerID) %>%select(change_net,game_date,pts_streak) 
       ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
       geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
       geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
@@ -70,6 +71,8 @@ server <- function(input, output) {
       geom_line(aes(y=0)) + ggtitle('Change') +
       ylab('Points Deviated from Average') +
       xlab('Date')
+      ggplot(scoring,aes(pts_streak))+geom_density() 
+      
     }
   })
   
