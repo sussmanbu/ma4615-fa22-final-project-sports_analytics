@@ -2,7 +2,7 @@
 title: Big Picture
 description:
 toc: true
-featuredImage: /images/The_Big_Picture_2.jpeg
+featuredImage: https://fansided.com/wp-content/uploads/getty-images/2018/08/489676914.jpeg
 featuredVideo:
 draft: false
 ---
