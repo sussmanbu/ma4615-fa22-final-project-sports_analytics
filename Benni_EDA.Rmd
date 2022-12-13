@@ -208,3 +208,96 @@ p4 <- ggplot() +
   geom_point(data = d1, aes(x=games, y=bb_cum), color="green", alpha =0.1)
 
 grid.arrange(p1, p2, p3, p4, ncol=2)
+```
+
+```{r}
+#################################################################################################
+#################################################################################################
+#################################################################################################
+#################################################################################################
+#################################################################################################
+#################################################################################################
+```
+
+
+```{r prepare_NBA_data}
+load("dataset/clean_nba_data.RData")
+scoring_data <- data %>% 
+  dplyr::select(game_date, Team_Abbrev, player, player_id, mp, trb, ast, pts) %>% 
+  group_by(player_id) %>%
+  arrange(game_date) %>% 
+  mutate(temp = (mp!=0), games = cumsum(temp), total_games = max(games), avg_min = mean(mp)) %>%
+  mutate(pts_total=sum(pts) , ast_total=sum(ast) , rb_total=sum(trb)) %>% 
+  mutate(pts_cum=cumsum(pts), ast_cum=cumsum(ast), rb_cum=cumsum(trb)) %>% 
+  filter(total_games>58, mp>54000)
+
+## filter for qualified players = 58 games played with any minutes, and for players with average 15 minutes pergame
+```
+
+```{r calculateNBA__paces_function}
+segment_model <- function(bb_player, stat){
+  d1 <- offense_data %>% filter(player==bb_player)
+  
+  if (stat == "pts")        {fit_lm <- lm(pts_cum ~ 1 + games, data = d1)
+                             total <- max(d1$pts_total)}
+  else if (stat =="ast")    {fit_lm <- lm(ast_cum ~ 1 + games, data = d1)
+                             total <- max(d1$ast_total)}
+  else if (stat =="rb")     {fit_lm <- lm(rb_cum ~ 1 + games, data = d1)
+                             total <- max(d1$rb_total)}
+  else                      {print("invalid stat")}
+  
+  
+  fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+  
+  total_games <- max(d1$games)
+  slope <- total/total_games
+  
+  team = max(d1$Team_Abbrev)
+  
+  a <- fit_segmented$psi
+  n <- length(a)/3
+  breakpoint <- c(0, a[(n+1):(2*n)], max(d1$games))
+  b <- fit_segmented$coefficients[2:(n+2)]
+  pace <- cumsum(b)
+  pace_length <- (breakpoint - lag(breakpoint))[2:(n+2)]
+  weighted_pace <- weighted.mean(pace, pace_length)
+  tibble(name = bb_player, team = team, total = total, total_games = total_games, slope  = slope, weighted_pace = weighted_pace, pace = pace, pace_length = pace_length)
+}
+```
+
+```{r NBA_view_individual}
+d1 <- scoring_data %>% filter(player_id=="lowryky01")
+
+# Points fit
+fit_lm <- lm(pts_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+pts_model <- data.frame(games = d1$games, pts_cum = my_fitted)
+
+# assists fit
+fit_lm <- lm(ast_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+ast_model <- data.frame(games = d1$games, ast_cum = my_fitted)
+
+# rebounds model
+fit_lm <- lm(rb_cum ~ 1 + games, data = d1)
+fit_segmented = segmented(fit_lm, seg.Z = ~games, psi=NA, control=seg.control(fix.npsi=FALSE, n.boot=0, tol=1e-7, it.max = 50))
+my_fitted <- fitted(fit_segmented)
+rb_model <- data.frame(games = d1$games, rb_cum = my_fitted)
+
+
+p1 <- ggplot() + 
+  geom_line(data = pts_model, aes(x = games, y = pts_cum)) + 
+  geom_point(data = d1, aes(x=games, y=pts_cum), color="yellow", alpha =0.1)
+
+p2 <- ggplot() +
+  geom_line(data = ast_model, aes(x = games, y = ast_cum)) + 
+  geom_point(data = d1, aes(x=games, y=ast_cum), color="blue", alpha =0.1)
+
+p3 <- ggplot() +
+  geom_line(data = rb_model, aes(x = games, y = rb_cum)) + 
+  geom_point(data = d1, aes(x=games, y=rb_cum), color="red", alpha =0.1)
+
+grid.arrange(p1, p2, p3, ncol=2)
+```
