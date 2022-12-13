@@ -12,6 +12,8 @@ suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(here))
 suppressPackageStartupMessages(library(runner))
 suppressPackageStartupMessages(library(modelr))
+suppressPackageStartupMessages(library(rsconnect))
+
 
 load(here::here("dataset", "clean_nba_data_app.RData"))
 load(here::here("dataset", "clean_nba_data22_app.RData"))
