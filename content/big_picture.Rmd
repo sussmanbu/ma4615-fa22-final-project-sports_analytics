@@ -23,7 +23,8 @@ We have defined streaks as a player performing above their average in a specific
 
 ```{r interactive, echo=FALSE}
 library(rsconnect)
+library(knitr)
 
-include_app("https://leose.shinyapps.io/final_interactive/", height = "600px")
+knitr::include_app("https://leose.shinyapps.io/final_interactive/", height = "600px")
 
 ```
