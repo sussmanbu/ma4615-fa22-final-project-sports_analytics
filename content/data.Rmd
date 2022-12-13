@@ -63,8 +63,6 @@ nba_ppg_22 <- nba_data22 %>%
   
 `nba_data22` held the cleaned data that removed any extra rows. This newly created dataset could be used to calculate season average statistics. In the example above, the points per game were calculated for each player. This process was largely reproducible for many other statistics and guided the process to finding streaks, as we will show when diving deeper into our exploratory analysis. 
   
-=======
-  
 ## MLB Raw Data - Advanced Sports Analytics
 
 ## Link to MLB raw data:
@@ -141,4 +139,4 @@ bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
 Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.
 
 ## Link to load_and_clean_data.R:
-/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R
+./ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R
