@@ -1,0 +1,18 @@
+---
+title: Week 8 Blog
+author: Haroon, Leo, Ryan, Benni
+date: '2022-12-12'
+slug: []
+categories: []
+tags: []
+description: ~
+toc: yes
+authors: []
+series: []
+lastmod: '2022-12-12T17:58:02-05:00'
+featuredVideo: ~
+featuredImage: ~
+---
+## Looking back on our analysis and Reflecting on the process:
+
+Our analysis between the two leagues required some ways to mediate the differences between the two leagues. Because the leagues were so different, we needed to find a way to make the threshold of the two leagues a bit more similar. One way we have considered doing this is creating a definition of a streak that is translatable between leagues, despite the statistics being different, like a player scoring above his season average. This allows us to look at players in a more generalized way. One thing we made sure to do was try to add context to why some players performed above their usual means. Some times, streaks are consequences of new opportunity or circumstances that are not reflected in statistics alone. For example, a player like Isaiah Thomas, a former player for the Celtics, dedicated his best season to his sister who passed away in a car crash, and performed his most impressive playoff run on her death's heels. These types of motivations are difficult to assess through statistics alone, and each player's playing situation, personal life, etc. could be further scrutinized to create a narrative and context for their performance. Looking at Josh Hart, one player who stood out in our analysis, his high performance was allowed due to a trade occurred that moved him to a team that specifically sought to expand his role. Our definition of a streak could be improved to perhaps better account for this type of context, although it may be easier to accomplish starting with one sports league so that the differences in game play are not a factor. 
