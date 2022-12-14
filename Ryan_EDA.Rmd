@@ -176,3 +176,82 @@ ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
   labs(x = "Strikeouts", y = "Streakiness (Binomial)")
 ```
 
+```{r NBA}
+library(tidyverse)
+library(modelr)
+library(ggrepel)
+
+load(here::here("dataset", "clean_nba_data.RData"))
+
+NBA_data <- data %>% filter(did_not_play == 0, is_inactive == 0,
+                            season == 2022) %>% select(-c(3:21))
+
+ppg_data <- NBA_data %>% group_by(player) %>%
+  summarize(ppg = sum(pts)/n(), epm = sum(plus_minus)/n(),
+            minutes_tot = sum(minutes)) %>% 
+  arrange(desc(ppg))
+
+NBA_avg <- ppg_data %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
+  ungroup() %>% summarize(avg_ppg = mean(ppg), med_ppg = median(ppg),
+                          avg_epm = mean(epm))
+
+NBA_data_day <- left_join(NBA_data, ppg_data, by = "player") %>%
+  mutate(NBA_diff = NBA_avg$avg_epm - epm)
+
+sim <- NBA_data_day %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
+  group_by(game_date) %>%
+  mutate(epm_diff = plus_minus - NBA_avg$avg_epm, above = (epm_diff > 0)) %>%
+  ungroup() %>% group_by(player) %>%
+  summarize(games_above = sum(above), games = n(), per = games_above/games,
+            epm = mean(epm), fga = mean(fga))
+
+model <- lm(per ~ epm, data = sim)
+beta_NBA <- coef(model)
+
+s_res <- rstandard(model)
+
+log_sim <- sim %>% cbind(s_res) %>%
+  mutate(streaky = ifelse(s_res < 0, 1, 0))
+
+
+summary(model)
+ggplot(sim, aes(epm, per)) + geom_point() +
+  geom_abline(intercept = beta_NBA[1], slope = beta_NBA[2], color = "red") +
+  labs(x = "Effective Plus Minus", y = "% of Games with 2+ Plus Minus")
+
+
+sim %>% cbind(s_res) %>%  ggplot(aes(epm, s_res)) +
+  geom_ref_line(h = 0) + geom_point()
+
+sim %>% cbind(s_res) %>%  filter(abs(s_res) >= 1.5)
+
+
+NBA_data_day %>% filter(player == "Jayson Tatum") %>%
+  group_by(game_date) %>%
+  mutate(epm_diff = plus_minus - epm,
+         sign = sign(epm_diff)) %>%
+  ggplot() +
+  geom_col(aes(game_date, epm_diff, fill = sign), position = "identity",
+           show.legend = FALSE) +
+  geom_line(aes(game_date, mean(NBA_diff)), color = "red") +
+  labs(title = "Jayson Tatum Game by Game Plus Minus Data",
+       x = "Date", y = "Game Plus Minus compared to average")
+
+
+lm_fga <- lm(s_res ~ fga, data = log_sim)
+bt_fga <- coef(lm_fga)
+summary(lm_fga)
+ggplot(log_sim, aes(fga, s_res)) + geom_point() +
+  geom_abline(intercept = bt_fga[1], slope = bt_fga[2], color = "red") +
+  labs(x = "Field Goal Attempts per Game", y = "Streakiness (Residual)")
+
+log_model_fga <- glm(streaky ~ fga, data = log_sim, family = binomial)
+beta_fga <- coef(log_model_fga)
+grid_fga <- log_sim %>% data_grid(fga) %>%
+    add_predictions(log_model_fga, type = "response")
+summary(log_model_fga)
+ggplot(log_sim, aes(fga)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid_fga, color = "red", size = 1) +
+  labs(x = "Field Goal Attempts per Game", y = "Streakiness (Binomial)")
+```
+
