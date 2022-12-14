@@ -578,13 +578,13 @@ Initially, we had created an xgboost model to predict whether a player would sco
 
 # Segmented Modelling
 ```{r Segmented}
-  knitr::include_graphics('./segmented_plot/HR.png')
-  knitr::include_graphics('./segmented_plot/Hit.png')
-  knitr::include_graphics('./segmented_plot/SO.png')
-  knitr::include_graphics('./segmented_plot/BB.png')
-  knitr::include_graphics('./segmented_plot/PTS.png')
-  knitr::include_graphics('./segmented_plot/RB.png')
-  knitr::include_graphics('./segmented_plot/AST.png')
+  knitr::include_graphics('./segmented_plots/HR.png')
+  knitr::include_graphics('./segmented_plots/Hit.png')
+  knitr::include_graphics('./segmented_plots/SO.png')
+  knitr::include_graphics('./segmented_plots/BB.png')
+  knitr::include_graphics('./segmented_plots/PTS.png')
+  knitr::include_graphics('./segmented_plots/RB.png')
+  knitr::include_graphics('./segmented_plots/AST.png')
 
 ```
 
