@@ -576,3 +576,16 @@ One of the main flaws in this analysis are the innate differences of basketball 
 # Modeling flaws/limitations:
 Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. RJ Barrett, another high performer, saw his role on the Knicks increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense. Because we define a streak as performing above their average over the whole season, players such as this may not have their innate "streakiness" accurately measured. 
 
+# Segmented Modelling
+```{r Segmented}
+  knitr::include_graphics('./segmented_plot/HR.png')
+  knitr::include_graphics('./segmented_plot/Hit.png')
+  knitr::include_graphics('./segmented_plot/SO.png')
+  knitr::include_graphics('./segmented_plot/BB.png')
+  knitr::include_graphics('./segmented_plot/PTS.png')
+  knitr::include_graphics('./segmented_plot/RB.png')
+  knitr::include_graphics('./segmented_plot/AST.png')
+
+```
+
+
