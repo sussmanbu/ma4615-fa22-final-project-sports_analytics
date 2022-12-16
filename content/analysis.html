@@ -24,10 +24,10 @@ draft: false
 <p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team’s offense, which is relevant for determining how much player’s will score. For the KenPom team model used later, team offensive and defensive ratings are used along with pace. Pace is a metric for determining the amount of possesions and shot attempts the game will have. Defensive rating is a metric for determining how many points per 100 posessions a team is likely to allow.</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
-## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.0      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -633,9 +633,9 @@ ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=gr
 <p>To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:</p>
 <pre class="r"><code>library(tidyverse)
 library(modelr)
-library(ggrepel)</code></pre>
-<pre><code>## Warning: package &#39;ggrepel&#39; was built under R version 4.2.2</code></pre>
-<pre class="r"><code>stat_fct &lt;- function(x,y){
+library(ggrepel)
+
+stat_fct &lt;- function(x,y){
   ifelse(y &gt; 0, x/y, 0)
 }
 
@@ -867,8 +867,95 @@ Unfortunately, we can’t use quite the same visualizations for the model, since
 ## Residual deviance: 75233  on 61309  degrees of freedom
 ## AIC: 75243
 ## 
+<<<<<<< HEAD
 ## Number of Fisher Scoring iterations: 5</code></pre>
 <pre><code>## [1] 32.64695</code></pre>
+=======
+## Number of Fisher Scoring iterations: 18</code></pre>
+<pre class="r"><code>mean(mod2$residuals^2)</code></pre>
+<pre><code>## [1] 4.064097</code></pre>
+<pre class="r"><code>all_data_mlb &lt;-all_data_mlb %&gt;%mutate(h_direction=ifelse(h_direction==-1,0,1))
+
+all_data_mlb_hays &lt;-all_data_mlb %&gt;% filter(player==&#39;Austin Hays&#39;) %&gt;% add_predictions(mod2, type = &quot;response&quot; )
+ggplot(all_data_mlb_hays) +geom_point(aes(x=h,y=pred,color=pa),position=&#39;jitter&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/comparison%203%20between%20invidual%20players-2.png" width="672" />
+Unfortunately, we can’t use quite the same visualizations for the model, since the range of the number of hits is greatly constrained compared to the offensive rating of a player. In a further analysis, maybe batting average would provide the range necessary. We see that the NBA model is more accurate in its predictive capabilities for the top players, but interestingly less adept at predicting all values across the NBA. Another surprising result is in the summary statistics of each model. All model predictors have 3 star significant codes except for true shooting percentage. This seems counter intuitive, as how well a player shoots on a given night should factor very heavily into how much above average they perform. However, in our analysis we thought that a players given offensive production is largely determined by how often they have a chance to shoot AND their shooting percentage, so we included an interaction term between true shooting percentage and usage percentage to factor in this intuition.</p>
+<pre class="r"><code>#model building by NBA player
+mod3 &lt;-all_data %&gt;% filter(season==&#39;2022&#39;) %&gt;%ungroup() %&gt;% glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial())</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre class="r"><code>mod3$coefficients</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##  -2.656607e+01   4.102111e-14  -5.216478e-13  -2.062898e-14</code></pre>
+<pre class="r"><code>exp(mod3$coefficients)</code></pre>
+<pre><code>##    (Intercept)         ts_pct        usg_pct ts_pct:usg_pct 
+##   2.900701e-12   1.000000e+00   1.000000e+00   1.000000e+00</code></pre>
+<pre class="r"><code>summary(mod3)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = factor(pts_direction) ~ ts_pct + usg_pct + usg_pct:ts_pct, 
+##     family = binomial(), data = .)
+## 
+## Deviance Residuals: 
+##        Min          1Q      Median          3Q         Max  
+## -2.409e-06  -2.409e-06  -2.409e-06  -2.409e-06  -2.409e-06  
+## 
+## Coefficients:
+##                  Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)    -2.657e+01  3.329e+04  -0.001    0.999
+## ts_pct          4.102e-14  5.379e+04   0.000    1.000
+## usg_pct        -5.217e-13  1.629e+05   0.000    1.000
+## ts_pct:usg_pct -2.063e-14  2.663e+05   0.000    1.000
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 0.0000e+00  on 9065  degrees of freedom
+## Residual deviance: 5.2597e-08  on 9062  degrees of freedom
+## AIC: 8
+## 
+## Number of Fisher Scoring iterations: 25</code></pre>
+<pre class="r"><code>mean(mod3$residuals^2)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>all_data &lt;-all_data %&gt;%mutate(pts_direction=ifelse(pts_direction==-1,0,1))
+
+
+#model building by MLB player
+mod4 &lt;-all_data_mlb %&gt;% ungroup() %&gt;% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre class="r"><code>mod4$coefficients</code></pre>
+<pre><code>##   (Intercept)            pa           rbi     home_runs            so 
+## -2.656607e+01 -5.047321e-13  7.475561e-14 -2.673407e-14 -8.964684e-14</code></pre>
+<pre class="r"><code>exp(mod4$coefficients)</code></pre>
+<pre><code>##  (Intercept)           pa          rbi    home_runs           so 
+## 2.900701e-12 1.000000e+00 1.000000e+00 1.000000e+00 1.000000e+00</code></pre>
+<pre class="r"><code>summary(mod4)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = factor(h_direction) ~ pa + rbi + home_runs + so, 
+##     family = binomial(), data = .)
+## 
+## Deviance Residuals: 
+##        Min          1Q      Median          3Q         Max  
+## -2.409e-06  -2.409e-06  -2.409e-06  -2.409e-06  -2.409e-06  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) -2.657e+01  2.822e+03  -0.009    0.992
+## pa          -5.047e-13  9.627e+02   0.000    1.000
+## rbi          7.476e-14  2.674e+03   0.000    1.000
+## home_runs   -2.673e-14  6.136e+03   0.000    1.000
+## so          -8.965e-14  1.931e+03   0.000    1.000
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 0.0000e+00  on 61313  degrees of freedom
+## Residual deviance: 3.5572e-07  on 61309  degrees of freedom
+## AIC: 10
+## 
+## Number of Fisher Scoring iterations: 25</code></pre>
+<pre class="r"><code>mean(mod4$residuals^2)</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>all_data_mlb &lt;-all_data_mlb %&gt;%mutate(h_direction=ifelse(h_direction==-1,0,1))</code></pre>
+>>>>>>> 90eabcdfd4576a5594f1b04e0de3bb80a3623e55
 </div>
 <div id="flawslimitations" class="section level2">
 <h2>Flaws/Limitations:</h2>
