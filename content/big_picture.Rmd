@@ -15,11 +15,32 @@ Oftentimes in sports, we say players are on “hot streaks” if they perform ab
 
 ## Between Two Sports:
 
-One way we decided to assess the validity of streaks was by looking at two different sports. Basketball nd baseball are extremely different sports in many aspect, such as playstyle, team size, season length, game structure, offense and defense schemes, and much much more. This difference however may aid in determining sports. If we were to look at only one sport, and found that players really did get the hot hand, it may return a false-positive. We aim to see if the streakiness of players and teams are localized to their respective sports, or certain transcendental properties emerge between the two sports. Due to the differences in the leagues’ formats and the natures of each sport, we will perform our analyses with respect to each league and then comparatively analyze the leagues to draw conclusions on the nature and impact of streaks on the league, respectively. 
+One way we decided to assess the validity of streaks was by looking at two different sports. Basketball and baseball are extremely different sports in many aspect, such as playstyle, team size, season length, game structure, offense and defense schemes, and much much more. This difference however may aid in determining sports. If we were to look at only one sport, and found that players really did get the hot hand, it may return a false-positive. We aim to see if the streakiness of players and teams are localized to their respective sports, or certain transcendental properties emerge between the two sports. Due to the differences in the leagues’ formats and the natures of each sport, we will perform our analyses with respect to each league and then comparatively analyze the leagues to draw conclusions on the nature and impact of streaks on the league, respectively. 
 
 ## What Will We Find? Who cares? :
 
 We have defined streaks as a player performing above their average in a specific stat, or a combination of stats in a number of successive games. We suggest that not only is there a method to predict when these players get on “hot streaks,” but we can perform similar analyses across different sports, and even identify whether certain players are “streaky” in general. If you participate in fantasy sports leagues, our findings may help you get a leg up in your workplace league, anticipating breakout players or finding players that may give you that extra boost you need to finally beat Martha in accounting. If you place bets on games, our findings may help you break out of your slump... and get back the money you lost from betting on the Sacramento Kings to win it all. If you are simply interested in sports and want to have a new way to assess player output and find trends within our data, then our findings are for you. 
+
+
+##What we have found, what is similar and what is different?
+Amazingly, we see very similar trends across the NBA and the MLB. Aggregated across the last 3 seasons, we can see below that the distribution of streaks between the MLB and NBA are almost identical. Keep in mind that we define a below average game as going on a "0" game positive points streak. 
+```{r conclusions}
+library(knitr)
+include_graphics('./segmented_plots/h_streak_distribution.png')
+include_graphics('./segmented_plots/pts_streak_distribution.png')
+```
+Next, lets look at the top players across the NBA and MLB and take a deep dive into the top performers in each league respectively. By top players, we are going to look at the players with the highest median streaks, a measure of how "consistently streaky" a player is. Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA. 
+Further on in the analyis we will compare players with the highest maximum streaks and lead their leagues in a respective category. 
+```{r conclusions 2}
+include_graphics('./segmented_plots/best_MLB_streaks.png')
+include_graphics('./segmented_plots/AH_spike_plot.png')
+include_graphics('./segmented_plots/top5_h_streak.png')
+
+include_graphics('./segmented_plots/best_PRA_streaks.png')
+include_graphics('./segmented_plots/JH_spike_plot.png')
+include_graphics('./segmented_plots/top5_pts_streak.png')
+```
+
 
 
 ## Interactive:
