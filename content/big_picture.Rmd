@@ -24,24 +24,20 @@ We have defined streaks as a player performing above their average in a specific
 
 ##What we have found, what is similar and what is different?
 Amazingly, we see very similar trends across the NBA and the MLB. Aggregated across the last 3 seasons, we can see below that the distribution of streaks between the MLB and NBA are almost identical. Keep in mind that we define a below average game as going on a "0" game positive points streak. 
-```{r conclusions}
-library(knitr)
-include_graphics('./segmented_plots/h_streak_distribution.png')
-include_graphics('./segmented_plots/pts_streak_distribution.png')
-```
+
+![h_streak_distribution](segmented_plots/h_streak_distribution.png)
+![pts_streak_distribution](segmented_plots/pts_streak_distribution.png)
+
 Next, lets look at the top players across the NBA and MLB and take a deep dive into the top performers in each league respectively. By top players, we are going to look at the players with the highest median streaks, a measure of how "consistently streaky" a player is. Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA. 
 Further on in the analyis we will compare players with the highest maximum streaks and lead their leagues in a respective category. 
-```{r conclusions 2}
-include_graphics('/segmented_plots/best_MLB_streaks.png')
-include_graphics('/segmented_plots/AH_spike_plot.png')
-include_graphics('/segmented_plots/top5_h_streak.png')
 
-include_graphics('/segmented_plots/best_PRA_streaks.png')
-include_graphics('/segmented_plots/JH_spike_plot.png')
-include_graphics('/segmented_plots/top5_pts_streak.png')
-```
+![best_mlb_streaks](segmented_plots/best_MLB_streaks.png)
+![top5_h_streak](segmented_plots/top5_h_streak.png)
+![AH_spike_plot](segmented_plots/AH_spike_plot.png)
 
-
+![best_nba_streaks](segmented_plots/best_PRA_streaks.png)
+![top5_pts_streak](segmented_plots/top5_pts_streak.png)
+![JH_spike_plot](segmented_plots/JH_spike_plot.png)
 
 ## Interactive:
 In our interactive, we have a dashboard that shows the probability that a player will perform above their average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. We also have a summary of their streaks to see what the likelihood of them continuing the streak might be. To use it, select the sport's league you would like to analyze and then select your player of interest. Start with your favorite player!
