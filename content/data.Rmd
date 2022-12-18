@@ -145,12 +145,12 @@ library(shiny)
 ## create downloadButton in Rmd document
 downloadHandler(
   filename = function() { 
-    paste("data-", Sys.Date(), ".csv", sep = "")
+    paste("data-", Sys.Date(), ".R", sep = "")
   }, 
   content = function(file) {
     write.csv('/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R', file)
   },
-  outputArgs = list(label = "Download .csv")
+  outputArgs = list(label = "Download .R")
 )
 ```
 
