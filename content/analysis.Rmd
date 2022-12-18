@@ -270,8 +270,8 @@ ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=gr
 ## MLB Broad Analysis
 
 To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:
-<br>
 
+<br>
 ```{r echo=TRUE, results='hide'}
 library(tidyverse)
 library(modelr)
@@ -330,8 +330,8 @@ log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
 
 <br>
 The stat to determine a player’s value in this analysis is OPS. We then calculated among players with at least 500 plate appearances the percentage of their games where they recorded an OPS above the league average of .726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:
-<br>
 
+<br>
 ```{r echo=FALSE}
 model_21 <- lm(per ~ ops, data = sim_21)
 beta <- coef(model_21)
@@ -346,8 +346,8 @@ Fitting a linear regression to this data, we find a statistically significant co
 
 <br>
 To visualize this decision, here’s a game log of Jose Altuve, who is the most consistent player by our residual measure. The graph represents games where performed above or below his OWN average OPS, and the red line represents the MLB average:
-<br>
 
+<br>
 ```{r echo=FALSE}
 bat_data_day_21 %>% filter(player == "Jose Altuve") %>%
   group_by(game_date) %>%
@@ -366,8 +366,8 @@ bat_data_day_21 %>% filter(player == "Jose Altuve") %>%
 
 <br>
 And here’s a game of log of Nathaniel Lowe, who is the most streaky player:
-<br>
 
+<br>
 ```{r echo=FALSE}
 bat_data_day_21 %>% filter(player == "Nathaniel Lowe") %>%
   group_by(game_date) %>%
@@ -389,8 +389,8 @@ Now we turned to analyze if there was a single stat that could most accurately p
 
 <br>
 Out of all stats we tried, strikeouts was the best predictor as seen by this linear regression:
-<br>
 
+<br>
 ```{r echo=FALSE}
 lm_so <- lm(s_res_21 ~ so, data = log_sim_21)
 bt_so <- coef(lm_so)
@@ -402,8 +402,8 @@ ggplot(log_sim_21, aes(so, s_res_21)) + geom_point() +
 
 <br>
 As well as this logistic regression, where we labeled players as streaky or consistent by the SIGN of their residuals:
-<br>
 
+<br>
 ```{r echo=FALSE}
 log_model_so <- glm(streaky ~ so, data = log_sim_21, family = binomial)
 beta_so <- coef(log_model_so)
@@ -417,11 +417,11 @@ ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
 
 <br>
 So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.
-<br>
 
+<br>
 So how does this type of analysis work on NBA data? For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plotted a player’s Average Plus-Minus against their percentage of games above +2:
-<br>
 
+<br>
 ```{r echo=FALSE}
 load(here::here("dataset", "clean_nba_data.RData"))
 
@@ -463,11 +463,11 @@ ggplot(sim, aes(epm, per)) + geom_point() +
 
 <br>
 Also like our MLB analysis, we labeled players as either “streaky” or “consistent” based on their standardized residuals of the previous model. However, unlike our MLB analysis, we could not find many stats that could produce statistically significant results for predicting a player’s streakiness. The best one we could find was Usage Pct, which is a stat that measures how often a player handles the ball when his team is on offense.
-<br>
 
+<br>
 Here are the plots for our linear regression:
-<br>
 
+<br>
 ```{r echo=FALSE}
 lm <- lm(s_res ~ up, data = log_sim)
 bt <- coef(lm)
@@ -479,8 +479,8 @@ ggplot(log_sim, aes(up, s_res)) + geom_point() +
 
 <br>
 And logistic regression:
-<br>
 
+<br>
 ```{r echo=FALSE}
 log_model <- glm(streaky ~ up, data = log_sim, family = binomial)
 beta <- coef(log_model)
@@ -494,15 +494,14 @@ ggplot(log_sim, aes(up)) + geom_point(aes(y = streaky)) +
 
 <br>
 Intuitively, we can reason that players with the ball in their hands more often have more opportunities to affect the game in some way, meaning they are more likely to balance out their positives and negatives on the court, creating more consistent play on a game to game basis. However, it is still not a statistically significant predictor of streakiness.
-<br>
 
+<br>
 There are some limitations to this analysis. For one, baseball and basketball are different in a sense that there are more opportunities for players to contribute in a basketball game than a baseball game. Top NBA players take around 15-20 field goals and 5-10 free throws a game, whereas the top MLB players get around 4-5 plate appearances a game. Therefore, this type of analysis is better suited for baseball, because a player’s production in a single game can vary drastically from their season average more so than in basketball. In addition, it generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks.
-<br>
 
+<br>
 We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
+
 <br>
-
-
 ## Further MLB analysis
 For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn. 
 
