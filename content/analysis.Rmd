@@ -240,7 +240,7 @@ ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
 geom_point()+
-geom_line(aes(y=0)) + ggtitle('Stephan Curry Deviation From Average (2022)') +
+geom_line(aes(y=0)) + ggtitle('Stephen Curry Deviation From Average (2022)') +
 ylab('Points Deviated from Average') +
 xlab('Date')
 ggplot(scoring,aes(PRA_streak))+stat_ecdf(geom = "step") + labs(title = 'Stephen Curry Streak Length CDF', x='Streak Length', y='CDF')
@@ -329,7 +329,7 @@ log_sim_21 <- sim_21 %>% cbind(s_res_21) %>%
 
 <br>
 
-The primary stat that we used  to determine a player’s value in this analysis is OPS since it is generally considered among statisticians and managersas one of the better metrics of a player's worth. We  calculated among all qualifying players (at least 502 plate appearances) the percentage of their games where they recorded an OPS above the league average of 0.726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:
+The primary stat that we used  to determine a player’s value in this analysis is OPS since it is generally considered among statisticians and managers as one of the better metrics of a player's worth. We  calculated among all qualifying players (at least 502 plate appearances) the percentage of their games where they recorded an OPS above the league average of 0.726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:
 
 <br>
 
@@ -657,7 +657,7 @@ One of the main flaws in this analysis are the innate differences of basketball 
 # Modeling flaws/limitations:
 Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with  a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. OG Anunoby, another high performer, saw his role on the Raptors increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense. Because we define a streak as performing above their average over their whole career, players such as this may not have their innate "streakiness" accurately measured. This is further outlined by how much usage percentage factors into a players probability of scoring above average. Simply getting more opportunities to score will obviously affect a players offensive output. While we try to mitigate injuries and limit our analysis only to players to are scoring within their average usage percentage range, there may still be outliars. The true sense of players "streakiness" may not be captured by our statistical methods. 
 
-# Pace Modelling
+# Pace Modeling
   Though streaks are generally thought of as consecutive successes, we can also model a player's streakiness by his variation is pace throughout the season. This approach allows us to broaden our analysis from the game-to-game perspective analyzed above to the overall season. We can then compare this value to the player's total output to determine to what extent streakiness plays into final season numbers. To do so, we first modeled each player's cumulative stats throughout the season as a piece-wise linear function using the `segmented` library, where the slope of each segment represents the pace of the player during that set of games. For example, Salvador Perez's walks during the 2021 season can be neatly separated into 7 groups of games with different paces. 
 
 ![Salvador_Perez](/segmented_plots/Salvador_Perez_Walks.png)
