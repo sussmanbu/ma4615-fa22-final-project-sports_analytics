@@ -24,10 +24,10 @@ draft: false
 <p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team’s offense, which is relevant for determining how much player’s will score. For the KenPom team model used later, team offensive and defensive ratings are used along with pace. Pace is a metric for determining the amount of possesions and shot attempts the game will have. Defensive rating is a metric for determining how many points per 100 posessions a team is likely to allow.</p>
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.8     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.1
-## ✔ readr   2.1.2     ✔ forcats 0.5.2
+## ✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
+## ✔ tidyr   1.2.0      ✔ stringr 1.4.1 
+## ✔ readr   2.1.2      ✔ forcats 0.5.2 
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
@@ -634,9 +634,9 @@ ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=gr
 <p><br></p>
 <pre class="r"><code>library(tidyverse)
 library(modelr)
-library(ggrepel)</code></pre>
-<pre><code>## Warning: package &#39;ggrepel&#39; was built under R version 4.2.2</code></pre>
-<pre class="r"><code>stat_fct &lt;- function(x,y){
+library(ggrepel)
+
+stat_fct &lt;- function(x,y){
   ifelse(y &gt; 0, x/y, 0)
 }
 
@@ -777,16 +777,13 @@ log_sim_21 &lt;- sim_21 %&gt;% cbind(s_res_21) %&gt;%
 <p><img src="/analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p><br></p>
 <p>So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.</p>
-<<<<<<< HEAD
-<p><br>
-There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.</p>
-<p>##Further MLB analysis
-For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA.</p>
-<p>As we see below, the MLB has a very similar distribution of hits to points and points +rebounds+assists. Many of its top players interestingly seem to go on longer streaks more often than their NBA counterparts.</p>
-=======
 <p><br></p>
 <p>So how does this type of analysis work on NBA data? For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plotted a player’s Average Plus-Minus against their percentage of games above +2:</p>
-<p><br></p>
+<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+##Further MLB analysis
+For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA.
+=======
+<br></p>
 <pre><code>## 
 ## Call:
 ## lm(formula = per ~ epm, data = sim)
@@ -862,8 +859,9 @@ For the sake of consistency, we also attempted to apply the same analysis to the
 </div>
 <div id="further-mlb-analysis" class="section level2">
 <h2>Further MLB analysis</h2>
-<p>For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.</p>
->>>>>>> eb8a64e62dd65ef46716fc9b3759a70b4ad2d42b
+<p>For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; eb8a64e62dd65ef46716fc9b3759a70b4ad2d42b</p>
+<p>As we see below, the MLB has a very similar distribution of hits to points and points +rebounds+assists. Many of its top players interestingly seem to go on longer streaks more often than their NBA counterparts.</p>
 <p><img src="/analysis_files/figure-html/Final%20player%20EDA-1.png" width="672" /></p>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>
@@ -978,19 +976,11 @@ Unfortunately, we can’t use quite the same visualizations for the model, since
 </div>
 <div id="segmented-modelling" class="section level1">
 <h1>Segmented Modelling</h1>
-<pre class="r"><code>library(knitr)
-include_graphics(&#39;./segmented_plots/HR.png&#39;)</code></pre>
-<p><img src="segmented_plots/HR.png" width="791" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/Hit.png&#39;)</code></pre>
-<p><img src="segmented_plots/Hit.png" width="785" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/SO.png&#39;)</code></pre>
-<p><img src="segmented_plots/SO.png" width="781" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/BB.png&#39;)</code></pre>
-<p><img src="segmented_plots/BB.png" width="786" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/PTS.png&#39;)</code></pre>
-<p><img src="segmented_plots/PTS.png" width="776" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/RB.png&#39;)</code></pre>
-<p><img src="segmented_plots/RB.png" width="786" /></p>
-<pre class="r"><code>include_graphics(&#39;./segmented_plots/AST.png&#39;)</code></pre>
-<p><img src="segmented_plots/AST.png" width="784" /></p>
+<p>[HR_] (./segmented_plots/HR.png)
+[HIT] (./segmented_plots/Hit.png)
+[SO_] (./segmented_plots/SO.png)
+[BB_] (./segmented_plots/BB.png)
+[PTS] (./segmented_plots/PTS.png)
+[RB_] (./segmented_plots/RB.png)
+[AST] (./segmented_plots/AST.png)</p>
 </div>
