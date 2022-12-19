@@ -243,7 +243,7 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle('Stephan Curry Deviation From Average (2022)') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(PRA_streak))+stat_ecdf(geom = "step") + labs(title = 'Stephan Curry Streak Length CDF', x='Streak Length', y='CDF')
+ggplot(scoring,aes(PRA_streak))+stat_ecdf(geom = "step") + labs(title = 'Stephen Curry Streak Length CDF', x='Streak Length', y='CDF')
 
 
 ```
