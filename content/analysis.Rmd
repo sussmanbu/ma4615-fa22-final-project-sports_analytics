@@ -670,7 +670,7 @@ Initially, we had created an xgboost model to predict whether a player would sco
 # Segmented Modelling
   Though streaks are generally thought of as consecutive successes, we can also model a player's streakiness by his variation is pace throughout the season. We can then compare this value to the player's total output to determine to what extent streakiness plays into final season numbers. To do so, we first modeled each player's cumulative stats throughout the season as a piece-wise linear function using the `segmented` library, where the slope of each segment represents the pace of the player during that set of games. For example, Salvador Perez's walks can be neatly separated into 7 groups of games with different paces. 
 
-![Salvador_Perez](/segmented_plots/Salvador_Perez_Walks)
+![Salvador_Perez](/segmented_plots/Salvador_Perez_Walks.png)
 
   This analysis was performed for every qualifying MLB player's (>=502 plate appearances) cumulative hits, walks, strike outs, and home runs as well as every qualifying NBA player's (>=58 games and >= 15 minutes per game) cumulative points, assists, and rebounds. To perform the analysis, we used the `segmented` function to automatically infer the number and locations of segments. To prevent this function's known limitation of overestimating the number of segments, we made sure to increase the number of iterations and further filter the home runs data to only those players with at least 15 home runs such that the cumulative totals could reasonably be broken down into different paces. The results of the modelling for each player can be seen in the shiny application of the Big Picture page. 
 

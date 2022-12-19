@@ -8,7 +8,7 @@ draft: false
 ---
 
 ## Who collected the data and why:
-We aim to use NBA and MLB data to draw conclusions and comparisons on player and team streaks, both within the respective leagues and interleague. To do so we used Advanced Sports Analytics as our main source. Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks player data on a game to game basis. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet. Special thanks to the team at ASA for allowing for the free download of aggregated data. The data was collected for the purpose of creating projections for daily fantasy sports games, which the author offers as part of their premium monthly package. However, they offer free blogs, resources, and tools for free to help fans of sports betting make better predictions. 
+  We aim to use NBA and MLB data to draw conclusions and comparisons on player and team streaks, both within the respective leagues and interleague. To do so we used Advanced Sports Analytics as our main source. Advanced Sports Analytics is a website that collects data across multiple sports. Obviously, there exists mountains of data on stat tracking in sports online for the purpose of analyzing player/team performances, and this site specifically tracks player data on a game to game basis. Contributors to this website include but are not limited to: Brandon Adams, Stewart Gibson, Gus Elmashni, and Charles Mournet. Special thanks to the team at ASA for allowing for the free download of aggregated data. The data was collected for the purpose of creating projections for daily fantasy sports games, which the author offers as part of their premium monthly package. However, they offer free blogs, resources, and tools for free to help fans of sports betting make better predictions. 
 
 ## NBA Raw Data - Advanced Sports Analytics
 
@@ -16,7 +16,7 @@ We aim to use NBA and MLB data to draw conclusions and comparisons on player and
 https://www.advancedsportsanalytics.com/nba-raw-data
 
 ## Describing the NBA data:
-The data is divided in a tidy manner, where each column in the dataset is a different statistic or a game identifier. For instance, there is the team name, opponent name, date of the game, and unique game id. Each row is an individual players performance in that game. So one game will have mulitple rows comprising of the different players performances. The variable names are straight forward, and there is no ambiguity in their function. The key variables we use in the analysis that warrant highlighting are as follows, offensive rating, defensive rating, bpm, usage percentage, and true shooting percentage. 
+  The data is divided in a tidy manner, where each column in the dataset is a different statistic or a game identifier. For instance, there is the team name, opponent name, date of the game, and unique game id. Each row is an individual players performance in that game. So one game will have mulitple rows comprising of the different players performances. The variable names are straight forward, and there is no ambiguity in their function. The key variables we use in the analysis that warrant highlighting are as follows, offensive rating, defensive rating, bpm, usage percentage, and true shooting percentage. 
 From https://www.basketball-reference.com/about/ratings.html
 
 * Offensive rating(team)
@@ -35,9 +35,9 @@ From https://www.basketball-reference.com/about/ratings.html
   * the formula is PTS / (2 * TSA). True shooting percentage is a measure of shooting efficiency that takes into account field goals, 3-point field goals, and free throws. 
   
 ## Describe the cleaning process (NBA):
-Luckily, most of our data is already cleaned, processed, and ready to be used. However, some cleaning was still needed. At first, this dataset had duplicate rows and sporadically included games where a player played 0 minutes (meaning they did not play). The first step was to identify and remove these erroneous rows to find the proper number of games each player played.
+  Luckily, most of our data is already cleaned, processed, and ready to be used. However, some cleaning was still needed. At first, this dataset had duplicate rows and sporadically included games where a player played 0 minutes (meaning they did not play). The first step was to identify and remove these erroneous rows to find the proper number of games each player played.
 
-Finding the number of games was important since we wanted to look at the season averages for many of the statistics. For example, one of the metrics we used to assess a scoring streak for a player was the point differential from their season scoring average in a game. To do this, we needed to clean the data as described above, keeping only the games the player actually played in for an accurate count of the amount of games played in a season, and then dividing the sum of the points scored by that count. The below code shows the clean up process for removing the extra rows and additionally shows the process of finding the season scoring average of each player for the 2022 NBA season. 
+  Finding the number of games was important since we wanted to look at the season averages for many of the statistics. For example, one of the metrics we used to assess a scoring streak for a player was the point differential from their season scoring average in a game. To do this, we needed to clean the data as described above, keeping only the games the player actually played in for an accurate count of the amount of games played in a season, and then dividing the sum of the points scored by that count. The below code shows the clean up process for removing the extra rows and additionally shows the process of finding the season scoring average of each player for the 2022 NBA season. 
 
 
 ``` {r cleanup, eval=FALSE, include=TRUE}
@@ -62,7 +62,7 @@ nba_ppg_22 <- nba_data22 %>%
 ```
   
   
-`nba_data22` held the cleaned data that removed any extra rows. This newly created dataset could be used to calculate season average statistics. In the example above, the points per game were calculated for each player. This process was largely reproducible for many other statistics and guided the process to finding streaks, as we will show when diving deeper into our exploratory analysis. 
+  `nba_data22` held the cleaned data that removed any extra rows. This newly created dataset could be used to calculate season average statistics. In the example above, the points per game were calculated for each player. This process was largely reproducible for many other statistics and guided the process to finding streaks, as we will show when diving deeper into our exploratory analysis. 
   
 ## MLB Raw Data - Advanced Sports Analytics
 
@@ -71,7 +71,7 @@ https://www.advancedsportsanalytics.com/mlb-raw-data
 
 
 ## Describing the MLB Data:
-We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:
+  We decided to focus primarily on players’ offensive production because their stats are more easily quantifiable than pitching and defensive stats. Our relevant variables in this dataset include counting stats for certain players in a game:
 
 
 * player: player’s name
@@ -97,10 +97,10 @@ We also calculated some other stats not included in the original dataset like:
 * ops: on base plus slugging (obp + slg)
 
 ## Describing the cleaning process (MLB):
-Most of the cleaning we did with this dataset was with the tidyverse package in R, and we dealt with removing missing values for plate appearances, because we noticed the dataset included rows of players who did not play in certain games. That cleaning can be found in our `load_and_clean_data.R` file. As previously mentioned, we also added new variables as well.
+  Most of the cleaning we did with this dataset was with the tidyverse package in R. Because we noticed the dataset included rows of players who did not play in certain games, we removed rows were a player had no plate appearances. That cleaning can be found in our the link to our cleaned data file. As previously mentioned, we also added new variables as well.
 
 
-We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below.
+  We created multiple data tables to execute our analysis like `bat_data_21` which added our new counting stats, `ops_data_21` which added our new rates stats for season totals, `MLB_avg_21` which was a small dataset of three values used to calculate the MLB average rate stats, and `bat_data_day` which combined rates stats for players across the entire season with game by game stats. The code can be seen below.
 
 
 ```{r MLB data, eval=FALSE, include=TRUE}
@@ -137,7 +137,7 @@ bat_data_day_21 <- left_join(bat_data_21, ops_data_21, by = "player")
 ```
 
 ## Combining the data:
-Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB.
+  Because baseball and basketball are different sports and have different stats, number of games, and pace of play, we do not think it would be helpful or relevant to merge the data in the traditional sense. However, we believe that key comparisons can be drawn between the two sports, especially in the case of the scope of our project, analyzing streakiness in players and teams. For the purposes of comparing the two leagues, we split each MLB season consisting of 162 games into the front half and second half and compare that to the 82-game season in the NBA. Our initial intuition is that a more or less direct comparison can be drawn between an NBA players number of consecutive games scoring above average and an MLB players number of consecutive games with a hit. We are also interested in drawing comparisons between the two mutual “assist” stats in the MLB and NBA, the assist in the NBA and the RBI stat for the MLB. Finally, we compare the effects of streaks on total season performance in both leagues and determine which stats and league are more effected by streaks.
 
 ## Link to load_and_clean_data.R:
 
@@ -174,6 +174,10 @@ mlbdata %>%
 
 ```
 
+## Additional R Packages
+  We used the `segmented` package for our linear segment modelling that is detailed in the analysis section. This package allows for the fitting of both a fixed number of piece-wise linear segments and automatic inference of the number of linear segments. It performs a changepoint analysis along with regression fitting of the data. For further details about tis package, refer to its use manual at:
+  
+https://cran.r-project.org/web/packages/segmented/segmented.pdf
 
-##Disclaimer
-While Sports Betting can be a fun way to test analytics models and enjoy a game, it does pose a risk.Although the data and our analysis is not intended for the purpose of sports betting, the conclusions that we draw from it could certainly be used for that purpose. Our work does not have a financial incentive behind it, and we are conducting research out of curiosity and  for academic pursuits. Our models and insights are not intended to be used as definitive betting methods, and should not be abused. If you struggle with a gambling addiction, please visit https://www.1800gambler.net/
+## Disclaimer
+  While Sports Betting can be a fun way to test analytics models and enjoy a game, it does pose a risk. Although the data and our analysis is not intended for the purpose of sports betting, the conclusions that we draw from it could certainly be used for that purpose. Our work does not have a financial incentive behind it, and we are conducting research out of curiosity and for academic pursuits. Our models and insights are not intended to be used as definitive betting methods, and should not be abused. If you struggle with a gambling addiction, please visit https://www.1800gambler.net/
