@@ -37,11 +37,22 @@ Further on in the analyis we will compare players with the highest maximum strea
 <p><img src="/segmented_plots/best_PRA_streaks.png" alt="best_nba_streaks" />
 <img src="/segmented_plots/top5_pts_streak.png" alt="top5_pts_streak" />
 <img src="/segmented_plots/JH_spike_plot.png" alt="JH_spike_plot" /></p>
+<p>Finally, we look at how pace streakiness predicts total seasonal performance for both leagues.</p>
+<p>MLB
+<img src="/segmented_plots/MLB_Values.png" alt="MLB_Values" /></p>
+<p>NBA
+<img src="/segmented_plots/NBA_Values.png" alt="NBA_Values" />
+In both leagues, the main metric of offense (hits and points) are relatively unpredicted by streakiness. Additionally, with the exception of assists in the NBA, player streakiness accounts for no more than a quarter of overall total. This suggests that though streaks help push the end of season totals up a little, good stats really indicate a good player in both leagues. With regards to assist, because assists are inherently dependent on other players, itis not surprising that seasonal assist totals are heavilly connected to the randomness of streaks. That said, both the R^2 and the Corr coefficients are noticeably higher in the NBA than the MLB. This suggest that streaks may play a larger role overall in the NBA than the MLB, which makes sense because the MLB’s longer season reduces the chance of statistical outliers.</p>
 </div>
 <div id="interactive" class="section level2">
 <h2>Interactive:</h2>
-<p>In our interactive, we have a dashboard that shows the probability that a player will perform above their average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. We also have a summary of their streaks to see what the likelihood of them continuing the streak might be. To use it, select the sport’s league you would like to analyze and then select your player of interest. Start with your favorite player!</p>
-<pre><code>## Warning: package &#39;rsconnect&#39; was built under R version 4.2.2</code></pre>
+<p>In our interactive, we have a dashboard that shows the following:</p>
+<ol style="list-style-type: decimal">
+<li><p>The cumulative pace of each player in various stats (MLB: home runs, hit, strike outs, and walks; NBA: points, assists,rebounds) broken into intervals of different pace. This allows you to see each player’s stat totals versus his streakiness as the variation in pace throughout the season.</p></li>
+<li><p>We also have a summary of their streaks to see what the likelihood of them continuing the streak might be.</p></li>
+<li><p>The probability that a player will perform above his average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. This shows how relevant metrics affect a player’s chances of streaky playing.</p></li>
+</ol>
+<p>To use our interactive, select the sport’s league you would like to analyze and then select your player of interest. Start with your favorite player and have fun!</p>
 <iframe src="https://leose.shinyapps.io/final_interactive/?showcase=0" width="672" height="600px" data-external="1">
 </iframe>
 </div>
