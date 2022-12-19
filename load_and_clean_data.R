@@ -20,7 +20,7 @@ save(data22,file = here::here("dataset/clean_nba_data22_app.RData"))
 
 
 load(here::here("dataset", "MLB_bat_data_2021.RData"))
-all_data_mlb <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>% ungroup()
+all_data_mlb <-MLB_bat_data_2021 %>% group_by(player)  %>% mutate(change_net = h - mean(h),h_direction  = sign(change_net)) %>% distinct(player,game_id,.keep_all = TRUE) %>%mutate(h_streak=ifelse(h_direction >0,streak_run(h_direction),0)) %>%mutate(ba=sum(h)/sum(pa))%>% ungroup()
 
 mlb_streak <-all_data_mlb$h_streak
 indices<-which(diff(sign(diff(mlb_streak)))==-2)+1

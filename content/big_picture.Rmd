@@ -58,7 +58,7 @@ In our interactive, we have a dashboard that shows the following:
 
 2. A summary of their streaks to see what the likelihood of them continuing the streak might be.
 
-3. The probability that a player will perform above his average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. This shows how relevant metrics affect a player's chances of streaky playing.
+3. The probability that a player will perform above his average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs,strikeouts,and plate appearances in baseball. This shows how relevant metrics affect a player's chances of streaky playing.To note, for the MLB, this model is slightly different in the analysis page by including homeruns and strikeouts, but leads to better visualization. 
 
 To use our interactive, select the sport's league you would like to analyze and then select your player of interest. Start with your favorite player and have fun!
 

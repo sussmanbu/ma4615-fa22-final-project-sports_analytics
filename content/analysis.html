@@ -14,14 +14,14 @@ draft: false
 
 <div id="motivations-of-our-data-analysis" class="section level2">
 <h2>Motivations of Our Data Analysis:</h2>
-<p>What motivates our analysis is a desire to examine our relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. We define a streak as the measure of the number of consecutive games a player performs above their average in a specific statistic. We define streakiness as a players propensity to perform above their average, and to what degree over the course of a season. We specifically focus on positive streak because our goal is to understand player success as opposed to player failure. Additionally, we define pace streakiness as the variation in a player’s statistical pace throughout the season. The main variables that we are interested in analyzing are hits, walks, home runs and strikeouts in the MLB, and points, rebounds, and assists in the NBA. To accomplish this goal, we have split the project into two separate tasks. We first performed analysis on both the NBA and MLB data separately to gain insight into how streaks are distributed in their respective leagues on a game-to-game basis. Once this was completed, we combined our findings to determine whether any relationships exist between baseball and basketball players. Finally, we take a step back and look at streakiness on the seasonal level by looking at pace variation to compare the effects of streakiness on overall performance in both leagues.</p>
+<p>What motivates our analysis is a desire to examine the relationship between trends in both the MLB and NBA, and see what comparisons we can draw between the two leagues, especially in regards to player streakiness. We define a streak as the measure of the number of consecutive games a player performs above their average in a specific statistic. We define streakiness as a players propensity to perform above their average, and to what degree over the course of a season. We specifically focus on positive streaks because our goal is to understand player success as opposed to player failure. Additionally, we define pace streakiness as the variation in a player’s statistical pace throughout the season. The main variables that we are interested in analyzing are hits, walks, home runs and strikeouts in the MLB, and points, rebounds, and assists in the NBA. To accomplish this goal, we have split the project into two separate tasks. We first performed analysis on both the NBA and MLB data separately to gain insight into how streaks are distributed in their respective leagues on a game-to-game basis. Once this was completed, we combined our findings to determine whether any relationships exist between baseball and basketball players. Finally, we take a step back and look at streakiness on the seasonal level by looking at pace variation to compare the effects of streakiness on overall performance in both leagues.</p>
 </div>
 <div id="nba-eda" class="section level2">
 <h2>NBA EDA:</h2>
 </div>
 <div id="identifying-streaks" class="section level2">
 <h2>Identifying Streaks:</h2>
-<p>For the NBA data, we first wanted to identify the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we had to calculate the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. This provided the appropriate amount of games played by each player. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player, respectively. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team’s offense, which is relevant for determining how much player’s will score. For the KenPom team model used later, team offensive and defensive ratings are used along with pace. Pace is a metric for determining the amount of possesions and shot attempts the game will have. Defensive rating is a metric for determining how many points per 100 possessions a team is likely to allow.</p>
+<p>For the NBA data, we first identified the longest streaks in the NBA. This would help us get a sense of which players had the longest streaks for a particular statistic in the league in a given season. The first statistic to look at was points. To assess the longest scoring streaks in the league, we calculated the points per season for each player. The dataset contains game-by-game data for each player, but does not account for entire season statistics. This meant that some cleaning and calculations were necessary. First, as stated in the Data page, any erroneous extra rows were removed. Then the season average in points scored was caclulated by dividing the total points scored by the total number of games played for each player. The field goal percentage was also calculated by dividing the total number of field goal made by the total number offield goal attempts. As seen in the table below, the table now listed the season points and field goal average, grouped by each player. Similarly, the assists and rebounds per game were also calculated. Additionally, we used some advanced metrics to aid us in our inference and analysis. In particular, we use true shooting percentage, offensive rating, and usage rate. TS% is a weighted field goal percentage that accounts for the difference in two and three point shots, and adjusts for free throws. Offensive rating is a metric that uses a per 100 posessions basis for offensive capability including TS%, but it also accounts for turnovers. Usage percentage is a metric of how often the player is used in a team’s offense, which is relevant for determining how much player’s will score.</p>
 <table style="width:100%;">
 <colgroup>
 <col width="24%" />
@@ -124,7 +124,7 @@ draft: false
 </tr>
 </tbody>
 </table>
-<p>We wanted to take a look at the most efficient scorers amongst the top scorers. Temporarily setting a threshold for players who scored at least 20 points per game, we made a scatterplot that visualized this relationship to get a sense of who we might expect to have the longest streaks, seen below.</p>
+<p>We will take a look below at the most efficient top scorers. Temporarily setting a threshold for players who scored at least 20 points per game, we made a scatterplot that visualized this relationship to get a sense of who we might expect to have the longest streaks, seen below.</p>
 <p><img src="/analysis_files/figure-html/Rplot01.png" width="400" /></p>
 <p>We see above that Lebron James and Joel Embiid scored the most points in the 2022 season, and that they were among the most efficient players in this pool alongside Giannis Antetokounmpo, Nikola Jokic, and Kevin Durant. Because of their prolific and efficient scoring, we at first expected them to be the among the players with the longest streaks. However, after further investigation, we determined that these players were fairly consistent and instead hypothesized that the streakiest players (and therefore the players with the longest streaks) would be those with a lower usage rates and lower scoring - possibly role players who were infrequently given a chances to score above their usual means.</p>
 <p>Because we score streaks based on the individual game performance AGAINST their season average, we needed to join the calculated season averages to the entire game-by-game data, as shown below. Additionally, in this merged dataset, we calculated the deviation per game for each of the three following statistics: points, assists, and rebounds. The deviation was calculated as the statistic from one game substracted by that player’s season average in that statistic. For example, 5 <code>pts</code> scored in one game substracted from 10 <code>ppg</code> will result in a <code>deviationppg</code> of -5.</p>
@@ -491,8 +491,8 @@ draft: false
 </div>
 <div id="further-analysis-of-streaks" class="section level1">
 <h1>Further analysis of streaks:</h1>
-<p>Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This also has the added benefit of mitigating players who normally do not have a significant role on their team, but feature more prominently in the offense because of injuries/trades, as these players would have a relatively low season average due to not playing much, and then consistently beating this mark once they have an opportunity to do so. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. Additionally, we will not just be examining a player’s max streak, but rather the players with the highest median streak length. This is a more informative metric, as any one player can have a big run once in a season, but it is much more indicative of a player’s general streakiness if he consistently performs above his averages.</p>
-<p>In these graphs we analyze the relationship between streaks defined by just points scored, and a combination of points, rebounds, and assists. The reasoning behind this is that points scored are not the only statistic of value, and many NBA players occupy different roles within an offense that may lead them to play a style of basketball that leads to more rebounds and assists. We theorized that by combining points rebounds and assists, we would represent big men and players whose value does not come from any one area more equitably in the data. Additionally, we are defining a streak as having started once a player performs above their average in 1 game. If the previous game resulted in a below average performance, they will have a “0” game pts streak. As we will see below, most of the time the players score below their average. However, for the sake of limiting the scope of our analysis, we are not interested in determining negative streaks, and will instead focus on instances of positive streaks. We also want to try to account for the fact that some players will score above average only because they get more opportunities to score. In this section, we will calculate the average usage percentage for a player in a given year, and only include the games where the usage rate falls into this range. This should give us a better sense of the TRUE streakiness of a player in the NBA.
+<p>Of note, for this further analysis, we will only be considering those players who average greater than 25 minutes a game to get the sample size into a managable state. We further break down these games into only those where the target player played greater than 15 minutes. This is to account for players that might have gotten hurt early in a game, or benched for being in foul trouble, early ejections, unfavorable matchups etc. By allowing them to play at least 15 minutes, we are giving the player the best opportunity to match their season average. This also has the added benefit of mitigating players who normally do not have a significant role on their team, but feature more prominently in the offense because of injuries/trades, as these players would have a relatively low season average due to not playing much, and then consistently beating this mark once they have an opportunity to do so. This data is also from 2019-2022, so it is possible for a player to continue their streaks into a new season. Additionally, we will not just be examining a player’s max streak, but rather the players with the highest median streak length. This is a more informative metric, as any one player can have a big run once in a season, but it is much more indicative of a player’s general streakiness if he consistently performs above his averages. We also want to try to account for the fact that some players will score above average only because they get more opportunities to score. We calculate the average usage percentage for a player in a given year, and only include the games where the usage rate falls into this range. This should give us a better sense of the TRUE streakiness of a player in the NBA. Also to note, the data cleaning and statistics are created in a similar but different way from above.</p>
+<p>In these graphs we analyze the relationship between streaks defined by just points scored, and a combination of points, rebounds, and assists. The reasoning behind this is that points scored are not the only statistic of value, and many NBA players occupy different roles within an offense that may lead them to play a style of basketball that leads to more rebounds and assists. We theorized that by combining points rebounds and assists, we would represent big men and players whose value does not come from any one area more equitably in the data. Additionally, we are defining a streak as having started once a player performs above their average in 1 game. If the previous game resulted in a below average performance, they will have a “0” game pts streak. As we will see below, most of the time the players score below their average. However, for the sake of limiting the scope of our analysis, we are not interested in determining negative streaks, and will instead focus on instances of positive streaks.
 <img src="/analysis_files/figure-html/further%20EDA-1.png" width="672" /></p>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   0.000   0.000   0.000   1.045   1.000  20.000</code></pre>
@@ -501,12 +501,12 @@ draft: false
 ##   0.000   0.000   0.000   1.118   1.000  21.000</code></pre>
 <p>Interestingly, there does not seem to much of a defined difference in the two distributions, and that a players streakiness can be reasonably well measured by one or the other. Next, lets take a closer look at some individual players and see how they are performing in 2022 by both points and P+R+A
 <img src="/analysis_files/figure-html/player%20analysis-1.png" width="672" /><img src="/analysis_files/figure-html/player%20analysis-2.png" width="672" /></p>
-<p>Below, we compare two of the NBA’s streakiest players, OG Anunoby of the Toronto Raptors and Josh Hart of the Portland Trailblazers to Stephen Curry, one of the leagues best overall players. In the games that Steph managed to play in 2022 due to injury, he actually went on a 4 game above average streak. But he could not consistently score above his average consistently.</p>
+<p>Below, we compare two of the NBA’s streakiest players, OG Anunoby of the Toronto Raptors and Josh Hart of the Portland Trailblazers to Stephen Curry, one of the leagues best overall players. In the games that Steph managed to play in 2022 due to injury, he actually went on a 2 game above average streak. But he could not consistently score above his average consistently, wheras OG and Josh Hart consistently went on longer runs.</p>
 <p><img src="/analysis_files/figure-html/specific%20player%20analysis-1.png" width="672" /><img src="/analysis_files/figure-html/specific%20player%20analysis-2.png" width="672" /><img src="/analysis_files/figure-html/specific%20player%20analysis-3.png" width="672" /><img src="/analysis_files/figure-html/specific%20player%20analysis-4.png" width="672" /><img src="/analysis_files/figure-html/specific%20player%20analysis-5.png" width="672" /><img src="/analysis_files/figure-html/specific%20player%20analysis-6.png" width="672" /></p>
 </div>
 <div id="modeling-and-inference" class="section level1">
 <h1>Modeling and inference:</h1>
-<p>To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables change. Due to the massive number of variables present in the NBA data, we did not perform any model selection for the NBA model, but we handpicked variables that we believed to be the most relevant. Below, we can see that the biggest individual factor in determining whether or not a player will score above their average in many cases is actually their usage percentage. This is somewhat intuitive, as the opportunity to score is a key step to scoring above average. This is further validated by some of the top performers, such as Josh Hart and OG Anunoby, who consistently scored above their average once they were given more offensive responsibilities.</p>
+<p>To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables change. Due to the massive number of variables present in the NBA data, we did not perform any model selection for the NBA model, but we handpicked variables that we believed to be the most relevant. Below, we can see that even after accounting for different usage percentages, one of the biggest individual factor in determining whether or not a player will score above their average in many cases is actually their usage percentage. This is somewhat intuitive, as the opportunity to score is a key step to scoring above average. This is further validated by some of the top performers, such as Josh Hart and OG Anunoby, who consistently scored above their average once they were given more offensive responsibilities.As a result of this finding, we will look into more ways to quantify a player’s streakiness</p>
 <pre><code>## 
 ## Call:
 ## glm(formula = factor(pts_direction) ~ ts_pct + usg_pct + usg_pct:ts_pct, 
@@ -538,6 +538,7 @@ draft: false
 <h2>MLB Broad Analysis</h2>
 <p>To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not.</p>
 <p><br></p>
+<pre><code>## Warning: package &#39;ggrepel&#39; was built under R version 4.2.2</code></pre>
 <pre><code>## Rows: 61316 Columns: 24
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;
@@ -548,7 +549,7 @@ draft: false
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 <p><br></p>
-<p>The primary stat that we used to determine a player’s value in this analysis is OPS since it is generally considered one of the better metrics of a player’s worth. We calculated among all qualifying players (at least 502 plate appearances) the percentage of their games where they recorded an OPS above the league average of 0.726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:</p>
+<p>The primary stat that we used to determine a player’s value in this analysis is OPS since it is generally considered among statisticians and managersas one of the better metrics of a player’s worth. We calculated among all qualifying players (at least 502 plate appearances) the percentage of their games where they recorded an OPS above the league average of 0.726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:</p>
 <p><br></p>
 <pre><code>## 
 ## Call:
@@ -633,10 +634,8 @@ draft: false
 <p>So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.</p>
 <p><br></p>
 <p>So how does this type of analysis work on NBA data? For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plotted a player’s Average Plus-Minus against their percentage of games above +2:</p>
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-##Further MLB analysis
+<p>##Further NBA analysis
 For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA.
-=======
 <br></p>
 <pre><code>## 
 ## Call:
@@ -713,18 +712,43 @@ For the sake of consistency, we also attempted to apply the same analysis to the
 </div>
 <div id="further-mlb-analysis" class="section level2">
 <h2>Further MLB analysis</h2>
-<p>For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; eb8a64e62dd65ef46716fc9b3759a70b4ad2d42b</p>
+<p>For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.</p>
 <p>As we see below, the MLB has a very similar distribution of hits to points and points +rebounds+assists. Many of its top players interestingly seem to go on longer streaks more often than their NBA counterparts.</p>
 <p><img src="/analysis_files/figure-html/Final%20player%20EDA-1.png" width="672" /></p>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>
 <p><img src="/analysis_files/figure-html/Final%20player%20EDA-2.png" width="672" /></p>
-<pre><code>## (Intercept)          pa         rbi   home_runs          so 
-##  0.15367939 -0.02152003  1.17322956  0.86338277 -0.45927311</code></pre>
-<pre><code>## (Intercept)          pa         rbi   home_runs          so 
-##   1.1661170   0.9787099   3.2324151   2.3711683   0.6317427</code></pre>
-<p><img src="/analysis_files/figure-html/Final%20player%20EDA-3.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-4.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-5.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-6.png" width="672" /><img src="/analysis_files/figure-html/Final%20player%20EDA-7.png" width="672" /></p>
+<p>Below, we look at the top performers in the MLB. As we saw above, Austin Hays and Yoan Moncada are the top performers in the MLB, with pitcher Yu Darvish giving us the lowest streakiness, most likely due to his low number of plate appearances.</p>
+<pre class="r"><code>scoring&lt;-all_data_mlb %&gt;% filter(player == &#39;Austin Hays&#39;) %&gt;%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill=&quot;red&quot;, col=&quot;red&quot;, alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill=&quot;green&quot;, col=&quot;green&quot;, alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(&#39;Austin Hays Hits Deviated from Average&#39;) +
+ylab(&#39;Hits Deviated from Average&#39;) +
+xlab(&#39;Date&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/contuining%20MLB%20player%20analysis%202-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(scoring,aes(h_streak))+stat_ecdf(geom = &quot;step&quot;)+ labs(title=&#39;Austin Hays Hits Streak CDF&#39;, x=&quot;Hits Streak&quot;, y=&quot;CDF&quot;) </code></pre>
+<p><img src="/analysis_files/figure-html/contuining%20MLB%20player%20analysis%202-2.png" width="672" /></p>
+<pre class="r"><code>scoring&lt;-all_data_mlb %&gt;% filter(player == &#39;Yoan Moncada&#39;) %&gt;%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill=&quot;red&quot;, col=&quot;red&quot;, alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill=&quot;green&quot;, col=&quot;green&quot;, alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(&#39;Yoan Moncada Hits Deviated from Average&#39;) +
+ylab(&#39;Hitss Deviated from Average&#39;) +
+xlab(&#39;Date&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/contuining%20MLB%20player%20analysis%202-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(scoring,aes(h_streak))+stat_ecdf(geom = &quot;step&quot;) + labs(title=&#39;Yoan Moncada Hits Streak CDF&#39;, x=&quot;Hits Streak&quot;, y=&quot;CDF&quot;)  </code></pre>
+<p><img src="/analysis_files/figure-html/contuining%20MLB%20player%20analysis%202-4.png" width="672" /></p>
+<pre class="r"><code>scoring&lt;-all_data_mlb %&gt;% filter(player == &#39;Yu Darvish&#39;) %&gt;%select(change_net,game_date,h_streak)
+ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
+geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill=&quot;red&quot;, col=&quot;red&quot;, alpha=0.5) +
+geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill=&quot;green&quot;, col=&quot;green&quot;, alpha=0.5) +
+geom_point()+
+geom_line(aes(y=0)) + ggtitle(&#39;Yu Darvish Hits Deviated from Average&#39;) +ylab(&#39;Hits Deviated from Average&#39;) +
+xlab(&#39;Date&#39;)</code></pre>
+<p><img src="/analysis_files/figure-html/contuining%20MLB%20player%20analysis%202-5.png" width="672" /></p>
 </div>
 <div id="similarities-between-the-nba-and-mlb" class="section level2">
 <h2>Similarities between the NBA and MLB</h2>
@@ -734,11 +758,11 @@ For the sake of consistency, we also attempted to apply the same analysis to the
 ##   0.000   0.000   0.000   1.045   1.000  20.000</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>
-<p>Next, lets look at the top performers in the MLB and the NBA. Austin Hays had the highest average streak length in the MLB, and Josh Hart had the second highest in the same category in the NBA. Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA.
+<p>Next, lets look at the top performers in the MLB and the NBA. Austin Hays had the highest median streak length in the MLB, and Josh Hart had the second highest in the same category in the NBA. Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA.
 <img src="/analysis_files/figure-html/comparison%202-1.png" width="672" /><img src="/analysis_files/figure-html/comparison%202-2.png" width="672" /><img src="/analysis_files/figure-html/comparison%202-3.png" width="672" /><img src="/analysis_files/figure-html/comparison%202-4.png" width="672" />
 Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well. Austin Hays however, completes more sustained runs of games with hits, whereas Josh Hart seems to have gone on only a couple longer runs.
-For the final comparison, we will use the models we have trained to see if the predictive capabilities of the model are similar.
-Unfortunately, we can’t use quite the same visualizations for the model, since the range of the number of hits is greatly constrained compared to the offensive rating of a player. In a further analysis, maybe batting average would provide the range necessary. We see that the NBA model is more accurate in its predictive capabilities for the top players, but interestingly less adept at predicting all values across the NBA. Another surprising result is in the summary statistics of each model. All model predictors have 3 star significant codes except for true shooting percentage. This seems counter intuitive, as how well a player shoots on a given night should factor very heavily into how much above average they perform. However, in our analysis we thought that a players given offensive production is largely determined by how often they have a chance to shoot AND their shooting percentage, so we included an interaction term between true shooting percentage and usage percentage to factor in this intuition.</p>
+For the final comparison, we will use the models we have trained to see if the predictive capabilities of the models are similar.
+Unfortunately, we can’t use quite the same visualizations for the model, since the range of the number of hits is greatly constrained compared to the offensive rating of a player. We see that the NBA model is more accurate in its predictive capabilities for the top players. This is most likely because just the batting average,walks,and plate appearances are not enough to capture a players hit capabilities. Another surprising result is in the summary statistics of each model. All model predictors have 3 star significant codes except for true shooting percentage. This seems counter intuitive, as how well a player shoots on a given night should factor very heavily into how much above average they perform. However, in our analysis we thought that a players given offensive production is largely determined by how often they have a chance to shoot AND their shooting percentage, so we included an interaction term between true shooting percentage and usage percentage to factor in this intuition. Ultimately, it still appears that the opportunity to score both in baseball and basketball seems to be the most relevant statistic in this analysis.</p>
 <pre><code>## 
 ## Call:
 ## glm(formula = factor(pts_direction) ~ ts_pct + usg_pct + usg_pct:ts_pct, 
@@ -767,31 +791,32 @@ Unfortunately, we can’t use quite the same visualizations for the model, since
 <pre><code>## [1] 74.03197</code></pre>
 <pre><code>## 
 ## Call:
-## glm(formula = factor(h_direction) ~ pa + rbi + home_runs + so, 
-##     family = binomial(), data = .)
+## glm(formula = factor(h_direction) ~ pa + ba + bb + so, family = binomial(), 
+##     data = .)
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -3.6873  -1.0420   0.2721   1.1129   1.9818  
+## -2.7417  -0.9917  -0.2283   0.9644   4.9077  
 ## 
 ## Coefficients:
-##             Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)  0.15368    0.01615   9.513  &lt; 2e-16 ***
-## pa          -0.02152    0.00568  -3.789 0.000152 ***
-## rbi          1.17323    0.02392  49.052  &lt; 2e-16 ***
-## home_runs    0.86338    0.05601  15.414  &lt; 2e-16 ***
-## so          -0.45927    0.01227 -37.439  &lt; 2e-16 ***
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)   0.862020   0.029734   28.99   &lt;2e-16 ***
+## pa            0.790980   0.009259   85.42   &lt;2e-16 ***
+## ba          -13.695735   0.185291  -73.92   &lt;2e-16 ***
+## bb           -0.666143   0.018179  -36.64   &lt;2e-16 ***
+## so           -0.722153   0.012549  -57.55   &lt;2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 84756  on 61313  degrees of freedom
-## Residual deviance: 75233  on 61309  degrees of freedom
-## AIC: 75243
+##     Null deviance: 78703  on 56777  degrees of freedom
+## Residual deviance: 67087  on 56773  degrees of freedom
+##   (4536 observations deleted due to missingness)
+## AIC: 67097
 ## 
-## Number of Fisher Scoring iterations: 5</code></pre>
-<pre><code>## [1] 32.64695</code></pre>
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## [1] 1524531</code></pre>
 </div>
 <div id="flawslimitations" class="section level2">
 <h2>Flaws/Limitations:</h2>
@@ -800,7 +825,7 @@ Unfortunately, we can’t use quite the same visualizations for the model, since
 </div>
 <div id="modeling-flawslimitations" class="section level1">
 <h1>Modeling flaws/limitations:</h1>
-<p>Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. OG Anunoby, another high performer, saw his role on the Raptors increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense. Because we define a streak as performing above their average over their whole career, players such as this may not have their innate “streakiness” accurately measured. This is further outlined by how much usage percentage factors into a players probability of scoring above average. Simply getting more opportunities to score will obviously affect a players offensive output. While we try to mitigate injuries and limit our analysis only to players to are scoring within their average usage percentage range, there may still be outliars.</p>
+<p>Initially, we had created an xgboost model to predict whether a player would score above their average. However, this type of model does not offer much interpretability so we went with a logistic regression model. Additionally, we are assuming that streakiness can be explained purely by the stats we have been given. In reality, these are humans with their own personal motivations, weaknesses, sick days, etc. For example, we know certain great players such as Kobe Bryant and Michael Jordan have performed some of their greatest statistical feats due to grudges, sense of pride, and feeling insulted by other players who doubted their ability. Other players, such as Isaiah Thomas of the celtics, dedicated his most statistically positive season to his sister who had tragically passed away. It is difficult to capture these in person motivations, and they have not been accounted for. Another initial inherent limitation is that we are not taking into account some factors that could have an impact on player performance within their team. For example, one of the highest performers in the NBA in our analysis is Josh Hart. What we fail to take into account is that Josh Hart was traded from the New Orleans Pelicans to the Portland Trailblazers in the middle of the 2022 season. His role changed from that of a bench player, to a main scorer and contributor for his team. OG Anunoby, another high performer, saw his role on the Raptors increase drastically as the team began looking to him for more offensive production as his role changed from a developing rookie to a core part of a mature NBA offense. Because we define a streak as performing above their average over their whole career, players such as this may not have their innate “streakiness” accurately measured. This is further outlined by how much usage percentage factors into a players probability of scoring above average. Simply getting more opportunities to score will obviously affect a players offensive output. While we try to mitigate injuries and limit our analysis only to players to are scoring within their average usage percentage range, there may still be outliars. The true sense of players “streakiness” may not be captured by our statistical methods.</p>
 </div>
 <div id="pace-modelling" class="section level1">
 <h1>Pace Modelling</h1>

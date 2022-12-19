@@ -5,9 +5,9 @@ account: leose
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 7884041
-bundleId: 6636356
+bundleId: 6655172
 url: https://leose.shinyapps.io/final_interactive/
-when: 1671028495.06462
-lastSyncTime: 1671028495.06467
+when: 1671482779.73834
+lastSyncTime: 1671482779.73836
 asMultiple: FALSE
 asStatic: FALSE
