@@ -631,6 +631,7 @@ ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=gr
 <div id="mlb-broad-analysis" class="section level2">
 <h2>MLB Broad Analysis</h2>
 <p>To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not. The following is most of the data cleaning for this analysis:</p>
+<p><br></p>
 <pre class="r"><code>library(tidyverse)
 library(modelr)
 library(ggrepel)</code></pre>
@@ -692,7 +693,9 @@ s_res_21 &lt;- rstandard(model_21)
 
 log_sim_21 &lt;- sim_21 %&gt;% cbind(s_res_21) %&gt;%
   mutate(streaky = ifelse(s_res_21 &lt; 0, 1, 0))</code></pre>
+<p><br></p>
 <p>The stat to determine a player’s value in this analysis is OPS. We then calculated among players with at least 500 plate appearances the percentage of their games where they recorded an OPS above the league average of .726 and plotted it against their total OPS for the season. Intuitively, we would expect players with higher overall OPS to have a higher percentage of games where they performed above league average, and that’s what we see here:</p>
+<p><br></p>
 <pre><code>## 
 ## Call:
 ## lm(formula = per ~ ops, data = sim_21)
@@ -712,15 +715,21 @@ log_sim_21 &lt;- sim_21 %&gt;% cbind(s_res_21) %&gt;%
 ## Multiple R-squared:  0.7164, Adjusted R-squared:  0.7143 
 ## F-statistic:   336 on 1 and 133 DF,  p-value: &lt; 2.2e-16</code></pre>
 <p><img src="/analysis_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><br></p>
 <p>Fitting a linear regression to this data, we find a statistically significant correlation. For our step, we standardized the residuals and determined that players with high magnitude positive residuals were the most “consistent,” and ones with high magnitude negative residuals were the most “streaky.” Why is this? We would expect more streaky players to have a small number of games with big production and a large number of below average games.</p>
-<p><br>
-To visualize this decision, here’s a game log of Jose Altuve, who is the most consistent player by our residual measure. The graph represents games where performed above or below his OWN average OPS, and the red line represents the MLB average:</p>
+<p><br></p>
+<p>To visualize this decision, here’s a game log of Jose Altuve, who is the most consistent player by our residual measure. The graph represents games where performed above or below his OWN average OPS, and the red line represents the MLB average:</p>
+<p><br></p>
 <p><img src="/analysis_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><br></p>
 <p>And here’s a game of log of Nathaniel Lowe, who is the most streaky player:</p>
+<p><br></p>
 <p><img src="/analysis_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><br></p>
 <p>Now we turned to analyze if there was a single stat that could most accurately predict whether a player was streaky or not. At first, we thought that walks would be the best stat, because of the idea that some players are “free swingers;” players that swing at a ton of pitches, don’t draw many walks, but are still on the roster because of their ability to get hot at certain times. However, walks ended up not being a great predictor. We also tried home runs, but that wasn’t a great predictor either.</p>
-<p><br>
-Out of all stats we tried, strikeouts was the best predictor as seen by this linear regression:</p>
+<p><br></p>
+<p>Out of all stats we tried, strikeouts was the best predictor as seen by this linear regression:</p>
+<p><br></p>
 <pre><code>## 
 ## Call:
 ## lm(formula = s_res_21 ~ so, data = log_sim_21)
@@ -740,7 +749,9 @@ Out of all stats we tried, strikeouts was the best predictor as seen by this lin
 ## Multiple R-squared:  0.09694,    Adjusted R-squared:  0.09015 
 ## F-statistic: 14.28 on 1 and 133 DF,  p-value: 0.0002372</code></pre>
 <p><img src="/analysis_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><br></p>
 <p>As well as this logistic regression, where we labeled players as streaky or consistent by the SIGN of their residuals:</p>
+<p><br></p>
 <pre><code>## 
 ## Call:
 ## glm(formula = streaky ~ so, family = binomial, data = log_sim_21)
@@ -764,12 +775,95 @@ Out of all stats we tried, strikeouts was the best predictor as seen by this lin
 ## 
 ## Number of Fisher Scoring iterations: 4</code></pre>
 <p><img src="/analysis_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><br></p>
 <p>So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.</p>
+<<<<<<< HEAD
 <p><br>
 There are some limitations to this analysis. It generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks. We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.</p>
 <p>##Further MLB analysis
 For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA.</p>
 <p>As we see below, the MLB has a very similar distribution of hits to points and points +rebounds+assists. Many of its top players interestingly seem to go on longer streaks more often than their NBA counterparts.</p>
+=======
+<p><br></p>
+<p>So how does this type of analysis work on NBA data? For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plotted a player’s Average Plus-Minus against their percentage of games above +2:</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## lm(formula = per ~ epm, data = sim)
+## 
+## Residuals:
+##       Min        1Q    Median        3Q       Max 
+## -0.089702 -0.021918 -0.000186  0.029953  0.090681 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 0.460129   0.004059  113.37   &lt;2e-16 ***
+## epm         0.029916   0.001072   27.91   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.03629 on 94 degrees of freedom
+## Multiple R-squared:  0.8923, Adjusted R-squared:  0.8912 
+## F-statistic: 779.1 on 1 and 94 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p><img src="/analysis_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><br></p>
+<p>Also like our MLB analysis, we labeled players as either “streaky” or “consistent” based on their standardized residuals of the previous model. However, unlike our MLB analysis, we could not find many stats that could produce statistically significant results for predicting a player’s streakiness. The best one we could find was Usage Pct, which is a stat that measures how often a player handles the ball when his team is on offense.</p>
+<p><br></p>
+<p>Here are the plots for our linear regression:</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## lm(formula = s_res ~ up, data = log_sim)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.62152 -0.60318  0.00401  0.85677  2.58556 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -0.31478    0.41993  -0.750    0.455
+## up           0.01358    0.01758   0.773    0.442
+## 
+## Residual standard error: 1.008 on 94 degrees of freedom
+## Multiple R-squared:  0.006312,   Adjusted R-squared:  -0.004259 
+## F-statistic: 0.5971 on 1 and 94 DF,  p-value: 0.4416</code></pre>
+<p><img src="/analysis_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><br></p>
+<p>And logistic regression:</p>
+<p><br></p>
+<pre><code>## 
+## Call:
+## glm(formula = streaky ~ up, family = binomial, data = log_sim)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -1.39902  -1.16854   0.01669   1.12942   1.43336  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)  1.13779    0.85389   1.332    0.183
+## up          -0.04914    0.03582  -1.372    0.170
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 133.08  on 95  degrees of freedom
+## Residual deviance: 131.15  on 94  degrees of freedom
+## AIC: 135.15
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p><img src="/analysis_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><br></p>
+<p>Intuitively, we can reason that players with the ball in their hands more often have more opportunities to affect the game in some way, meaning they are more likely to balance out their positives and negatives on the court, creating more consistent play on a game to game basis. However, it is still not a statistically significant predictor of streakiness.</p>
+<p><br></p>
+<p>There are some limitations to this analysis. For one, baseball and basketball are different in a sense that there are more opportunities for players to contribute in a basketball game than a baseball game. Top NBA players take around 15-20 field goals and 5-10 free throws a game, whereas the top MLB players get around 4-5 plate appearances a game. Therefore, this type of analysis is better suited for baseball, because a player’s production in a single game can vary drastically from their season average more so than in basketball. In addition, it generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks.</p>
+<p><br></p>
+<p>We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.</p>
+<p><br></p>
+</div>
+<div id="further-mlb-analysis" class="section level2">
+<h2>Further MLB analysis</h2>
+<p>For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn.</p>
+>>>>>>> eb8a64e62dd65ef46716fc9b3759a70b4ad2d42b
 <p><img src="/analysis_files/figure-html/Final%20player%20EDA-1.png" width="672" /></p>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   0.000   0.000   0.000   0.834   1.000  19.000</code></pre>

@@ -203,7 +203,7 @@ sim <- NBA_data_day %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
   mutate(epm_diff = plus_minus - NBA_avg$avg_epm, above = (epm_diff > 0)) %>%
   ungroup() %>% group_by(player) %>%
   summarize(games_above = sum(above), games = n(), per = games_above/games,
-            epm = mean(epm), fga = mean(fga))
+            epm = mean(epm), up = mean(usg_pct), fga = mean(fga), fta = mean(fta))
 
 model <- lm(per ~ epm, data = sim)
 beta_NBA <- coef(model)
@@ -213,18 +213,17 @@ s_res <- rstandard(model)
 log_sim <- sim %>% cbind(s_res) %>%
   mutate(streaky = ifelse(s_res < 0, 1, 0))
 
-
 summary(model)
 ggplot(sim, aes(epm, per)) + geom_point() +
   geom_abline(intercept = beta_NBA[1], slope = beta_NBA[2], color = "red") +
-  labs(x = "Effective Plus Minus", y = "% of Games with 2+ Plus Minus")
+  labs(x = "Average Plus Minus", y = "% of Games with 2+ Plus Minus")
+
 
 
 sim %>% cbind(s_res) %>%  ggplot(aes(epm, s_res)) +
   geom_ref_line(h = 0) + geom_point()
 
 sim %>% cbind(s_res) %>%  filter(abs(s_res) >= 1.5)
-
 
 NBA_data_day %>% filter(player == "Jayson Tatum") %>%
   group_by(game_date) %>%
@@ -238,20 +237,21 @@ NBA_data_day %>% filter(player == "Jayson Tatum") %>%
        x = "Date", y = "Game Plus Minus compared to average")
 
 
-lm_fga <- lm(s_res ~ fga, data = log_sim)
-bt_fga <- coef(lm_fga)
-summary(lm_fga)
-ggplot(log_sim, aes(fga, s_res)) + geom_point() +
-  geom_abline(intercept = bt_fga[1], slope = bt_fga[2], color = "red") +
-  labs(x = "Field Goal Attempts per Game", y = "Streakiness (Residual)")
 
-log_model_fga <- glm(streaky ~ fga, data = log_sim, family = binomial)
-beta_fga <- coef(log_model_fga)
-grid_fga <- log_sim %>% data_grid(fga) %>%
-    add_predictions(log_model_fga, type = "response")
-summary(log_model_fga)
-ggplot(log_sim, aes(fga)) + geom_point(aes(y = streaky)) +
-  geom_line(aes(y = pred), data = grid_fga, color = "red", size = 1) +
-  labs(x = "Field Goal Attempts per Game", y = "Streakiness (Binomial)")
+lm <- lm(s_res ~ up, data = log_sim)
+bt <- coef(lm)
+summary(lm)
+ggplot(log_sim, aes(up, s_res)) + geom_point() +
+  geom_abline(intercept = bt[1], slope = bt[2], color = "red") +
+  labs(x = "Usage Rate", y = "Streakiness (Residual)")
+
+log_model <- glm(streaky ~ up, data = log_sim, family = binomial)
+beta <- coef(log_model)
+grid <- log_sim %>% data_grid(up) %>%
+    add_predictions(log_model, type = "response")
+summary(log_model)
+ggplot(log_sim, aes(up)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid, color = "red", size = 1) +
+  labs(x = "Usage Rate", y = "Streakiness (Binomial)")
 ```
 

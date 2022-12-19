@@ -40,7 +40,7 @@ Luckily, most of our data is already cleaned, processed, and ready to be used. H
 Finding the number of games was important since we wanted to look at the season averages for many of the statistics. For example, one of the metrics we used to assess a scoring streak for a player was the point differential from their season scoring average in a game. To do this, we needed to clean the data as described above, keeping only the games the player actually played in for an accurate count of the amount of games played in a season, and then dividing the sum of the points scored by that count. The below code shows the clean up process for removing the extra rows and additionally shows the process of finding the season scoring average of each player for the 2022 NBA season. 
 
 
-``` {nba cleanup, eval=FALSE, include=TRUE}
+``` {r cleanup, eval=FALSE, include=TRUE}
 
 library(tidyverse)
 library(dplyr)
@@ -141,7 +141,38 @@ Because baseball and basketball are different sports and have different stats, n
 
 ## Link to load_and_clean_data.R:
 
-[Load and Clean Data](/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R/)
+```{r, echo=FALSE}
+
+library(downloadthis)
+
+data <- read.csv('../dataset/ASA All NBA Raw Data 2022 regular season.csv')
+
+data %>%
+  download_this(
+    output_name = "NBA dataset",
+    output_extension = ".csv",
+    button_label = "Download NBA data as csv",
+    button_type = "default",
+    has_icon = TRUE,
+    icon = "fa fa-save"
+  )
+
+```
+```{r, echo=FALSE}
+
+mlbdata <- read.csv('../dataset/MLB_batting_raw_data.csv')
+
+mlbdata %>%
+  download_this(
+    output_name = "MLB dataset",
+    output_extension = ".csv",
+    button_label = "Download MLB data as csv",
+    button_type = "default",
+    has_icon = TRUE,
+    icon = "fa fa-save"
+  )
+
+```
 
 
 ##Disclaimer
