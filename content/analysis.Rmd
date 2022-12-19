@@ -54,7 +54,7 @@ ggplot(scoring, aes(x=fg_percentage, y=ppg, label=player)) +
 ```
 ``` {r 25pt_vs_fg, echo=FALSE}
 # To Prevent Needing to Rerun EDA Each Time
-knitr::include_graphics('analysis_files/figure-html/Rplot01.png')
+#knitr::include_graphics('/analysis_files/figure-html/Rplot01.png')
 ```
 
 We see above that Lebron James and Joel Embiid scored the most points in the 2022 season, and that they were among the most efficient players in this pool alongside Giannis Antetokounmpo, Nikola Jokic, and Kevin Durant. Because of their prolific and efficient scoring, we at first expected them to be the among the players with the longest streaks. However, after further investigation, we determined that these players were fairly consistent and instead hypothesized that the streakiest players (and therefore the players with the longest streaks) would be those with a lower usage rates and lower scoring - possibly role players who were infrequently given a chances to score above their usual means. 
@@ -265,6 +265,101 @@ grid <- data_grid(ungroup(all_data), ts_pct= seq_range(ts_pct,100),usg_pct= seq_
 ggplot(all_data) +geom_line(aes(x=ts_pct,y=pred,color = factor(usg_pct)),data=grid) + labs(x="True Shooting %", y="Probability", title="Probability of Above Average Points", color="Usage Percentage")
 ```
 
+
+<br>
+
+For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plot a player’s Average Plus-Minus against their percentage of games above +2:
+
+
+##Further NBA analysis
+For the sake of consistency, we will apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the MLB. 
+<br>
+
+```{r echo=FALSE}
+load(here::here("dataset", "clean_nba_data.RData"))
+
+NBA_data <- data %>% filter(did_not_play == 0, is_inactive == 0,
+                            season == 2022) %>% select(-c(3:21))
+
+ppg_data <- NBA_data %>% group_by(player) %>%
+  summarize(ppg = sum(pts)/n(), epm = sum(plus_minus)/n(),
+            minutes_tot = sum(minutes)) %>% 
+  arrange(desc(ppg))
+
+NBA_avg <- ppg_data %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
+  ungroup() %>% summarize(avg_ppg = mean(ppg), med_ppg = median(ppg),
+                          avg_epm = mean(epm))
+
+NBA_data_day <- left_join(NBA_data, ppg_data, by = "player") %>%
+  mutate(NBA_diff = NBA_avg$avg_epm - epm)
+
+sim <- NBA_data_day %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
+  group_by(game_date) %>%
+  mutate(epm_diff = plus_minus - NBA_avg$avg_epm, above = (epm_diff > 0)) %>%
+  ungroup() %>% group_by(player) %>%
+  summarize(games_above = sum(above), games = n(), per = games_above/games,
+            epm = mean(epm), up = mean(usg_pct), fga = mean(fga), fta = mean(fta))
+
+model <- lm(per ~ epm, data = sim)
+beta_NBA <- coef(model)
+
+s_res <- rstandard(model)
+
+log_sim <- sim %>% cbind(s_res) %>%
+  mutate(streaky = ifelse(s_res < 0, 1, 0))
+
+summary(model)
+ggplot(sim, aes(epm, per)) + geom_point() +
+  geom_abline(intercept = beta_NBA[1], slope = beta_NBA[2], color = "red") +
+  labs(x = "Average Plus Minus", y = "% of Games with 2+ Plus Minus")
+```
+
+
+<br>
+
+Also like our MLB analysis further below, we labeled players as either “streaky” or “consistent” based on their standardized residuals of the previous model. However, unlike our MLB analysis, we could not find many stats that could produce statistically significant results for predicting a player’s streakiness. The best one we could find was Usage Pct, which is a stat that measures how often a player handles the ball when his team is on offense.
+
+<br>
+
+Here are the plots for our logistic regression:
+<br>
+
+```{r echo=FALSE}
+log_model <- glm(streaky ~ up, data = log_sim, family = binomial)
+beta <- coef(log_model)
+grid <- log_sim %>% data_grid(up) %>%
+    add_predictions(log_model, type = "response")
+summary(log_model)
+ggplot(log_sim, aes(up)) + geom_point(aes(y = streaky)) +
+  geom_line(aes(y = pred), data = grid, color = "red", size = 1) +
+  labs(x = "Usage Rate", y = "Streakiness (Binomial)")
+```
+And linear regression:
+
+<br>
+
+```{r echo=FALSE}
+lm <- lm(s_res ~ up, data = log_sim)
+bt <- coef(lm)
+summary(lm)
+ggplot(log_sim, aes(up, s_res)) + geom_point() +
+  geom_abline(intercept = bt[1], slope = bt[2], color = "red") +
+  labs(x = "Usage Rate", y = "Streakiness (Residual)")
+```
+<br>
+
+Intuitively, we can reason that players with the ball in their hands more often have more opportunities to affect the game in some way, meaning they are more likely to balance out their positives and negatives on the court, creating more consistent play on a game to game basis. However, it is still not a statistically significant predictor of streakiness. This analysis is interesting, considering how usage rate is so impactful in some of our other models. 
+
+<br>
+
+There are some limitations to this analysis. For one, baseball and basketball are different in a sense that there are more opportunities for players to contribute in a basketball game than a baseball game. Top NBA players take around 15-20 field goals and 5-10 free throws a game, whereas the top MLB players get around 4-5 plate appearances a game. Therefore, this type of analysis is better suited for baseball, because a player’s production in a single game can vary drastically from their season average more so than in basketball. In addition, it generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks.
+
+<br>
+
+We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
+
+<br>
+
 ## MLB Broad Analysis
 
 To generalize the concept of “streakiness” in MLB, we wanted to find out if there was one single stat that could most strongly predict whether a batter is streaky or not.
@@ -430,106 +525,9 @@ ggplot(log_sim_21, aes(so)) + geom_point(aes(y = streaky)) +
 
 So we conclude that “free swingers” are not necessarily the streaky players, but rather the “swing for the fences” type of players, meaning players that swing as hard as they can as much as they can in order to hit more home runs, but at the cost of striking out more. It is also interesting to note how strikeouts were correlated to streakiness in a statistically significant way but not home runs, meaning the act of “swinging for the fences” relates to streakiness whether or not the players are actually successful in hitting more home runs.
 
-<br>
-
-So how does this type of analysis work on NBA data? For this cross-sport analysis, we filtered through NBA players who played at least 2000 minutes in the 2021-22 NBA season. Our stat of choice for our first linear regression was Average Plus-Minus, which is a stat that measures how much a player’s team outscores their opponent per game when they’re on the floor. Of our sample of players, the mean Plus-Minus was around +2. Like our OPS plot, we plotted a player’s Average Plus-Minus against their percentage of games above +2:
-
-
-##Further NBA analysis
-For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA. 
-<br>
-
-```{r echo=FALSE}
-load(here::here("dataset", "clean_nba_data.RData"))
-
-NBA_data <- data %>% filter(did_not_play == 0, is_inactive == 0,
-                            season == 2022) %>% select(-c(3:21))
-
-ppg_data <- NBA_data %>% group_by(player) %>%
-  summarize(ppg = sum(pts)/n(), epm = sum(plus_minus)/n(),
-            minutes_tot = sum(minutes)) %>% 
-  arrange(desc(ppg))
-
-NBA_avg <- ppg_data %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
-  ungroup() %>% summarize(avg_ppg = mean(ppg), med_ppg = median(ppg),
-                          avg_epm = mean(epm))
-
-NBA_data_day <- left_join(NBA_data, ppg_data, by = "player") %>%
-  mutate(NBA_diff = NBA_avg$avg_epm - epm)
-
-sim <- NBA_data_day %>% group_by(player) %>% filter(minutes_tot >= 2000) %>%
-  group_by(game_date) %>%
-  mutate(epm_diff = plus_minus - NBA_avg$avg_epm, above = (epm_diff > 0)) %>%
-  ungroup() %>% group_by(player) %>%
-  summarize(games_above = sum(above), games = n(), per = games_above/games,
-            epm = mean(epm), up = mean(usg_pct), fga = mean(fga), fta = mean(fta))
-
-model <- lm(per ~ epm, data = sim)
-beta_NBA <- coef(model)
-
-s_res <- rstandard(model)
-
-log_sim <- sim %>% cbind(s_res) %>%
-  mutate(streaky = ifelse(s_res < 0, 1, 0))
-
-summary(model)
-ggplot(sim, aes(epm, per)) + geom_point() +
-  geom_abline(intercept = beta_NBA[1], slope = beta_NBA[2], color = "red") +
-  labs(x = "Average Plus Minus", y = "% of Games with 2+ Plus Minus")
-```
-
-<br>
-
-Also like our MLB analysis, we labeled players as either “streaky” or “consistent” based on their standardized residuals of the previous model. However, unlike our MLB analysis, we could not find many stats that could produce statistically significant results for predicting a player’s streakiness. The best one we could find was Usage Pct, which is a stat that measures how often a player handles the ball when his team is on offense.
-
-<br>
-
-Here are the plots for our linear regression:
-
-<br>
-
-```{r echo=FALSE}
-lm <- lm(s_res ~ up, data = log_sim)
-bt <- coef(lm)
-summary(lm)
-ggplot(log_sim, aes(up, s_res)) + geom_point() +
-  geom_abline(intercept = bt[1], slope = bt[2], color = "red") +
-  labs(x = "Usage Rate", y = "Streakiness (Residual)")
-```
-
-<br>
-
-And logistic regression:
-
-<br>
-
-```{r echo=FALSE}
-log_model <- glm(streaky ~ up, data = log_sim, family = binomial)
-beta <- coef(log_model)
-grid <- log_sim %>% data_grid(up) %>%
-    add_predictions(log_model, type = "response")
-summary(log_model)
-ggplot(log_sim, aes(up)) + geom_point(aes(y = streaky)) +
-  geom_line(aes(y = pred), data = grid, color = "red", size = 1) +
-  labs(x = "Usage Rate", y = "Streakiness (Binomial)")
-```
-
-<br>
-
-Intuitively, we can reason that players with the ball in their hands more often have more opportunities to affect the game in some way, meaning they are more likely to balance out their positives and negatives on the court, creating more consistent play on a game to game basis. However, it is still not a statistically significant predictor of streakiness.
-
-<br>
-
-There are some limitations to this analysis. For one, baseball and basketball are different in a sense that there are more opportunities for players to contribute in a basketball game than a baseball game. Top NBA players take around 15-20 field goals and 5-10 free throws a game, whereas the top MLB players get around 4-5 plate appearances a game. Therefore, this type of analysis is better suited for baseball, because a player’s production in a single game can vary drastically from their season average more so than in basketball. In addition, it generalizes streakiness as a concept to a great degree, and does not cover game-to-game streaks.
-
-<br>
-
-We also performed a different analysis of streaks in MLB to cover for these shortcomings, and used that analysis to tie in similarities to our NBA analysis.
-
-<br>
 
 ## Further MLB analysis
-For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn. 
+For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.
 
 ```{r data loading,include=FALSE}
 load(here::here("dataset", "MLB_bat_data_2021.RData"))
@@ -649,6 +647,12 @@ summary(mod4)
 mean(mod4$residuals^2)
 
 ```
+
+To recap, below are the two logistic regression models on strikeouts and usage rate, and the two linear plots on OPS and plsu minus compared to above average performances. As we see below, OPS and plus minus are similarly distributed, suggesting that what a players advanced stats are in both leagues affect streakiness. Additionally, unlike the NBA, strikeouts provide a meaningful statistic to predict streakiness, as explained by the "swing for the fence mentality" that may not be present in the NBA. 
+![log_strikeouts](/segmented_plots/log_strikeouts.png)
+![log_usage_rate](/segmented_plots/usage_rate.png)
+![OPS](/segmented_plots/OPS.png)
+![plus_minus](/segmented_plots/plus_minus.png)
 
 ## Flaws/Limitations:
 
