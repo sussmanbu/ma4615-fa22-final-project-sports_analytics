@@ -17,6 +17,7 @@ https://www.advancedsportsanalytics.com/nba-raw-data
 
 ## Describing the NBA data:
 The data is divided in a tidy manner, where each column in the dataset is a different statistic or a game identifier. For instance, there is the team name, opponent name, date of the game, and unique game id. Each row is an individual players performance in that game. So one game will have mulitple rows comprising of the different players performances. The variable names are straight forward, and there is no ambiguity in their function. The key variables we use in the analysis that warrant highlighting are as follows, offensive rating, defensive rating, bpm, usage percentage, and true shooting percentage. 
+From https://www.basketball-reference.com/about/ratings.html
 
 * Offensive rating(team)
   * Players Points*Total FG%) + Opponents Differential= 1/5 of possessions - Times Fouled+ FTM* FT% * OAPOW (Official Adjusted Players Offensive Withstand)
@@ -142,3 +143,6 @@ Because baseball and basketball are different sports and have different stats, n
 
 [Load and Clean Data](/ma4615-fa22-final-project-sports_analytics/load_and_clean_data.R/)
 
+
+##Disclaimer
+While Sports Betting can be a fun way to test analytics models and enjoy a game, it does pose a risk.Although the data and our analysis is not intended for the purpose of sports betting, the conclusions that we draw from it could certainly be used for that purpose. Our work does not have a financial incentive behind it, and we are conducting research out of curiosity and  for academic pursuits. Our models and insights are not intended to be used as definitive betting methods, and should not be abused. If you struggle with a gambling addiction, please visit https://www.1800gambler.net/

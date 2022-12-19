@@ -171,7 +171,7 @@ sign(change_net),change_net_PRA=PRA-mean(PRA),PRA_direction=sign(change_net_PRA)
 
 ```
 
-In these graphs we analyze the relationship between streaks defined by just points scored, and a combination of points, rebounds, and assists. The reasoning behind this is that points scored are not the only statistic of value, and many nba players occupy different roles within an offense that may lead them to play a style of basketball that leads to more rebounds and assists. We theorized that by combining points rebounds and assists, we would represent big men and players whose value does not come from any one area more equitably in the data. Additionally, we are defining a streak as having started once a player performs above their average in 1 game. If the previous game resulted in a below average performance, they will have a "0" game pts streak. As we will see below, most of the time the players score below their average. However, for the sake of limiting the scope of our analysis, we are not interested in determining negative streaks, and will instead focus on instances of positive streaks. We also want to try to account for the fact that some players will score above average only because they get more opportunities to score. In this section, we will calculate the average usage percentage for a player in a given year, and only include the games where the usage rate falls into this range. This should give us a better sense of the TRUE streakiness of a player in the NBA. 
+In these graphs we analyze the relationship between streaks defined by just points scored, and a combination of points, rebounds, and assists. The reasoning behind this is that points scored are not the only statistic of value, and many NBA players occupy different roles within an offense that may lead them to play a style of basketball that leads to more rebounds and assists. We theorized that by combining points rebounds and assists, we would represent big men and players whose value does not come from any one area more equitably in the data. Additionally, we are defining a streak as having started once a player performs above their average in 1 game. If the previous game resulted in a below average performance, they will have a "0" game pts streak. As we will see below, most of the time the players score below their average. However, for the sake of limiting the scope of our analysis, we are not interested in determining negative streaks, and will instead focus on instances of positive streaks. We also want to try to account for the fact that some players will score above average only because they get more opportunities to score. In this section, we will calculate the average usage percentage for a player in a given year, and only include the games where the usage rate falls into this range. This should give us a better sense of the TRUE streakiness of a player in the NBA. 
 ```{r further EDA}
 #visualize distribution of positive player points streaks and PRA streaks
 ggplot(all_data) +geom_histogram(aes(x=pts_streak),bins=23)
@@ -252,7 +252,7 @@ ggplot(scoring,aes(pts_streak))+stat_ecdf(geom = "step") + ggtitle('SC')
 
 
 # Modeling and inference:
-To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables change. Due to the massive number of variables present in the NBA data, we did not perform any model selection for the NBA model, but we handpicked variables that we believed to be the most relevant. Below, we can see that the biggest individual factor in determining whether or not a player will score above their average in many cases is actually their usage percentage. This is somewhat intuitive, as the opportunity to score is a key step to scoring above average. This is further validated by some of the top performers, such as Josh Hart and OG Anunoby, who consistently scored above their average once they were given more offensive responsibilities. In future analysis, we would like to delve deeper into how players perform above their average given the same scoring opportunities across games.
+To include a more formal statistical inference, we created two separate models to try to understand the probability that a team/player will perform above average, and which factors weigh most heavily in this decision. The first model is a logistic regression model trained on player data that gives us the probability that a player will perform above their average. We identified key variables most relevant to our question as our explanatory variables, and include one interaction term. The formula is as follows: glm(formula=factor(pts_direction)~ts_pct+usg_pct+usg_pct:ts_pct,family=binomial()). Ultimately, we are less interested in the predictive capability of this model, and instead more interested by how it allows us to see changes in probability as the explanatory variables change. Due to the massive number of variables present in the NBA data, we did not perform any model selection for the NBA model, but we handpicked variables that we believed to be the most relevant. Below, we can see that the biggest individual factor in determining whether or not a player will score above their average in many cases is actually their usage percentage. This is somewhat intuitive, as the opportunity to score is a key step to scoring above average. This is further validated by some of the top performers, such as Josh Hart and OG Anunoby, who consistently scored above their average once they were given more offensive responsibilities.
 
 ```{r nba model 1}
 #model building by player
@@ -411,7 +411,7 @@ There are some limitations to this analysis. It generalizes streakiness as a con
 
 
 ##Further MLB analysis
-For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA.Luckily, an MLB season is almost twice as long as an NBA season, so similar comparisons can be drawn. 
+For the sake of consistency, we also attempted to apply the same analysis to the MLB data to the NBA despite some of the inherent differences in the two leagues. First, we load the data in and create our streaks in the same way as the NBA. 
 
 
 ```{r data loading,include=FALSE}
@@ -419,7 +419,7 @@ load(here::here("dataset", "MLB_bat_data_2021.RData"))
 problems()
 
 ```
-
+As we see below, the MLB has a very similar distribution of hits to points and points +rebounds+assists. Many of its  top players interestingly seem to go on longer streaks more often than their NBA counterparts. 
 
 ```{r Final player EDA, echo=FALSE}
 #get all of our data by players who meet criteria and calculate streaks
@@ -435,17 +435,10 @@ indices<-which(diff(sign(diff(streak)))==-2)+1
 local_max <-slice(all_data_mlb,indices)
 
 all_streaks_2022 <- local_max %>% group_by(player) %>% summarize(max_streak=max(median(h_streak))) %>% arrange(desc(max_streak))
-best_streaks_2022 <- all_streaks_2022 %>%head(5)
+best_streaks_mlb_2022 <- all_streaks_2022 %>%head(5)
 bottom_streaks_2022 <- all_streaks_2022 %>% tail(5)
 
-ggplot(best_streaks_2022) +geom_col(aes(y=max_streak,x=player))+ ggtitle('players with median best streaks in MLB') 
-
-
-
-#cdf and pdf for  best player hits
-ggplot(best_streaks_2022,aes(max_streak))+stat_ecdf(geom = "step") +ggtitle('CDF of max median streaks in MLB') 
-ggplot(best_streaks_2022,aes(max_streak))+geom_density()+ ggtitle('Density of max median streaks in MLB') 
-
+ggplot(best_streaks_mlb_2022) +geom_col(aes(y=max_streak,x=player))+ ggtitle('players with median best streaks in MLB') 
 
 #model building by player
 mod2 <-all_data_mlb %>%ungroup() %>% glm(formula=factor(h_direction)~pa+rbi+home_runs+so,family=binomial())
@@ -488,7 +481,7 @@ xlab('Date')
 
 ##Similarities between the NBA and MLB
 
-First, let's look at the comparisons in aggregate data in the NBA and MLB by points,PRA, and hits. As you can see, surprisingly, there is a very similar trend among each league, and the distributions match very closely. This may point to the presence of a more universal trait regarding athletes ability to perform above average across long periods of time, not limited to any one league. We will attempt to further draw comparisons between the two leagues below. 
+Finally, let's look at the comparisons in aggregate data in the NBA and MLB by points,PRA, and hits more in depth. There is a very similar trend among each league, and the distributions match very closely. This may point to the presence of a more universal trait regarding athletes ability to perform above average across long periods of time, not limited to any one league. 
 
 ```{r comparison 1}
 ggplot(all_data_mlb) +geom_histogram(aes(x=h_streak),bins=23) + ggtitle('Distribution of hits streaks') 
@@ -498,10 +491,10 @@ summary(all_data$pts_streak)
 summary(all_data_mlb$h_streak)
 ```
 
-Next, lets look at the top performers in the MLB and the NBA. Austin Hays had the highest average streak length in the MLB, and Josh Hart had the second highest in the same category in the NBA. 
+Next, lets look at the top performers in the MLB and the NBA. Austin Hays had the highest average streak length in the MLB, and Josh Hart had the second highest in the same category in the NBA.  Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA. 
 ```{r comparison 2}
 
-scoring<-all_data_mlb %>% filter(player == 'Austin Hays') %>%select(change_net,game_date,h_streak)
+scoring<-all_data_mlb %>% filter(player =='Austin Hays') %>%select(change_net,game_date,h_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
 geom_ribbon(aes(ymin=pmin(change_net,0), ymax=0), fill="red", col="red", alpha=0.5) +
 geom_ribbon(aes(ymin=0, ymax=pmax(change_net,0)), fill="green", col="green", alpha=0.5) +
@@ -509,7 +502,8 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle('AH Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(h_streak))+geom_density()
+scoring <-all_data_mlb %>% filter(player %in% best_streaks_mlb_2022$player) %>%select(change_net,game_date,h_streak)
+ggplot(scoring,aes(h_streak))+geom_histogram(bins=15)
 
 scoring<-all_data %>% filter(player == 'Josh Hart') %>%select(change_net,game_date,pts_streak)
 ggplot(scoring, aes(x=as.Date(as.factor(game_date)), y=change_net, group=1)) +
@@ -519,7 +513,8 @@ geom_point()+
 geom_line(aes(y=0)) + ggtitle('Josh Hart Change') +
 ylab('Points Deviated from Average') +
 xlab('Date')
-ggplot(scoring,aes(pts_streak))+geom_density()
+scoring <-all_data %>% filter(player %in% best_streaks_2022$player) %>%select(change_net,game_date,pts_streak)
+ggplot(scoring,aes(pts_streak))+geom_histogram(bins=15)
 
 ```
 Again, the results are fairly similar and somewhat surprising. It is interesting to note that some of the top player match each others streakiness quite well. Austin Hays however, completes more sustained runs of games with hits, whereas Josh Hart seems to have gone on only a couple longer runs.
