@@ -11,7 +11,7 @@ draft: false
 
 ## The Hot Hand. Just some Hot Air? 
 
-Oftentimes in sports, we say players are on “hot streaks” if they perform above a certain standard for multiple consecutive games. Some believe in the "hot hand", where a player is more likely to make his next shot based on his previous performance. Similarly, "the zone" refers to a player who is seemingly in another place mentally, scoring at an unusually high clip. Some brush the "hot hand" off as sports pseudoscience, looking at each shot or opportunity to score as an isolated event. But what are streaks exactly? Can we quantify them? Is there any truth to these phenomena? We aim to define the standard against which a streak can be determined, identify streaks based on this standard, and draw comparisons between streaks in two sports leagues in particular: the NBA and the MLB. 
+Oftentimes in sports, we say players are on “hot streaks” if they perform above a certain standard for multiple consecutive games. Some believe in the "hot hand", where a player is more likely to make his next shot based on his previous performance. Similarly, "the zone" refers to a player who is seemingly in another place mentally, scoring at an unusually high clip. Some brush the "hot hand" off as sports pseudoscience, looking at each shot or opportunity to score as an isolated event. But what are streaks exactly? Can we quantify them? Is there any truth to these phenomena? We aim to define the standard against which a streak can be determined, identify streaks based on this standard, and draw comparisons between streaks in two sports leagues in particular: the NBA and the MLB. We attempt to quantify the prevalence of streaks in both leagues for various stats, the factors that contribute to them, and their effects on total end of the season numbers.
 
 ## Between Two Sports:
 
@@ -32,7 +32,7 @@ Amazingly, we see very similar trends across the NBA and the MLB. Aggregated acr
 
 
 Next, lets look at the top players across the NBA and MLB and take a deep dive into the top performers in each league respectively. By top players, we are going to look at the players with the highest median streaks, a measure of how "consistently streaky" a player is. Below, we see the top 5 performers in each league, along with the distribution of streaks and the top players spike plot. As we can see, the top players in the MLB go on longer streaks more frequently than in the NBA. 
-Further on in the analyis we will compare players with the highest maximum streaks and lead their leagues in a respective category. 
+Further on in the analyis we will compare players with the highest maximum streaks and lead their leagues in a respective category. We also discuss what factors (like usage in the NBA) contribute most to streakiness.
 
 ![best_mlb_streaks](/segmented_plots/best_MLB_streaks.png)
 ![top5_h_streak](/segmented_plots/top5_h_streak.png)
@@ -42,21 +42,21 @@ Further on in the analyis we will compare players with the highest maximum strea
 ![top5_pts_streak](/segmented_plots/top5_pts_streak.png)
 ![JH_spike_plot](/segmented_plots/JH_spike_plot.png)
 
-Finally, we look at how pace streakiness predicts total seasonal performance for both leagues. 
+Finally, we look at how pace streakiness predicts total seasonal performance for both leagues. For each of the main stats (MLB: hits, home runs, strike outs, and walks; NBA: points, assists, rebounds), we comput a linear regression of player streakiness against total seasonal values as well as the correlation coeffiscient between the two. In both leagues, the main metric of offense (hits and points) are relatively unpredicted by streakiness. Additionally, with the exception of assists in the NBA, player streakiness accounts for no more than a quarter of overall total. This suggests that though streaks help push the end of season totals up a little, good stats really indicate a good player in both leagues. With regards to assist, because assists are inherently dependent on other players, it is not surprising that seasonal assist totals are heavily connected to the randomness of streaks. That said, both the R^2 and the Corr coefficients are noticeably higher in the NBA than the MLB. This suggest that streaks may play a larger role overall in the NBA than the MLB, which makes sense because the MLB's longer season reduces the chance of statistical outlyers. 
 
 MLB
 ![MLB_Values](/segmented_plots/MLB_Values.png)
 
 NBA
 ![NBA_Values](/segmented_plots/NBA_Values.png)
-In both leagues, the main metric of offense (hits and points) are relatively unpredicted by streakiness. Additionally, with the exception of assists in the NBA, player streakiness accounts for no more than a quarter of overall total. This suggests that though streaks help push the end of season totals up a little, good stats really indicate a good player in both leagues. With regards to assist, because assists are inherently dependent on other players, itis not surprising that seasonal assist totals are heavilly connected to the randomness of streaks. That said,  both the R^2 and the Corr coefficients are noticeably higher in the NBA than the MLB. This suggest that streaks may play a larger role overall in the NBA than the MLB, which makes sense because the MLB's longer season reduces the chance of statistical outliers. 
+
 
 ## Interactive:
 In our interactive, we have a dashboard that shows the following:
 
 1. The cumulative pace of each player in various stats (MLB: home runs, hit, strike outs, and walks; NBA: points, assists,rebounds) broken into intervals of different pace. This allows you to see each player's stat totals versus his streakiness as the variation in pace throughout the season. 
 
-2. We also have a summary of their streaks to see what the likelihood of them continuing the streak might be.
+2. A summary of their streaks to see what the likelihood of them continuing the streak might be.
 
 3. The probability that a player will perform above his average based on some relevant metrics such as offensive rating and usage percentage in basketball, and home runs and plate appearances in baseball. This shows how relevant metrics affect a player's chances of streaky playing.
 
