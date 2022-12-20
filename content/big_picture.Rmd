@@ -42,6 +42,14 @@ Further on in the analyis we will compare players with the highest maximum strea
 ![top5_pts_streak](/segmented_plots/top5_pts_streak.png)
 ![JH_spike_plot](/segmented_plots/JH_spike_plot.png)
 
+
+To recap, below are the two logistic regression models on strikeouts and usage rate, and the two linear plots on OPS and plsu minus compared to above average performances. As we see below, OPS and plus minus are similarly distributed, suggesting that what a players advanced stats are in both leagues affect streakiness. Additionally, unlike the NBA, strikeouts provide a meaningful statistic to predict streakiness, as explained by the "swing for the fence mentality" that may not be present in the NBA. 
+![log_strikeouts](/segmented_plots/log_strikeouts.png)
+![log_usage_rate](/segmented_plots/usage_rate.png)
+![OPS](/segmented_plots/OPS.png)
+![plus_minus](/segmented_plots/plus_minus.png)
+
+
 Finally, we look at how pace streakiness predicts total seasonal performance for both leagues. For each of the main stats (MLB: hits, home runs, strike outs, and walks; NBA: points, assists, rebounds), we comput a linear regression of player streakiness against total seasonal values as well as the correlation coeffiscient between the two. In both leagues, the main metric of offense (hits and points) are relatively unpredicted by streakiness. Additionally, with the exception of assists in the NBA, player streakiness accounts for no more than a quarter of overall total. This suggests that though streaks help push the end of season totals up a little, good stats really indicate a good player in both leagues. With regards to assist, because assists are inherently dependent on other players, it is not surprising that seasonal assist totals are heavily connected to the randomness of streaks. That said, both the R^2 and the Corr coefficients are noticeably higher in the NBA than the MLB. This suggest that streaks may play a larger role overall in the NBA than the MLB, which makes sense because the MLB's longer season reduces the chance of statistical outlyers. 
 
 MLB
